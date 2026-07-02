@@ -24,7 +24,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-    base: '/Gestion-Estudiantil',
+    base: '/Gestion-Estudiantil/',
   resolve: {
     alias: {
       // Alias @ to the src directory

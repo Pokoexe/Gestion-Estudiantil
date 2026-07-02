@@ -14,6 +14,7 @@ import { MateriasPage } from "./pages/MateriasPage";
 export const router = createBrowserRouter([
   { path: "/", Component: LoginPage },
 
+
   {
     path: "/estudiante",
     Component: AppLayout,
@@ -53,4 +54,4 @@ export const router = createBrowserRouter([
     Component: AppLayout,
     children: [{ index: true, Component: ProgramadorDashboard }],
   },
-]);
+], { basename: '/Gestion-Estudiantil' });
