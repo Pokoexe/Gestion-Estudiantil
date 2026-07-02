@@ -10,6 +10,15 @@ import { TesoreriaDashboard } from "./pages/TesoreriaDashboard";
 import { DirectorDashboard } from "./pages/DirectorDashboard";
 import { ProgramadorDashboard } from "./pages/ProgramadorDashboard";
 import { MateriasPage } from "./pages/MateriasPage";
+import { RepairPage } from "./pages/RepairPage";
+import { RepairCoursePage } from "./pages/RepairCoursePage";
+import { CoursesActivitiesPage } from "./pages/CoursesActivitiesPage";
+import { CourseDetailPage } from "./pages/CourseDetailPage";
+import { PagosPage } from "./pages/PagosPage";
+import { StudentDataPage } from "./pages/StudentDataPage";
+import { CalificacionPage } from "./pages/CalificacionPage";
+import { MisEvaluacionesPage } from "./pages/MisEvaluacionesPage";
+import { MensajesPage } from "./pages/MensajesPage";
 
 export const router = createBrowserRouter([
   { path: "/", Component: LoginPage },
@@ -20,8 +29,17 @@ export const router = createBrowserRouter([
     Component: AppLayout,
     children: [
       { index: true, Component: DashboardPage },
+      { path: "datos", Component: StudentDataPage },
       { path: "materias", Component: MateriasPage },
-      { path: "cursos", Component: CoursesPage },
+      { path: "materias/:id", Component: CoursesPage },
+      { path: "calificaciones", Component: CalificacionPage },
+      { path: "evaluaciones", Component: MisEvaluacionesPage },
+      { path: "reparacion", Component: RepairPage },
+      { path: "reparacion/:id", Component: RepairCoursePage },
+      { path: "cursos", Component: CoursesActivitiesPage },
+      { path: "cursos/:id", Component: CourseDetailPage },
+      { path: "pagos", Component: PagosPage },
+      { path: "mensajes", Component: MensajesPage },
     ],
   },
   {

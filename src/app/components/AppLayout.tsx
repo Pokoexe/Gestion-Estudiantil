@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
-import { Bell, ChevronDown, LogOut, User, Repeat } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, Repeat, X, ArrowLeft } from "lucide-react";
 import { ROLES, ROLE_ORDER, roleFromPath, type NavItem } from "../roles";
+import { SOLVENT, DEBT_LEVEL, DEBT_MESSAGE, DEBT_STYLES } from "../data/solvency";
+import { CONVERSATIONS } from "../data/chats";
+import { FloatingChat } from "./FloatingChat";
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -9,10 +12,24 @@ export function AppLayout() {
 
   const roleId = roleFromPath(location.pathname);
   const role = ROLES[roleId];
+  const onMessagesPage = location.pathname.includes("/mensajes");
 
   const [showRoleSwitch, setShowRoleSwitch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications] = useState(3);
+  // Se reinicia en cada recarga: si el estudiante es moroso, el banner reaparece.
+  const [showDebtBanner, setShowDebtBanner] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatConvId, setChatConvId] = useState<number | null>(null);
+
+  const unreadCount = CONVERSATIONS.reduce((sum, c) => sum + c.unread, 0);
+  const openChatTo = (id: number) => {
+    setChatConvId(id);
+    setChatOpen(true);
+    setShowNotifications(false);
+  };
+
+  const showDebt = roleId === "estudiante" && !SOLVENT && showDebtBanner;
+  const DebtIcon = DEBT_STYLES[DEBT_LEVEL].icon;
 
   const today = new Date();
 
@@ -32,7 +49,8 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-screen bg-edu-bg">
-      {/* Barra lateral */}
+      {/* Barra lateral — oculta en la página de Mensajes */}
+      {!onMessagesPage && (
       <aside className="w-56 min-h-screen bg-edu-surface border-r border-edu-border flex flex-col shrink-0">
         {/* Logo */}
         <div className="px-5 pt-5 pb-4 border-b border-edu-border-soft flex items-center gap-2.5">
@@ -103,16 +121,28 @@ export function AppLayout() {
           </button>
         </div>
       </aside>
+      )}
 
       {/* Columna principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Encabezado */}
         <header className="h-[60px] bg-edu-surface border-b border-edu-border flex items-center justify-between px-6 gap-4 sticky top-0 z-20">
-          <div>
-            <h2 className="text-edu-ink font-semibold text-base m-0">{currentTitle}</h2>
-            <p className="text-edu-ink-400 text-xs m-0">
-              {today.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </p>
+          <div className="flex items-center gap-3 min-w-0">
+            {onMessagesPage && (
+              <button
+                onClick={() => navigate(-1)}
+                aria-label="Volver"
+                className="w-9 h-9 rounded-full border-[1.5px] border-edu-border bg-edu-subtle cursor-pointer flex items-center justify-center text-edu-ink-500 hover:text-edu-primary hover:border-edu-primary-200 transition-colors shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <div className="min-w-0">
+              <h2 className="text-edu-ink font-semibold text-base m-0">{currentTitle}</h2>
+              <p className="text-edu-ink-400 text-xs m-0">
+                {today.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -161,32 +191,47 @@ export function AppLayout() {
                 className="relative w-9 h-9 rounded-full border-[1.5px] border-edu-border bg-edu-subtle cursor-pointer flex items-center justify-center text-edu-ink-500"
               >
                 <Bell className="w-4 h-4" />
-                {notifications > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute -top-[3px] -right-[3px] w-[17px] h-[17px] rounded-full bg-edu-danger-strong text-white text-[0.6rem] font-bold flex items-center justify-center border-2 border-white">
-                    {notifications}
+                    {unreadCount}
                   </span>
                 )}
               </button>
               {showNotifications && (
-                <div className="absolute top-[calc(100%+6px)] right-0 bg-edu-surface border border-edu-border rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] z-30 w-[290px] overflow-hidden">
+                <div className="absolute top-[calc(100%+6px)] right-0 bg-edu-surface border border-edu-border rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.1)] z-30 w-[300px] overflow-hidden">
                   <div className="px-4 py-3 border-b border-edu-border-soft flex justify-between items-center">
-                    <span className="font-semibold text-sm text-edu-ink">Notificaciones</span>
-                    <span className="text-xs text-edu-primary cursor-pointer font-medium">Marcar todas leídas</span>
+                    <span className="font-semibold text-sm text-edu-ink">Mensajes</span>
+                    <span className="text-xs text-edu-primary cursor-pointer font-medium">Marcar todos leídos</span>
                   </div>
-                  {[
-                    { title: "Examen programado", desc: "Parcial de Matemática el 5 de julio", time: "hace 2 h" },
-                    { title: "Nota publicada", desc: "Laboratorio de Química: 87/100", time: "ayer" },
-                    { title: "Pago por vencer", desc: "Cuota del período vence el 15 de julio", time: "hace 2 d" },
-                  ].map((n, i) => (
-                    <div
-                      key={i}
-                      className={`px-4 py-2.5 cursor-pointer hover:bg-edu-subtle${i < 2 ? " border-b border-edu-border-soft" : ""}`}
-                    >
-                      <div className="text-[0.8125rem] font-medium text-edu-ink">{n.title}</div>
-                      <div className="text-xs text-edu-ink-500 mt-0.5">{n.desc}</div>
-                      <div className="text-[0.7rem] text-edu-ink-400 mt-0.5">{n.time}</div>
-                    </div>
-                  ))}
+                  {CONVERSATIONS.slice(0, 4).map((c, i, arr) => {
+                    const last = c.messages[c.messages.length - 1];
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => openChatTo(c.id)}
+                        className={`w-full text-left flex items-center gap-2.5 px-4 py-2.5 bg-transparent border-none cursor-pointer hover:bg-edu-subtle transition-colors${i < arr.length - 1 ? " border-b border-edu-border-soft" : ""}`}
+                      >
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[0.7rem] font-bold shrink-0"
+                          style={{ backgroundColor: c.color }}
+                        >
+                          {c.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[0.8125rem] font-semibold text-edu-ink truncate">{c.name}</span>
+                            <span className="text-[0.68rem] text-edu-ink-400 shrink-0">{c.lastTime}</span>
+                          </div>
+                          <div className="text-xs text-edu-ink-500 truncate mt-0.5">
+                            {last?.fromMe ? "Tú: " : ""}{last?.text}
+                          </div>
+                        </div>
+                        {c.unread > 0 && (
+                          <span className="shrink-0 w-2 h-2 rounded-full bg-edu-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -198,11 +243,36 @@ export function AppLayout() {
           </div>
         </header>
 
+        {/* Aviso de morosidad — pegado al header, visible en todas las páginas */}
+        {showDebt && (
+          <div className={`sticky top-[60px] z-10 flex items-center gap-2.5 px-6 py-2.5 text-sm font-medium border-b border-edu-border-soft ${DEBT_STYLES[DEBT_LEVEL].banner}`}>
+            <DebtIcon className="w-4 h-4 shrink-0" />
+            <span className="flex-1">{DEBT_MESSAGE}</span>
+            <button
+              onClick={() => setShowDebtBanner(false)}
+              aria-label="Cerrar aviso"
+              className="bg-transparent border-none cursor-pointer p-0 flex items-center opacity-70 hover:opacity-100"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Contenido de la página */}
-        <main className="flex-1 p-6 flex flex-col gap-5">
+        <main className={onMessagesPage ? "flex-1 flex flex-col min-h-0" : "flex-1 p-6 flex flex-col gap-5"}>
           <Outlet />
         </main>
       </div>
+
+      {/* Chat flotante global (estilo Messenger) — visible en todas las páginas
+          excepto en la propia página de Mensajes (donde ya está el chat completo). */}
+      {!onMessagesPage && (
+        <FloatingChat
+          open={chatOpen}
+          onOpenChange={(o) => { setChatOpen(o); if (!o) setChatConvId(null); }}
+          openConversationId={chatConvId}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { Clock, CheckCircle2, AlertCircle, ClipboardCheck } from "lucide-react";
+import { Award, TrendingDown, AlertCircle, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router";
 import { color } from "../theme/tokens";
 
 const SCHEDULE: {
@@ -182,108 +183,110 @@ const SCHEDULE: {
         },
     ];
 
-const PENDING_EVALS = [
-    {
-        id: 1,
-        subject: "Matemática",
-        type: "Examen parcial",
-        dueDate: "5 jul 2026",
-        weight: "30%",
-        status: "upcoming",
-        dot: color.primary,
-    },
-    {
-        id: 2,
-        subject: "Química",
-        type: "Informe de laboratorio",
-        dueDate: "7 jul 2026",
-        weight: "15%",
-        status: "upcoming",
-        dot: color.purple,
-    },
-    {
-        id: 3,
-        subject: "Literatura",
-        type: "Entrega de ensayo",
-        dueDate: "10 jul 2026",
-        weight: "20%",
-        status: "upcoming",
-        dot: color.success,
-    },
-    {
-        id: 4,
-        subject: "Historia",
-        type: "Exposición oral",
-        dueDate: "12 jul 2026",
-        weight: "25%",
-        status: "late",
-        dot: color.danger,
-    },
+type SubjectStatus = "aprobado" | "reprobado" | "por_reprobar";
+
+interface Subject {
+    id: number;
+    name: string;
+    teacher: string;
+    evaluations: number;
+    attendance: string;
+    average: number;
+    rank: number; // posición del estudiante dentro de la materia
+    failedEvals: number; // evaluaciones no aprobadas
+    status: SubjectStatus;
+    dot: string;
+}
+
+const SUBJECTS: Subject[] = [
+    { id: 1, name: "Física", teacher: "Prof. Torres", evaluations: 8, attendance: "96 %", average: 19, rank: 1, failedEvals: 0, status: "aprobado", dot: color.warningStrong },
+    { id: 2, name: "Biología", teacher: "Prof. Ruiz", evaluations: 6, attendance: "94 %", average: 17, rank: 3, failedEvals: 0, status: "aprobado", dot: color.success },
+    { id: 3, name: "Matemática", teacher: "Prof. Ramírez", evaluations: 7, attendance: "92 %", average: 16, rank: 5, failedEvals: 0, status: "aprobado", dot: color.primary },
+    { id: 4, name: "Literatura", teacher: "Prof. García", evaluations: 5, attendance: "90 %", average: 15, rank: 6, failedEvals: 0, status: "aprobado", dot: color.success },
+    { id: 5, name: "Química", teacher: "Prof. Méndez", evaluations: 6, attendance: "88 %", average: 13, rank: 8, failedEvals: 1, status: "aprobado", dot: color.purple },
+    { id: 6, name: "Arte", teacher: "Prof. Vega", evaluations: 4, attendance: "85 %", average: 12, rank: 10, failedEvals: 1, status: "aprobado", dot: color.purple },
+    { id: 7, name: "Historia", teacher: "Prof. Flores", evaluations: 6, attendance: "78 %", average: 10, rank: 15, failedEvals: 2, status: "por_reprobar", dot: color.danger },
+    { id: 8, name: "Inglés", teacher: "Prof. Collins", evaluations: 5, attendance: "70 %", average: 8, rank: 22, failedEvals: 4, status: "reprobado", dot: color.warning },
 ];
 
+const STATUS_META: Record<SubjectStatus, { label: string; cls: string }> = {
+    aprobado: { label: "Aprobado", cls: "bg-edu-success-bg text-edu-success" },
+    reprobado: { label: "Reprobado", cls: "bg-edu-danger-bg text-edu-danger" },
+    por_reprobar: { label: "Por reprobar", cls: "bg-edu-warning-bg text-edu-warning" },
+};
+
+const SUBJECT_COLS = "grid-cols-[1.4fr_1.3fr_1fr_1fr_1.1fr_1fr]";
+const SUBJECT_HEADERS = ["Materia", "Profesor", "Evaluaciones", "Asistencia", "Estado", "Promedio"];
+
 export function MateriasPage() {
-    const today = new Date();
-    const dayIndex = today.getDay();
-    const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie"];
-    const activeDay =
-        dayIndex >= 1 && dayIndex <= 5 ? weekdays[dayIndex - 1] : "Lun";
+    const navigate = useNavigate();
+
+    const best = SUBJECTS.reduce((a, b) => (b.average > a.average ? b : a));
+    const worst = SUBJECTS.reduce((a, b) => (b.average < a.average ? b : a));
+    const failing = SUBJECTS.filter((s) => s.status !== "aprobado");
+
+    const goToSubject = (id: number) => navigate(`/estudiante/materias/${id}`);
 
     return (
         <>
             <div className="grid grid-cols-3 gap-2">
 
 
-                {/* Mejor materia */}
+                {/* Materia con más promedio */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Mejor Materia
+                                Materia con más promedio
                             </p>
                             <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
-                                Física
+                                {best.name}
                             </p>
                         </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-edu-primary" />
+                        <div className="w-10 h-10 rounded-edu-control bg-edu-success-bg flex items-center justify-center shrink-0">
+                            <Award className="w-5 h-5 text-edu-success" />
                         </div>
                     </div>
-                    <div className="flex align-items justify-between space-y-1.5">
+                    <p className="text-edu-ink-700 text-[0.8rem] m-0">
+                        Eres el estudiante n.º {best.rank} de la materia
+                    </p>
+                    <div className="flex items-center justify-between gap-2 mt-auto">
                         <p className="text-edu-ink-400 text-xs m-0">
-                            Prof. Jonny
+                            {best.teacher}
                         </p>
-                        <span className={`font-semibold px-2 py-[3px] rounded-[6px] text-white bg-edu-success`}>
-                            Promedio de 19
+                        <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-success shrink-0">
+                            Promedio de {best.average}
                         </span>
                     </div>
                 </div>
 
-                {/* Próxima evaluación */}
+                {/* Materia con peor promedio */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Próxima evaluación
+                                Materia con peor promedio
                             </p>
                             <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
-                                Matemática - Examen
-                            </p>
-                            <p className="text-edu-ink-400 text-xs m-0">
-                                Limites y Derivadas
+                                {worst.name}
                             </p>
                         </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-edu-primary" />
+                        <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
+                            <TrendingDown className="w-5 h-5 text-edu-danger" />
                         </div>
                     </div>
-                    <div className="flex gap-1.5 flex-wrap">
-                        <span className="bg-edu-primary-50 text-edu-primary text-[0.7rem] font-semibold px-2 py-[3px] rounded-[6px]">
-                            Hoy · 12:20
+                    <p className="text-edu-ink-700 text-[0.8rem] m-0">
+                        No aprobaste {worst.failedEvals}{" "}
+                        {worst.failedEvals === 1 ? "evaluación" : "evaluaciones"}
+                    </p>
+                    <div className="flex items-center justify-between gap-2 mt-auto">
+                        <p className="text-edu-ink-400 text-xs m-0">
+                            {worst.teacher}
+                        </p>
+                        <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-danger shrink-0">
+                            Promedio de {worst.average}
                         </span>
                     </div>
-                    <p className="text-edu-ink-400 text-xs m-0">
-                        Prof. Ramírez · Comienza en 3 h 20 min
-                    </p>
                 </div>
 
                 {/* Asistencia promedio */}
@@ -315,77 +318,20 @@ export function MateriasPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-                {/* Evaluaciones pendientes */}
-                <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-                    <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
-                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
-                            Evaluaciones pendientes de la semana
-                        </h3>
-                        <span className="text-[0.8rem] text-edu-primary cursor-pointer font-medium">
-                            Ver todas →
-                        </span>
-                    </div>
-                    <div>
-                        <div className="grid grid-cols-[1fr_1.2fr_1fr_0.5fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Materia", "Evaluación", "Fecha", "Porcentaje", "Estado"].map((h) => (
-                                <span
-                                    key={h}
-                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                                >
-                                    {h}
-                                </span>
-                            ))}
-                        </div>
-                        {PENDING_EVALS.map((ev, i) => (
-                            <div
-                                key={ev.id}
-                                className={`grid grid-cols-[1fr_1.2fr_1fr_0.5fr_0.8fr] px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < PENDING_EVALS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className="w-2 h-2 rounded-full shrink-0"
-                                        style={{ backgroundColor: ev.dot }}
-                                    />
-                                    <span className="text-[0.875rem] text-edu-ink font-medium">
-                                        {ev.subject}
-                                    </span>
-                                </div>
-                                <span className="text-[0.875rem] text-edu-ink-700">
-                                    {ev.type}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-edu-ink-400 shrink-0" />
-                                    <span className="text-[0.8125rem] text-edu-ink-500">
-                                        {ev.dueDate}
-                                    </span>
-                                </div>
-                                <span className="text-[0.875rem] text-edu-ink-700 font-semibold">
-                                    {ev.weight}
-                                </span>
-                                <span
-                                    className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${ev.status === "late" ? "bg-edu-danger-bg text-edu-danger" : "bg-edu-warning-bg text-edu-warning"}`}
-                                >
-                                    {ev.status === "late" ? "Atrasada" : "Próxima"}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Resultados de evaluaciones */}
+            <div className="flex flex-col gap-4">
+                {/* Todas las materias */}
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                     <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
                         <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
-                            Resultados de evaluaciones
+                            Todas las materias
                         </h3>
-                        <span className="text-[0.8rem] text-edu-primary cursor-pointer font-medium">
-                            Ver todas →
+                        <span className="text-[0.8rem] text-edu-ink-400 font-medium">
+                            {SUBJECTS.length} materias
                         </span>
                     </div>
                     <div>
-                        <div className="grid grid-cols-[1fr_1.2fr_1fr_0.5fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Materia", "Evaluación", "Fecha", "Calificación"].map((h) => (
+                        <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {SUBJECT_HEADERS.map((h) => (
                                 <span
                                     key={h}
                                     className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
@@ -394,32 +340,103 @@ export function MateriasPage() {
                                 </span>
                             ))}
                         </div>
-                        {PENDING_EVALS.map((ev, i) => (
+                        {SUBJECTS.map((s, i) => {
+                            const st = STATUS_META[s.status];
+                            return (
+                                <div
+                                    key={s.id}
+                                    onClick={() => goToSubject(s.id)}
+                                    className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < SUBJECTS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="w-2 h-2 rounded-full shrink-0"
+                                            style={{ backgroundColor: s.dot }}
+                                        />
+                                        <span className="text-[0.875rem] text-edu-ink font-medium">
+                                            {s.name}
+                                        </span>
+                                    </div>
+                                    <span className="text-[0.875rem] text-edu-ink-700">
+                                        {s.teacher}
+                                    </span>
+                                    <span className="text-[0.875rem] text-edu-ink-700">
+                                        {s.evaluations}
+                                    </span>
+                                    <span className="text-[0.875rem] text-edu-ink-700">
+                                        {s.attendance}
+                                    </span>
+                                    <span
+                                        className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
+                                    >
+                                        {st.label}
+                                    </span>
+                                    <div className="flex items-center justify-between gap-1">
+                                        <span className="text-[0.875rem] text-edu-ink font-semibold">
+                                            {s.average}
+                                        </span>
+                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Materias reprobadas o por reprobar */}
+                <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                    <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
+                            Materias reprobadas o por reprobar
+                        </h3>
+                        <span className="text-[0.8rem] text-edu-danger font-medium">
+                            {failing.length} en riesgo
+                        </span>
+                    </div>
+                    <div>
+                        <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {SUBJECT_HEADERS.map((h) => (
+                                <span
+                                    key={h}
+                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                                >
+                                    {h}
+                                </span>
+                            ))}
+                        </div>
+                        {failing.map((s, i) => (
                             <div
-                                key={ev.id}
-                                className={`grid grid-cols-[1fr_1.2fr_1fr_0.5fr] px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < PENDING_EVALS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                key={s.id}
+                                onClick={() => goToSubject(s.id)}
+                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < failing.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <div className="flex items-center gap-2">
                                     <span
                                         className="w-2 h-2 rounded-full shrink-0"
-                                        style={{ backgroundColor: ev.dot }}
+                                        style={{ backgroundColor: color.danger }}
                                     />
                                     <span className="text-[0.875rem] text-edu-ink font-medium">
-                                        {ev.subject}
+                                        {s.name}
                                     </span>
                                 </div>
                                 <span className="text-[0.875rem] text-edu-ink-700">
-                                    {ev.type}
+                                    {s.teacher}
                                 </span>
-                                <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-edu-ink-400 shrink-0" />
-                                    <span className="text-[0.8125rem] text-edu-ink-500">
-                                        {ev.dueDate}
+                                <span className="text-[0.875rem] text-edu-ink-700">
+                                    {s.evaluations}
+                                </span>
+                                <span className="text-[0.875rem] text-edu-ink-700">
+                                    {s.attendance}
+                                </span>
+                                <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
+                                    {STATUS_META[s.status].label}
+                                </span>
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[0.875rem] text-edu-danger font-semibold">
+                                        {s.average}
                                     </span>
+                                    <ChevronRight className="w-4 h-4 text-edu-danger/50 shrink-0" />
                                 </div>
-                                <span className="text-[0.875rem] text-edu-ink-700 font-semibold">
-                                    {ev.weight}
-                                </span>
                             </div>
                         ))}
                     </div>

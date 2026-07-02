@@ -30,6 +30,8 @@ import {
   Settings,
   CalendarDays,
   BookOpen,
+  Wrench,
+  IdCard,
 } from "lucide-react";
 import { color } from "./theme/tokens";
 
@@ -79,12 +81,15 @@ export const ROLES: Record<RoleId, RoleConfig> = {
     homeTitle: "Panel del Estudiante",
     nav: [
       { icon: Home, label: "Inicio", to: "", ready: true },
+      { icon: IdCard, label: "Datos del estudiante", to: "datos", ready: true },
       { icon: Layers, label: "Mis materias", to: "materias", ready: true },
+      { icon: Wrench, label: "Reparación", to: "reparacion", ready: true },
       { icon: Calendar, label: "Horario", to: "horario" },
-      { icon: BarChart2, label: "Calificaciones", to: "calificaciones" },
-      { icon: Star, label: "Extracurriculares", to: "extracurriculares" },
-      { icon: CreditCard, label: "Pagos", to: "pagos" },
-      { icon: MessageSquare, label: "Mensajes", to: "mensajes" },
+      { icon: BarChart2, label: "Calificaciones", to: "calificaciones", ready: true },
+      { icon: ClipboardList, label: "Mis evaluaciones", to: "evaluaciones", ready: true },
+      { icon: BookOpen, label: "Cursos y actividades", to: "cursos", ready: true },
+      { icon: CreditCard, label: "Pagos", to: "pagos", ready: true },
+      { icon: MessageSquare, label: "Mensajes", to: "mensajes", ready: true },
     ],
   },
 
