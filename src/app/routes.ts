@@ -19,6 +19,37 @@ import { StudentDataPage } from "./pages/StudentDataPage";
 import { CalificacionPage } from "./pages/CalificacionPage";
 import { MisEvaluacionesPage } from "./pages/MisEvaluacionesPage";
 import { MensajesPage } from "./pages/MensajesPage";
+// Docente
+import { DocenteSeccionesPage } from "./pages/DocenteSeccionesPage";
+import { DocenteHorarioPage } from "./pages/DocenteHorarioPage";
+import { DocentePlanesPage } from "./pages/DocentePlanesPage";
+import { DocenteAsistenciaPage } from "./pages/DocenteAsistenciaPage";
+import { DocenteCalificacionesPage } from "./pages/DocenteCalificacionesPage";
+// Coordinador
+import { CoordReunionesPage } from "./pages/CoordReunionesPage";
+import { CoordActividadesPage } from "./pages/CoordActividadesPage";
+import { CoordPlanificacionesPage } from "./pages/CoordPlanificacionesPage";
+import { CoordIncidenciasPage } from "./pages/CoordIncidenciasPage";
+import { CoordSeccionesPage } from "./pages/CoordSeccionesPage";
+import { CoordPersonasPage } from "./pages/CoordPersonasPage";
+// Evaluador
+import { EvalRevisionesPage } from "./pages/EvalRevisionesPage";
+import { EvalCronogramaPage } from "./pages/EvalCronogramaPage";
+import { EvalBoletinesPage } from "./pages/EvalBoletinesPage";
+import { EvalDiscusionPage } from "./pages/EvalDiscusionPage";
+import { EvalPlantillasPage } from "./pages/EvalPlantillasPage";
+// Administración (Tesorería)
+import { TesoreriaPagosPage } from "./pages/TesoreriaPagosPage";
+import { TesoreriaSolvenciaPage } from "./pages/TesoreriaSolvenciaPage";
+import { TesoreriaConfirmarPage } from "./pages/TesoreriaConfirmarPage";
+import { TesoreriaInventarioPage } from "./pages/TesoreriaInventarioPage";
+import { TesoreriaReportesPage } from "./pages/TesoreriaReportesPage";
+// Director
+import { DirAcademicoPage } from "./pages/DirAcademicoPage";
+import { DirFinanzasPage } from "./pages/DirFinanzasPage";
+import { DirPersonalPage } from "./pages/DirPersonalPage";
+import { DirActividadesPage } from "./pages/DirActividadesPage";
+import { DirReportesPage } from "./pages/DirReportesPage";
 
 export const router = createBrowserRouter([
   { path: "/", Component: LoginPage },
@@ -45,27 +76,64 @@ export const router = createBrowserRouter([
   {
     path: "/docente",
     Component: AppLayout,
-    children: [{ index: true, Component: DocenteDashboard }],
+    children: [
+      { index: true, Component: DocenteDashboard },
+      { path: "secciones", Component: DocenteSeccionesPage },
+      { path: "horario", Component: DocenteHorarioPage },
+      { path: "planes", Component: DocentePlanesPage },
+      { path: "asistencia", Component: DocenteAsistenciaPage },
+      { path: "calificaciones", Component: DocenteCalificacionesPage },
+      { path: "mensajes", Component: MensajesPage },
+    ],
   },
   {
     path: "/coordinador",
     Component: AppLayout,
-    children: [{ index: true, Component: CoordinadorDashboard }],
+    children: [
+      { index: true, Component: CoordinadorDashboard },
+      { path: "reuniones", Component: CoordReunionesPage },
+      { path: "actividades", Component: CoordActividadesPage },
+      { path: "planificaciones", Component: CoordPlanificacionesPage },
+      { path: "incidencias", Component: CoordIncidenciasPage },
+      { path: "secciones", Component: CoordSeccionesPage },
+      { path: "personas", Component: CoordPersonasPage },
+    ],
   },
   {
     path: "/evaluador",
     Component: AppLayout,
-    children: [{ index: true, Component: EvaluadorDashboard }],
+    children: [
+      { index: true, Component: EvaluadorDashboard },
+      { path: "revisiones", Component: EvalRevisionesPage },
+      { path: "cronograma", Component: EvalCronogramaPage },
+      { path: "boletines", Component: EvalBoletinesPage },
+      { path: "discusion", Component: EvalDiscusionPage },
+      { path: "plantillas", Component: EvalPlantillasPage },
+    ],
   },
   {
     path: "/tesoreria",
     Component: AppLayout,
-    children: [{ index: true, Component: TesoreriaDashboard }],
+    children: [
+      { index: true, Component: TesoreriaDashboard },
+      { path: "pagos", Component: TesoreriaPagosPage },
+      { path: "solvencia", Component: TesoreriaSolvenciaPage },
+      { path: "confirmar", Component: TesoreriaConfirmarPage },
+      { path: "inventario", Component: TesoreriaInventarioPage },
+      { path: "reportes", Component: TesoreriaReportesPage },
+    ],
   },
   {
     path: "/director",
     Component: AppLayout,
-    children: [{ index: true, Component: DirectorDashboard }],
+    children: [
+      { index: true, Component: DirectorDashboard },
+      { path: "academico", Component: DirAcademicoPage },
+      { path: "finanzas", Component: DirFinanzasPage },
+      { path: "personal", Component: DirPersonalPage },
+      { path: "actividades", Component: DirActividadesPage },
+      { path: "reportes", Component: DirReportesPage },
+    ],
   },
   {
     path: "/programador",
