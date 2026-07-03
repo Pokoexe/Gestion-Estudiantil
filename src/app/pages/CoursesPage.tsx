@@ -12,8 +12,10 @@ import {
   FlaskConical,
   PenLine,
   BookOpen,
+  MessageCircle,
 } from "lucide-react";
 import { color } from "../theme/tokens";
+import { Link } from "react-router";
 
 interface Topic {
   id: number;
@@ -201,18 +203,6 @@ function AssignmentCard({ assignment }: { assignment: Assignment }) {
             </div>
           )}
 
-          {assignment.duration && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-edu-chip bg-edu-border-soft flex items-center justify-center">
-                <Clock style={{ width: "15px", height: "15px" }} className="text-edu-ink-500" />
-              </div>
-              <div>
-                <div className="text-[0.7rem] text-edu-ink-400 font-medium">Duración requerida</div>
-                <div className="text-sm text-edu-ink font-semibold">{assignment.duration}</div>
-              </div>
-            </div>
-          )}
-
           {assignment.topics && assignment.topics.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-2.5">
@@ -239,7 +229,7 @@ function AssignmentCard({ assignment }: { assignment: Assignment }) {
 
           {assignment.hasAttachment && (
             <div className="pt-1">
-              <button className="inline-flex items-center gap-2 px-[18px] py-[9px] rounded-[9px] border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-primary-100">
+              <button className="w-full inline-flex items-center gap-2 px-[18px] py-[9px] rounded-[9px] border-[1.5px] border-edu-success-200 bg-edu-success-bg text-edu-success text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-success-100">
                 <Download style={{ width: "15px", height: "15px" }} />
                 Descargar prueba adjunta
                 {assignment.attachmentName && (
@@ -257,123 +247,148 @@ function AssignmentCard({ assignment }: { assignment: Assignment }) {
 }
 
 export function CoursesPage() {
+  const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
   const pendingCount = ASSIGNMENTS.filter((a) => a.status === "pending").length;
   const gradedCount = ASSIGNMENTS.filter((a) => a.status === "graded").length;
+  const filteredAssignments = ASSIGNMENTS.filter((a) =>
+    filter === "Todas" ? true : filter === "Calificadas" ? a.status === "graded" : a.status !== "graded",
+  );
 
   return (
-    <div className="flex flex-col gap-5">
+    <>
       {/* Banner de la materia */}
-      <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
-            <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
-              {COURSE.code} · {COURSE.section}
-            </span>
-          </div>
-          <h2 className="text-white mb-1.5 text-xl font-bold m-0">{COURSE.name}</h2>
-          <div className="flex gap-4 flex-wrap">
-            {[COURSE.schedule, COURSE.room, `Período ${COURSE.term}`].map((item) => (
-              <span key={item} className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{item}</span>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-3">
-          {[
-            { label: "Pendientes", value: pendingCount },
-            { label: "Calificadas", value: gradedCount },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-[rgba(255,255,255,0.15)] rounded-edu-control px-[18px] py-2.5 text-center">
-              <div className="text-[1.3rem] font-bold text-white">{value}</div>
-              <div className="text-[0.72rem] text-[rgba(255,255,255,0.75)] mt-px">{label}</div>
+
+      <div className="grid grid-cols-5 gap-5">
+
+        <div className="col-span-2 space-y-2">
+          <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
+                <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
+                  {COURSE.code} · {COURSE.section}
+                </span>
+              </div>
+              <h2 className="text-white mb-1.5 text-xl font-bold m-0">{COURSE.name}</h2>
+              <div className="flex gap-4 flex-wrap">
+                {[COURSE.schedule, COURSE.room, `Período ${COURSE.term}`].map((item) => (
+                  <span key={item} className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{item}</span>
+                ))}
+
+                <Link to="/estudiante/mensajes" className="h-7 rounded-[7px] bg-edu-success-bg flex items-center gap-2 justify-center w-full">
+                  <MessageCircle style={{ width: "13px", height: "13px" }} className="text-edu-success" />
+                  <span className="text-[0.8rem] text-edu-success">Chat grupal de la materia</span>
+                </Link>
+
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Datos del docente */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-[18px] flex items-center gap-4 flex-wrap">
-        <div className="w-[52px] h-[52px] rounded-full bg-edu-primary-50 border-2 border-edu-primary-100 flex items-center justify-center text-base font-bold text-edu-primary shrink-0">
-          {TEACHER.initials}
-        </div>
-
-        <div className="flex-1 min-w-[160px]">
-          <div className="text-[0.9375rem] font-bold text-edu-ink">{TEACHER.name}</div>
-          <div className="text-[0.8rem] text-edu-ink-500 mt-0.5">{TEACHER.title}</div>
-        </div>
-
-        <div className="w-px h-10 bg-edu-border-soft shrink-0" />
-
-        <div className="flex flex-col gap-1.5">
-          <a
-            href={`tel:${TEACHER.phone}`}
-            className="flex items-center gap-2 text-edu-ink-700 no-underline text-sm"
-          >
-            <div className="w-7 h-7 rounded-[7px] bg-edu-success-bg flex items-center justify-center">
-              <Phone style={{ width: "13px", height: "13px" }} className="text-edu-success" />
+            <div className="flex justify-center gap-3 w-full">
+              {[
+                { label: "Pendientes", value: pendingCount },
+                { label: "Calificadas", value: gradedCount },
+              ].map(({ label, value }) => (
+                <div key={label} className=" w-full bg-[rgba(255,255,255,0.15)] rounded-edu-control px-[18px] py-2.5 text-center">
+                  <div className="text-[1.3rem] font-bold text-white">{value}</div>
+                  <div className="text-[0.72rem] text-[rgba(255,255,255,0.75)] mt-px">{label}</div>
+                </div>
+              ))}
             </div>
-            <span className="font-medium">{TEACHER.phone}</span>
-          </a>
-          <a
-            href={`mailto:${TEACHER.email}`}
-            className="flex items-center gap-2 text-edu-ink-700 no-underline text-sm"
-          >
-            <div className="w-7 h-7 rounded-[7px] bg-edu-primary-50 flex items-center justify-center">
-              <Mail style={{ width: "13px", height: "13px" }} className="text-edu-primary" />
-            </div>
-            <span className="font-medium">{TEACHER.email}</span>
-          </a>
-        </div>
-      </div>
-
-      {/* Plan de evaluación */}
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación</h3>
-            <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.8rem]">
-              {ASSIGNMENTS.length} evaluaciones · Peso total: 100%
-            </p>
           </div>
-          <div className="flex gap-1.5">
-            {(["Todas", "Pendientes", "Calificadas"] as const).map((f) => (
-              <button
-                key={f}
-                className={`px-3 py-[5px] rounded-[7px] border-[1.5px] text-[0.775rem] font-medium cursor-pointer ${f === "Todas" ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-transparent text-edu-ink-500"}`}
+
+          {/* Resumen de notas */}
+          <div className="grid grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
+            {[
+              { label: "Completadas", value: `${gradedCount}/${ASSIGNMENTS.length}`, color: color.success },
+              { label: "Promedio ponderado", value: "91,5", color: color.primary },
+              { label: "Peso restante", value: "65%", color: color.warning },
+              { label: "Proyección final", value: "En buen camino", color: color.purple },
+            ].map(({ label, value, color: dot }, i, arr) => (
+              <div
+                key={label}
+                className={`flex-1 px-4 py-2.5 flex flex-col gap-1 ${i < arr.length - 1 ? "border-r border-edu-border-soft" : ""}`}
               >
-                {f}
-              </button>
+                <div className="text-[0.72rem] text-edu-ink-400 font-medium uppercase tracking-[0.05em]">{label}</div>
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ backgroundColor: dot }} />
+                  <span className="text-base font-bold text-edu-ink">{value}</span>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
 
-        <div className="flex flex-col gap-2.5">
-          {ASSIGNMENTS.map((assignment) => (
-            <AssignmentCard key={assignment.id} assignment={assignment} />
-          ))}
-        </div>
-      </div>
+          {/* Datos del docente */}
+          <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-[18px] flex items-center gap-4 flex-wrap">
+            <div className="w-[52px] h-[52px] rounded-full bg-edu-primary-50 border-2 border-edu-primary-100 flex items-center justify-center text-base font-bold text-edu-primary shrink-0">
+              {TEACHER.initials}
+            </div>
 
-      {/* Resumen de notas */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 flex gap-0">
-        {[
-          { label: "Completadas", value: `${gradedCount}/${ASSIGNMENTS.length}`, color: color.success },
-          { label: "Promedio ponderado", value: "91,5", color: color.primary },
-          { label: "Peso restante", value: "65%", color: color.warning },
-          { label: "Proyección final", value: "En buen camino", color: color.purple },
-        ].map(({ label, value, color: dot }, i, arr) => (
-          <div
-            key={label}
-            className={`flex-1 px-4 py-2.5 flex flex-col gap-1 ${i < arr.length - 1 ? "border-r border-edu-border-soft" : ""}`}
-          >
-            <div className="text-[0.72rem] text-edu-ink-400 font-medium uppercase tracking-[0.05em]">{label}</div>
-            <div className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ backgroundColor: dot }} />
-              <span className="text-base font-bold text-edu-ink">{value}</span>
+            <div className="flex-1 min-w-[160px]">
+              <div className="text-[0.9375rem] font-bold text-edu-ink">{TEACHER.name}</div>
+              <div className="text-[0.8rem] text-edu-ink-500 mt-0.5">{TEACHER.title}</div>
+            </div>
+
+            <div className="w-px h-10 bg-edu-border-soft shrink-0" />
+
+            <div className="flex flex-col gap-1.5">
+              <a
+                href={`tel:${TEACHER.phone}`}
+                className="flex items-center gap-2 text-edu-ink-700 no-underline text-sm"
+              >
+                <div className="w-7 h-7 rounded-[7px] bg-edu-success-bg flex items-center justify-center">
+                  <Phone style={{ width: "13px", height: "13px" }} className="text-edu-success" />
+                </div>
+                <span className="font-medium">{TEACHER.phone}</span>
+              </a>
+              <a
+                href={`mailto:${TEACHER.email}`}
+                className="flex items-center gap-2 text-edu-ink-700 no-underline text-sm"
+              >
+                <div className="w-7 h-7 rounded-[7px] bg-edu-primary-50 flex items-center justify-center">
+                  <Mail style={{ width: "13px", height: "13px" }} className="text-edu-primary" />
+                </div>
+                <span className="font-medium">{TEACHER.email}</span>
+              </a>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Plan de evaluación */}
+        <div className="col-span-3">
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación</h3>
+              <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.8rem]">
+                {filteredAssignments.length} de {ASSIGNMENTS.length} evaluaciones · Peso total: 100%
+              </p>
+            </div>
+            <div className="flex gap-1.5">
+              {(["Todas", "Pendientes", "Calificadas"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 py-[5px] rounded-[7px] border-[1.5px] text-[0.775rem] font-medium cursor-pointer ${filter === f ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-transparent text-edu-ink-500"}`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            {filteredAssignments.length === 0 ? (
+              <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-10 text-center text-edu-ink-400 text-sm">
+                No hay evaluaciones {filter === "Pendientes" ? "pendientes" : "calificadas"}.
+              </div>
+            ) : (
+              filteredAssignments.map((assignment) => (
+                <AssignmentCard key={assignment.id} assignment={assignment} />
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
-    </div>
+    </>
+
   );
 }

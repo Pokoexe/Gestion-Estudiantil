@@ -218,6 +218,11 @@ const STATUS_META: Record<SubjectStatus, { label: string; cls: string }> = {
 const SUBJECT_COLS = "grid-cols-[1.4fr_1.3fr_1fr_1fr_1.1fr_1fr]";
 const SUBJECT_HEADERS = ["Materia", "Profesor", "Evaluaciones", "Asistencia", "Estado", "Promedio"];
 
+
+
+const SUBJECT_COLS_FAILS = "grid-cols-[1.4fr_1fr_1fr]";
+const SUBJECT_HEADERS_FAILS = ["Materia", "Promedio", "Estado"];
+
 export function MateriasPage() {
     const navigate = useNavigate();
 
@@ -230,156 +235,90 @@ export function MateriasPage() {
     return (
         <>
             <div className="grid grid-cols-3 gap-2">
-
-
-                {/* Materia con más promedio */}
-                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Materia con más promedio
-                            </p>
-                            <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
-                                {best.name}
-                            </p>
+                <div className="col-span-2 grid grid-cols-2 gap-2">
+                    {/* Asistencia promedio */}
+                    <div className="col-span-2 bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                    Promedio de Asistencia
+                                </p>
+                                <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
+                                    92,4 %
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 rounded-edu-control bg-edu-warning-bg flex items-center justify-center">
+                                <AlertCircle className="w-5 h-5 text-edu-warning-strong" />
+                            </div>
                         </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-success-bg flex items-center justify-center shrink-0">
-                            <Award className="w-5 h-5 text-edu-success" />
-                        </div>
-                    </div>
-                    <p className="text-edu-ink-700 text-[0.8rem] m-0">
-                        Eres el estudiante n.º {best.rank} de la materia
-                    </p>
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                        <p className="text-edu-ink-400 text-xs m-0">
-                            {best.teacher}
-                        </p>
-                        <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-success shrink-0">
-                            Promedio de {best.average}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Materia con peor promedio */}
-                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Materia con peor promedio
-                            </p>
-                            <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
-                                {worst.name}
-                            </p>
-                        </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
-                            <TrendingDown className="w-5 h-5 text-edu-danger" />
-                        </div>
-                    </div>
-                    <p className="text-edu-ink-700 text-[0.8rem] m-0">
-                        No aprobaste {worst.failedEvals}{" "}
-                        {worst.failedEvals === 1 ? "evaluación" : "evaluaciones"}
-                    </p>
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                        <p className="text-edu-ink-400 text-xs m-0">
-                            {worst.teacher}
-                        </p>
-                        <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-danger shrink-0">
-                            Promedio de {worst.average}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Asistencia promedio */}
-                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Promedio de Asistencia
-                            </p>
-                            <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
-                                92,4 %
-                            </p>
-                        </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-warning-bg flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-edu-warning-strong" />
-                        </div>
-                    </div>
-                    <div className="flex gap-1">
-                        {Array.from({ length: 20 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className={`flex-1 h-1.5 rounded-edu-pill ${i < 18 ? "bg-edu-primary" : "bg-edu-danger-bg"}`}
-                            />
-                        ))}
-                    </div>
-                    <p className="text-edu-ink-400 text-xs m-0">
-                        2 inasistencias este lapso · Mínimo exigido: 75 %
-                    </p>
-                </div>
-            </div>
-
-            <div className="flex flex-col gap-4">
-                {/* Todas las materias */}
-                <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-                    <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
-                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
-                            Todas las materias
-                        </h3>
-                        <span className="text-[0.8rem] text-edu-ink-400 font-medium">
-                            {SUBJECTS.length} materias
-                        </span>
-                    </div>
-                    <div>
-                        <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                            {SUBJECT_HEADERS.map((h) => (
-                                <span
-                                    key={h}
-                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                                >
-                                    {h}
-                                </span>
+                        <div className="flex gap-1">
+                            {Array.from({ length: 20 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`flex-1 h-1.5 rounded-edu-pill ${i < 18 ? "bg-edu-primary" : "bg-edu-danger-bg"}`}
+                                />
                             ))}
                         </div>
-                        {SUBJECTS.map((s, i) => {
-                            const st = STATUS_META[s.status];
-                            return (
-                                <div
-                                    key={s.id}
-                                    onClick={() => goToSubject(s.id)}
-                                    className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < SUBJECTS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className="w-2 h-2 rounded-full shrink-0"
-                                            style={{ backgroundColor: s.dot }}
-                                        />
-                                        <span className="text-[0.875rem] text-edu-ink font-medium">
-                                            {s.name}
-                                        </span>
-                                    </div>
-                                    <span className="text-[0.875rem] text-edu-ink-700">
-                                        {s.teacher}
-                                    </span>
-                                    <span className="text-[0.875rem] text-edu-ink-700">
-                                        {s.evaluations}
-                                    </span>
-                                    <span className="text-[0.875rem] text-edu-ink-700">
-                                        {s.attendance}
-                                    </span>
-                                    <span
-                                        className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
-                                    >
-                                        {st.label}
-                                    </span>
-                                    <div className="flex items-center justify-between gap-1">
-                                        <span className="text-[0.875rem] text-edu-ink font-semibold">
-                                            {s.average}
-                                        </span>
-                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        <p className="text-edu-ink-400 text-xs m-0">
+                            2 inasistencias este lapso · Mínimo exigido: 75 %
+                        </p>
+                    </div>
+
+                    {/* Materia con más promedio */}
+                    <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                    Materia con más promedio
+                                </p>
+                                <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
+                                    {best.name}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 rounded-edu-control bg-edu-success-bg flex items-center justify-center shrink-0">
+                                <Award className="w-5 h-5 text-edu-success" />
+                            </div>
+                        </div>
+                        <p className="text-edu-ink-700 text-[0.8rem] m-0">
+                            Eres el estudiante n.º {best.rank} de la materia
+                        </p>
+                        <div className="flex items-center justify-between gap-2 mt-auto">
+                            <p className="text-edu-ink-400 text-xs m-0">
+                                {best.teacher}
+                            </p>
+                            <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-success shrink-0">
+                                Promedio de {best.average}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Materia con peor promedio */}
+                    <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                    Materia con peor promedio
+                                </p>
+                                <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
+                                    {worst.name}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
+                                <TrendingDown className="w-5 h-5 text-edu-danger" />
+                            </div>
+                        </div>
+                        <p className="text-edu-ink-700 text-[0.8rem] m-0">
+                            No aprobaste {worst.failedEvals}{" "}
+                            {worst.failedEvals === 1 ? "evaluación" : "evaluaciones"}
+                        </p>
+                        <div className="flex items-center justify-between gap-2 mt-auto">
+                            <p className="text-edu-ink-400 text-xs m-0">
+                                {worst.teacher}
+                            </p>
+                            <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-danger shrink-0">
+                                Promedio de {worst.average}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -394,8 +333,8 @@ export function MateriasPage() {
                         </span>
                     </div>
                     <div>
-                        <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                            {SUBJECT_HEADERS.map((h) => (
+                        <div className={`grid ${SUBJECT_COLS_FAILS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {SUBJECT_HEADERS_FAILS.map((h) => (
                                 <span
                                     key={h}
                                     className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
@@ -408,12 +347,67 @@ export function MateriasPage() {
                             <div
                                 key={s.id}
                                 onClick={() => goToSubject(s.id)}
-                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < failing.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                className={`grid ${SUBJECT_COLS_FAILS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < failing.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <div className="flex items-center gap-2">
                                     <span
                                         className="w-2 h-2 rounded-full shrink-0"
                                         style={{ backgroundColor: color.danger }}
+                                    />
+                                    <span className="text-[0.875rem] text-edu-ink font-medium">
+                                        {s.name}
+                                    </span>
+                                </div>
+                                <span className="text-[0.875rem] text-edu-danger font-semibold">
+                                    {s.average}
+                                </span>
+
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
+                                        {STATUS_META[s.status].label}
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-edu-danger/50 shrink-0" />
+                                </div>
+
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Todas las materias */}
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+                    <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
+                        Todas las materias
+                    </h3>
+                    <span className="text-[0.8rem] text-edu-ink-400 font-medium">
+                        {SUBJECTS.length} materias
+                    </span>
+                </div>
+                <div>
+                    <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                        {SUBJECT_HEADERS.map((h) => (
+                            <span
+                                key={h}
+                                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                            >
+                                {h}
+                            </span>
+                        ))}
+                    </div>
+                    {SUBJECTS.map((s, i) => {
+                        const st = STATUS_META[s.status];
+                        return (
+                            <div
+                                key={s.id}
+                                onClick={() => goToSubject(s.id)}
+                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < SUBJECTS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <span
+                                        className="w-2 h-2 rounded-full shrink-0"
+                                        style={{ backgroundColor: s.dot }}
                                     />
                                     <span className="text-[0.875rem] text-edu-ink font-medium">
                                         {s.name}
@@ -428,18 +422,20 @@ export function MateriasPage() {
                                 <span className="text-[0.875rem] text-edu-ink-700">
                                     {s.attendance}
                                 </span>
-                                <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
-                                    {STATUS_META[s.status].label}
+                                <span
+                                    className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
+                                >
+                                    {st.label}
                                 </span>
                                 <div className="flex items-center justify-between gap-1">
-                                    <span className="text-[0.875rem] text-edu-danger font-semibold">
+                                    <span className="text-[0.875rem] text-edu-ink font-semibold">
                                         {s.average}
                                     </span>
-                                    <ChevronRight className="w-4 h-4 text-edu-danger/50 shrink-0" />
+                                    <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
             </div>
         </>

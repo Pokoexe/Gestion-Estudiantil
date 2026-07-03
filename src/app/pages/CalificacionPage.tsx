@@ -134,7 +134,7 @@ export function CalificacionPage() {
 
                 {/* Buscador y filtros */}
                 <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <div className="relative flex-1 min-w-[180px] max-w-xs">
+                    <div className="relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"

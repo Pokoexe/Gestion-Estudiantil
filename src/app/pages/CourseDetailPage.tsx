@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import {
     ChevronDown,
     ChevronUp,
@@ -12,6 +12,7 @@ import {
     PenLine,
     BookOpen,
     User,
+    MessageCircle,
 } from "lucide-react";
 import { color } from "../theme/tokens";
 import { getCourseById, EXTRA_COURSES, type CourseEvaluation } from "../data/courses";
@@ -40,7 +41,7 @@ function initialsOf(name: string) {
         .toUpperCase();
 }
 
-function EvaluationCard({ evaluation, defaultOpen }: { evaluation: CourseEvaluation; defaultOpen: boolean }) {
+function EvaluationCard({ evaluation, defaultOpen, preview }: { evaluation: CourseEvaluation; defaultOpen: boolean; preview?: boolean }) {
     const [expanded, setExpanded] = useState(defaultOpen);
     const typeMeta = TYPE_META[evaluation.type];
     const statusMeta = STATUS_META[evaluation.status];
@@ -77,7 +78,7 @@ function EvaluationCard({ evaluation, defaultOpen }: { evaluation: CourseEvaluat
                             {evaluation.dueDate}
                         </span>
                         <span className="text-[0.775rem] text-edu-ink-500">Peso: <strong className="text-edu-ink-700">{evaluation.weight}</strong></span>
-                        {evaluation.status === "graded" && (
+                        {!preview && evaluation.status === "graded" && (
                             <span className="text-[0.775rem] text-edu-success font-semibold">
                                 Nota: {evaluation.grade}/20
                             </span>
@@ -85,12 +86,14 @@ function EvaluationCard({ evaluation, defaultOpen }: { evaluation: CourseEvaluat
                     </div>
                 </div>
 
-                <span
-                    className="text-[0.7rem] font-semibold px-2.5 py-[3px] rounded-edu-pill shrink-0"
-                    style={{ backgroundColor: statusMeta.bg, color: statusMeta.color }}
-                >
-                    {statusMeta.label}
-                </span>
+                {!preview && (
+                    <span
+                        className="text-[0.7rem] font-semibold px-2.5 py-[3px] rounded-edu-pill shrink-0"
+                        style={{ backgroundColor: statusMeta.bg, color: statusMeta.color }}
+                    >
+                        {statusMeta.label}
+                    </span>
+                )}
 
                 <div className="text-edu-ink-400 shrink-0">
                     {expanded ? <ChevronUp style={{ width: "16px", height: "16px" }} /> : <ChevronDown style={{ width: "16px", height: "16px" }} />}
@@ -107,12 +110,14 @@ function EvaluationCard({ evaluation, defaultOpen }: { evaluation: CourseEvaluat
                             {evaluation.description ?? "El docente publicará los detalles de esta evaluación próximamente."}
                         </p>
                     </div>
-                    <div className="pt-1">
-                        <button className="inline-flex items-center gap-2 px-[18px] py-[9px] rounded-[9px] border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-primary-100">
-                            <Download style={{ width: "15px", height: "15px" }} />
-                            Descargar material
-                        </button>
-                    </div>
+                    {!preview && (
+                        <div className="pt-1">
+                            <button className="w-full inline-flex items-center gap-2 px-[18px] py-[9px] rounded-[9px] border-[1.5px] border-edu-success-200 bg-edu-success-bg text-edu-success text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-success-100">
+                                <Download style={{ width: "15px", height: "15px" }} />
+                                Descargar material
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -123,11 +128,16 @@ export function CourseDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const course = getCourseById(id) ?? EXTRA_COURSES[0];
+    const isEnrolled = !!course.enrollment;
+    const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
 
     const evaluations = course.evaluations;
     const pendingCount = evaluations.filter((e) => e.status === "pending").length;
     const gradedEvals = evaluations.filter((e) => e.status === "graded");
     const firstPending = evaluations.find((e) => e.status === "pending");
+    const filteredEvaluations = evaluations.filter((e) =>
+        filter === "Todas" ? true : filter === "Calificadas" ? e.status === "graded" : e.status !== "graded",
+    );
 
     const avg = gradedEvals.length
         ? gradedEvals.reduce((sum, e) => sum + parseFloat(e.grade ?? "0"), 0) / gradedEvals.length
@@ -145,33 +155,129 @@ export function CourseDetailPage() {
                 Volver a cursos
             </button>
 
-            {/* Banner del curso */}
-            <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
-                        <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
-                            {course.code} · Curso extracurricular
-                        </span>
-                    </div>
-                    <h2 className="text-white mb-1.5 text-xl font-bold m-0">{course.title}</h2>
-                    <div className="flex gap-4 flex-wrap">
-                        {[course.schedule, course.room, `Período ${course.term}`].map((item) => (
-                            <span key={item} className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{item}</span>
-                        ))}
-                    </div>
-                </div>
-                <div className="flex gap-3">
-                    {[
-                        { label: "Pendientes", value: pendingCount },
-                        { label: "Calificadas", value: gradedEvals.length },
-                    ].map(({ label, value }) => (
-                        <div key={label} className="bg-[rgba(255,255,255,0.15)] rounded-edu-control px-[18px] py-2.5 text-center">
-                            <div className="text-[1.3rem] font-bold text-white">{value}</div>
-                            <div className="text-[0.72rem] text-[rgba(255,255,255,0.75)] mt-px">{label}</div>
+            <div className="grid grid-cols-5 gap-5">
+
+                <div className="col-span-2 space-y-2">
+                    {/* Banner del curso */}
+                    <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
+                                <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
+                                    {course.code} · Curso extracurricular
+                                </span>
+                            </div>
+                            <h2 className="text-white mb-1.5 text-xl font-bold m-0">{course.title}</h2>
+                            <div className="flex gap-4 flex-wrap">
+                                {[course.schedule, course.room, `Período ${course.term}`].map((item) => (
+                                    <span key={item} className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{item}</span>
+                                ))}
+
+                                {isEnrolled && (
+                                    <Link to="/estudiante/mensajes" className="h-7 rounded-[7px] bg-edu-success-bg flex items-center gap-2 justify-center w-full">
+                                        <MessageCircle style={{ width: "13px", height: "13px" }} className="text-edu-success" />
+                                        <span className="text-[0.8rem] text-edu-success">Chat grupal del curso</span>
+                                    </Link>
+                                )}
+
+                            </div>
                         </div>
-                    ))}
+                        {isEnrolled && (
+                            <div className="flex justify-center gap-3 w-full">
+                                {[
+                                    { label: "Pendientes", value: pendingCount },
+                                    { label: "Calificadas", value: gradedEvals.length },
+                                ].map(({ label, value }) => (
+                                    <div key={label} className=" w-full bg-[rgba(255,255,255,0.15)] rounded-edu-control px-[18px] py-2.5 text-center">
+                                        <div className="text-[1.3rem] font-bold text-white">{value}</div>
+                                        <div className="text-[0.72rem] text-[rgba(255,255,255,0.75)] mt-px">{label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {isEnrolled ? (
+                        /* Resumen — solo para cursos en los que participo */
+                        <div className="grid grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
+                            {[
+                                { label: "Evaluaciones", value: `${gradedEvals.length}/${evaluations.length}`, color: color.success },
+                                { label: "Promedio", value: avg !== null ? `${avg.toFixed(1).replace(".", ",")}/20` : "—", color: color.primary },
+                                { label: "Peso evaluado", value: `${evaluatedWeight}%`, color: color.warning },
+                                { label: "Estado", value: pendingCount === 0 ? "Completado" : "En curso", color: color.purple },
+                            ].map(({ label, value, color: dot }, i, arr) => (
+                                <div
+                                    key={label}
+                                    className={`flex-1 px-4 py-2.5 flex flex-col gap-1 ${i < arr.length - 1 ? "border-r border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="text-[0.72rem] text-edu-ink-400 font-medium uppercase tracking-[0.05em]">{label}</div>
+                                    <div className="inline-flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ backgroundColor: dot }} />
+                                        <span className="text-base font-bold text-edu-ink">{value}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        /* Presentación para inscribirse — cursos nuevos */
+                        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-3">
+                            <div>
+                                <p className="text-edu-ink font-semibold text-[0.95rem] m-0">¿Te interesa este curso?</p>
+                                <p className="text-edu-ink-500 text-[0.8rem] mt-1 m-0 leading-[1.5]">
+                                    Inscríbete para participar en las actividades y evaluaciones de este curso.
+                                </p>
+                            </div>
+                            <button className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-edu-control bg-edu-primary text-white text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-primary-hover">
+                                Unirse al curso
+                            </button>
+                        </div>
+                    )}
                 </div>
+
+                {/* Plan de evaluación */}
+                <div className="col-span-3">
+                    <div className="flex justify-between items-center mb-3">
+                        <div>
+                            <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación</h3>
+                            <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.8rem]">
+                                {isEnrolled
+                                    ? `${filteredEvaluations.length} de ${evaluations.length} evaluaciones · Peso total: 100%`
+                                    : `${evaluations.length} evaluaciones · Peso total: 100%`}
+                            </p>
+                        </div>
+                        {isEnrolled && (
+                            <div className="flex gap-1.5">
+                                {(["Todas", "Pendientes", "Calificadas"] as const).map((f) => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setFilter(f)}
+                                        className={`px-3 py-[5px] rounded-[7px] border-[1.5px] text-[0.775rem] font-medium cursor-pointer ${filter === f ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-transparent text-edu-ink-500"}`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
+                        {isEnrolled && filteredEvaluations.length === 0 ? (
+                            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay evaluaciones {filter === "Pendientes" ? "pendientes" : "calificadas"}.
+                            </div>
+                        ) : (
+                            (isEnrolled ? filteredEvaluations : evaluations).map((evaluation) => (
+                                <EvaluationCard
+                                    key={evaluation.id}
+                                    evaluation={evaluation}
+                                    defaultOpen={isEnrolled && (firstPending ? evaluation.id === firstPending.id : evaluation.id === evaluations[0].id)}
+                                    preview={!isEnrolled}
+                                />
+                            ))
+                        )}
+                    </div>
+                </div>
+
             </div>
 
             {/* Presentación del curso: imagen + descripción + docente */}
@@ -203,49 +309,6 @@ export function CourseDetailPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Plan de evaluación */}
-            <div>
-                <div className="flex justify-between items-center mb-3">
-                    <div>
-                        <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación</h3>
-                        <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.8rem]">
-                            {evaluations.length} evaluaciones · Peso total: 100%
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
-                    {evaluations.map((evaluation) => (
-                        <EvaluationCard
-                            key={evaluation.id}
-                            evaluation={evaluation}
-                            defaultOpen={firstPending ? evaluation.id === firstPending.id : evaluation.id === evaluations[0].id}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            {/* Resumen */}
-            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 flex gap-0">
-                {[
-                    { label: "Evaluaciones", value: `${gradedEvals.length}/${evaluations.length}`, color: color.success },
-                    { label: "Promedio", value: avg !== null ? `${avg.toFixed(1).replace(".", ",")}/20` : "—", color: color.primary },
-                    { label: "Peso evaluado", value: `${evaluatedWeight}%`, color: color.warning },
-                    { label: "Estado", value: pendingCount === 0 ? "Completado" : "En curso", color: color.purple },
-                ].map(({ label, value, color: dot }, i, arr) => (
-                    <div
-                        key={label}
-                        className={`flex-1 px-4 py-2.5 flex flex-col gap-1 ${i < arr.length - 1 ? "border-r border-edu-border-soft" : ""}`}
-                    >
-                        <div className="text-[0.72rem] text-edu-ink-400 font-medium uppercase tracking-[0.05em]">{label}</div>
-                        <div className="inline-flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ backgroundColor: dot }} />
-                            <span className="text-base font-bold text-edu-ink">{value}</span>
-                        </div>
-                    </div>
-                ))}
             </div>
         </div>
     );

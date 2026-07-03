@@ -84,7 +84,6 @@ export const ROLES: Record<RoleId, RoleConfig> = {
       { icon: IdCard, label: "Datos del estudiante", to: "datos", ready: true },
       { icon: Layers, label: "Mis materias", to: "materias", ready: true },
       { icon: Wrench, label: "Reparación", to: "reparacion", ready: true },
-      { icon: Calendar, label: "Horario", to: "horario" },
       { icon: BarChart2, label: "Calificaciones", to: "calificaciones", ready: true },
       { icon: ClipboardList, label: "Mis evaluaciones", to: "evaluaciones", ready: true },
       { icon: BookOpen, label: "Cursos y actividades", to: "cursos", ready: true },

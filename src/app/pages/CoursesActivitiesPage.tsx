@@ -113,7 +113,7 @@ function CoursesGrid({
 }) {
     if (courses.length === 0) {
         return (
-            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-12 text-center text-edu-ink-400 text-sm">
+            <div className="px-5 py-12 text-center text-edu-ink-400 text-sm">
                 {emptyText}
             </div>
         );
@@ -123,7 +123,7 @@ function CoursesGrid({
     const paged = courses.slice((page - 1) * COURSES_PER_PAGE, page * COURSES_PER_PAGE);
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="p-5 flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
                 {paged.map((c) => (
                     <CourseCard key={c.id} course={c} onClick={() => onOpen(c.id)} />
@@ -150,9 +150,9 @@ export function CoursesActivitiesPage() {
     const openCourse = (id: number) => navigate(`/estudiante/cursos/${id}`);
 
     return (
-        <>
+        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
             {/* Pestañas */}
-            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 pt-3">
+            <div className="px-5 pt-3 border-b border-edu-border-soft">
                 <div className="flex gap-1">
                     {TABS.map((t) => (
                         <button
@@ -194,10 +194,10 @@ export function CoursesActivitiesPage() {
 
             {/* Actividades */}
             {tab === "actividades" && (
-                <div className="flex flex-col gap-5">
+                <>
                     {/* Bloques resumen */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <div className="p-5 grid grid-cols-2 gap-4">
+                        <div className="bg-edu-subtle rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
@@ -216,7 +216,7 @@ export function CoursesActivitiesPage() {
                             </p>
                         </div>
 
-                        <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div className="bg-edu-subtle rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
@@ -237,7 +237,7 @@ export function CoursesActivitiesPage() {
                     </div>
 
                     {/* Tabla de actividades */}
-                    <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                    <div className="border-t border-edu-border-soft">
                         <div className="px-5 py-4 border-b border-edu-border-soft">
                             <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
                                 Historial de actividades
@@ -285,8 +285,8 @@ export function CoursesActivitiesPage() {
                             })}
                         </div>
                     </div>
-                </div>
+                </>
             )}
-        </>
+        </div>
     );
 }

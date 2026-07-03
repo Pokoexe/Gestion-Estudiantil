@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Search, Wrench, AlertTriangle, ChevronRight } from "lucide-react";
+import { Search, Wrench, AlertTriangle, ChevronRight, CircleAlert } from "lucide-react";
 import { color } from "../theme/tokens";
 
 type RepairStatus = "reprobado" | "por_reprobar" | "reparando";
-type StatusFilter = "todos" | RepairStatus;
+type StatusFilter = "todas" | RepairStatus;
 
 interface RepairSubject {
     id: number;
@@ -32,13 +32,15 @@ const STATUS_META: Record<RepairStatus, { label: string; cls: string; dot: strin
     reparando: { label: "En reparación", cls: "bg-edu-primary-50 text-edu-primary", dot: color.primary },
 };
 
-const TABS: { key: "riesgo" | "reparacion"; label: string; statuses: RepairStatus[] }[] = [
-    { key: "riesgo", label: "Reprobadas y por reprobar", statuses: ["reprobado", "por_reprobar"] },
+const TABS: { key: "riesgo" | "todas" | "reprobadas" | "reparacion"; label: string; statuses: RepairStatus[] }[] = [
+    { key: "todas", label: "Todas", statuses: ["reprobado", "por_reprobar", "reparando"] },
+    { key: "riesgo", label: "Por reprobar", statuses: ["por_reprobar"] },
+    { key: "reprobadas", label: "Reprobadas", statuses: ["reprobado"] },
     { key: "reparacion", label: "En reparación", statuses: ["reparando"] },
 ];
 
 const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
-    { value: "todos", label: "Todos" },
+    { value: "todas", label: "Todas" },
     { value: "reprobado", label: "Reprobadas" },
     { value: "por_reprobar", label: "Por reprobar" },
     { value: "reparando", label: "En reparación" },
@@ -50,22 +52,25 @@ const REPAIR_HEADERS = ["Materia", "Profesor", "Ev. reprobadas", "Estado", "Prom
 export function RepairPage() {
     const navigate = useNavigate();
 
-    const [tab, setTab] = useState<"riesgo" | "reparacion">("riesgo");
+    const [tab, setTab] = useState<"riesgo" | "todas" | "reprobadas" | "reparacion">("todas");
     const [query, setQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas");
 
-    const changeTab = (key: "riesgo" | "reparacion") => {
+    const changeTab = (key: "riesgo" | "todas" | "reprobadas" | "reparacion") => {
         setTab(key);
-        setStatusFilter("todos");
+        setStatusFilter("todas");
     };
 
     const failingCount = REPAIR_SUBJECTS.filter((s) => s.status !== "reparando").length;
     const repairingCount = REPAIR_SUBJECTS.filter((s) => s.status === "reparando").length;
 
     const tabStatuses = TABS.find((t) => t.key === tab)!.statuses;
+
     const rows = REPAIR_SUBJECTS.filter((s) => {
+        console.log(statusFilter !== "todas", s.status !== statusFilter, 'e', !tabStatuses.includes(s.status))
         if (!tabStatuses.includes(s.status)) return false;
-        if (statusFilter !== "todos" && s.status !== statusFilter) return false;
+
+        if (statusFilter !== "todas" && s.status !== statusFilter) return false;
         if (query.trim() && !s.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
         return true;
     });
@@ -76,26 +81,47 @@ export function RepairPage() {
     return (
         <>
             {/* Bloques resumen */}
-            <div className="grid grid-cols-2 gap-4">
-                {/* Reprobadas y por reprobar */}
+            <div className="grid grid-cols-3 gap-4">
+                {/* por reprobar */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
                         <div>
                             <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Reprobadas y por reprobar
+                                Por reprobar
+                            </p>
+                            <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
+                                {failingCount}
+                            </p>
+                        </div>
+                        <div className="w-10 h-10 rounded-edu-control bg-edu-warning-bg flex items-center justify-center shrink-0">
+                            <AlertTriangle className="w-5 h-5 text-edu-warning" />
+                        </div>
+                    </div>
+                    <p className="text-edu-ink-400 text-xs m-0">
+                        Materias que estás por reprobar y necesitan atención
+                    </p>
+                </div>
+
+                {/* Reprobadas*/}
+                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                Reprobadas
                             </p>
                             <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
                                 {failingCount}
                             </p>
                         </div>
                         <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
-                            <AlertTriangle className="w-5 h-5 text-edu-danger" />
+                            <CircleAlert className="w-5 h-5 text-edu-danger" />
                         </div>
                     </div>
                     <p className="text-edu-ink-400 text-xs m-0">
                         Materias que necesitan recuperación
                     </p>
                 </div>
+
 
                 {/* En reparación */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
@@ -127,11 +153,10 @@ export function RepairPage() {
                             <button
                                 key={t.key}
                                 onClick={() => changeTab(t.key)}
-                                className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${
-                                    tab === t.key
-                                        ? "border-edu-primary text-edu-primary"
-                                        : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
-                                }`}
+                                className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${tab === t.key
+                                    ? "border-edu-primary text-edu-primary"
+                                    : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
+                                    }`}
                             >
                                 {t.label}
                             </button>
@@ -141,7 +166,7 @@ export function RepairPage() {
 
                 {/* Buscador + Select */}
                 <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <div className="relative flex-1 min-w-[180px] max-w-xs">
+                    <div className="relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"

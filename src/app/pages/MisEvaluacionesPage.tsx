@@ -60,6 +60,7 @@ const EVALUATIONS: Evaluation[] = [
 ];
 
 const daysLabel = (d: number) => (d <= 0 ? "Hoy" : d === 1 ? "Mañana" : `en ${d} días`);
+const WEEK_LABEL = "3 al 10 de julio";
 const avgClass = (a: number) => (a < PASS_MARK ? "text-edu-danger" : a < RISK_MARK ? "text-edu-warning" : "text-edu-ink");
 
 const EVAL_COLS = "grid-cols-[1.2fr_1.8fr_1.1fr_0.7fr_1fr]";
@@ -108,6 +109,12 @@ export function MisEvaluacionesPage() {
                         </div>
                     </div>
                     <p className="text-edu-ink-400 text-xs m-0">En los próximos 7 días</p>
+                    <div className="flex items-center justify-between gap-2 mt-auto">
+                        <span className="inline-flex items-center gap-1.5 bg-edu-primary-50 text-edu-primary text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
+                            <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                            {WEEK_LABEL}
+                        </span>
+                    </div>
                 </div>
 
                 {/* La más cercana */}
@@ -170,7 +177,7 @@ export function MisEvaluacionesPage() {
 
                 {/* Buscador y filtros */}
                 <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <div className="relative flex-1 min-w-[180px] max-w-xs">
+                    <div className="relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"

@@ -12,6 +12,7 @@ import {
     ChevronRight,
     AlertTriangle,
     Star,
+    Book,
 } from "lucide-react";
 import { color } from "../theme/tokens";
 
@@ -230,63 +231,95 @@ export function StudentDataPage() {
                     </div>
                 </div>
 
-                {/* Materias reprobadas o en reprobación */}
-                <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
-                    <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <TrendingDown className="w-4 h-4 text-edu-danger" />
-                            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias reprobadas o en reprobación</h3>
-                        </div>
-                        <span className="text-[0.72rem] text-edu-danger font-medium">{reprobadas.length} en riesgo</span>
-                    </div>
-                    <div className="flex flex-col">
-                        {reprobadas.map((m, i) => (
-                            <div
-                                key={m.id}
-                                onClick={() => navigate(`/estudiante/materias/${m.id}`)}
-                                className={`px-5 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors hover:bg-edu-subtle ${i < reprobadas.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color.danger }} />
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-[0.85rem] font-medium text-edu-ink truncate">{m.subject}</div>
-                                    <div className="text-[0.75rem] text-edu-ink-400 truncate">{m.teacher}</div>
-                                </div>
-                                <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold shrink-0 ${REPRO_META[m.status].cls}`}>
-                                    {REPRO_META[m.status].label}
-                                </span>
-                                <span className="text-[0.85rem] font-bold text-edu-danger shrink-0 w-6 text-right">{m.average}</span>
+                <div className="grid grid-cols-2 gap-4">
+
+                    {/* Materias reprobadas o en reprobación */}
+                    <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
+                        <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <TrendingDown className="w-4 h-4 text-edu-danger" />
+                                <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias reprobadas o en reprobación</h3>
                             </div>
-                        ))}
+                            <span className="text-[0.72rem] text-edu-danger font-medium">{reprobadas.length} en riesgo</span>
+                        </div>
+                        <div className="flex flex-col">
+                            {reprobadas.map((m, i) => (
+                                <div
+                                    key={m.id}
+                                    onClick={() => navigate(`/estudiante/materias/${m.id}`)}
+                                    className={`px-5 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors hover:bg-edu-subtle ${i < reprobadas.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color.danger }} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[0.85rem] font-medium text-edu-ink truncate">{m.subject}</div>
+                                        <div className="text-[0.75rem] text-edu-ink-400 truncate">{m.teacher}</div>
+                                    </div>
+                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold shrink-0 ${REPRO_META[m.status].cls}`}>
+                                        {REPRO_META[m.status].label}
+                                    </span>
+                                    <span className="text-[0.85rem] font-bold text-edu-danger shrink-0 w-6 text-right">{m.average}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Incidencias */}
+                    <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
+                        <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-edu-warning-strong" />
+                                <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Incidencias</h3>
+                            </div>
+                            <span className="text-[0.72rem] text-edu-ink-400 font-medium">{incidencias.length} registros</span>
+                        </div>
+                        <div className="flex flex-col">
+                            {incidencias.map((it, i) => (
+                                <div
+                                    key={it.id}
+                                    className={`px-5 py-2.5 flex items-center gap-3 ${i < incidencias.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span
+                                        className="w-2 h-2 rounded-full shrink-0"
+                                        style={{ backgroundColor: SEVERITY_DOT[it.severity] }}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[0.85rem] font-medium text-edu-ink truncate">{it.type}</div>
+                                        <div className="text-[0.75rem] text-edu-ink-400 truncate">{it.detail}</div>
+                                    </div>
+                                    <span className="text-[0.72rem] text-edu-ink-400 shrink-0">{it.date}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
+
             </div>
 
             {/* Incidencias y actividades (máx. 5 ítems c/u) */}
             <div className="grid grid-cols-2 gap-4">
-                {/* Incidencias */}
+                {/* Cursos extracurriculares */}
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
                     <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4 text-edu-warning-strong" />
-                            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Incidencias</h3>
+                            <Book className="w-4 h-4 text-edu-success" />
+                            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Cursos extracurriculares</h3>
                         </div>
-                        <span className="text-[0.72rem] text-edu-ink-400 font-medium">{incidencias.length} registros</span>
+                        <span className="text-[0.72rem] text-edu-ink-400 font-medium">{actividades.length} participaciones</span>
                     </div>
                     <div className="flex flex-col">
-                        {incidencias.map((it, i) => (
+                        {actividades.map((a, i) => (
                             <div
-                                key={it.id}
-                                className={`px-5 py-2.5 flex items-center gap-3 ${i < incidencias.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                key={a.id}
+                                className={`px-5 py-2.5 flex items-center gap-3 ${i < actividades.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
-                                <span
-                                    className="w-2 h-2 rounded-full shrink-0"
-                                    style={{ backgroundColor: SEVERITY_DOT[it.severity] }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-[0.85rem] font-medium text-edu-ink truncate">{it.type}</div>
-                                    <div className="text-[0.75rem] text-edu-ink-400 truncate">{it.detail}</div>
+                                <div className="w-7 h-7 rounded-edu-chip bg-edu-primary-50 flex items-center justify-center shrink-0">
+                                    <Book className="w-3.5 h-3.5 text-edu-success" />
                                 </div>
-                                <span className="text-[0.72rem] text-edu-ink-400 shrink-0">{it.date}</span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-[0.85rem] font-medium text-edu-ink truncate">{a.name}</div>
+                                    <div className="text-[0.75rem] text-edu-ink-400 truncate">{a.detail}</div>
+                                </div>
+                                <span className="text-[0.72rem] text-edu-ink-400 shrink-0">{a.date}</span>
                             </div>
                         ))}
                     </div>

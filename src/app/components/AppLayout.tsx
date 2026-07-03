@@ -51,76 +51,76 @@ export function AppLayout() {
     <div className="flex min-h-screen bg-edu-bg">
       {/* Barra lateral — oculta en la página de Mensajes */}
       {!onMessagesPage && (
-      <aside className="w-56 min-h-screen bg-edu-surface border-r border-edu-border flex flex-col shrink-0">
-        {/* Logo */}
-        <div className="px-5 pt-5 pb-4 border-b border-edu-border-soft flex items-center gap-2.5">
-          <div className="w-[34px] h-[34px] rounded-edu-control bg-edu-primary flex items-center justify-center shrink-0">
-            <RoleIcon className="w-4 h-4 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-edu-ink font-semibold text-[0.95rem] leading-[1.1]">
-              EduGestión
+        <aside className="w-56 h-screen sticky top-0 bg-edu-surface border-r border-edu-border flex flex-col shrink-0 overflow-hidden">
+          {/* Logo */}
+          <div className="px-5 pt-5 pb-4 border-b border-edu-border-soft flex items-center gap-2.5">
+            <div className="w-[34px] h-[34px] rounded-edu-control bg-edu-primary flex items-center justify-center shrink-0">
+              <RoleIcon className="w-4 h-4 text-white" />
             </div>
-            <div className="text-edu-ink-400 text-[0.68rem] mt-[1px]">
-              {role.label}
+            <div className="min-w-0">
+              <div className="text-edu-ink font-semibold text-[0.95rem] leading-[1.1]">
+                EduGestión
+              </div>
+              <div className="text-edu-ink-400 text-[0.68rem] mt-[1px]">
+                {role.label}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Navegación */}
-        <nav className="flex-1 px-2.5 py-3 flex flex-col gap-0.5">
-          {role.nav.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item);
-            const ready = !!item.ready;
-            return (
-              <button
-                key={item.label}
-                onClick={() => ready && navigate(fullPath(item))}
-                disabled={!ready}
-                title={ready ? item.label : `${item.label} · próximamente`}
-                className={`flex items-center gap-2.5 px-3 py-[9px] rounded-edu-chip border-none w-full text-left text-sm transition-colors
+          {/* Navegación */}
+          <nav className="flex-1 px-2.5 py-3 flex flex-col gap-0.5">
+            {role.nav.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item);
+              const ready = !!item.ready;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => ready && navigate(fullPath(item))}
+                  disabled={!ready}
+                  title={ready ? item.label : `${item.label} · próximamente`}
+                  className={`flex items-center gap-2.5 px-3 py-[9px] rounded-edu-chip border-none w-full text-left text-sm transition-colors
                   ${active
-                    ? "bg-edu-primary-50 text-edu-primary font-semibold cursor-pointer"
-                    : ready
-                      ? "bg-transparent text-edu-ink-500 font-normal cursor-pointer hover:bg-edu-subtle hover:text-edu-ink-700"
-                      : "bg-transparent text-edu-ink-300 font-normal cursor-default"
-                  }`}
-              >
-                <Icon className="w-[17px] h-[17px] shrink-0" />
-                <span className="flex-1">{item.label}</span>
-                {!ready && (
-                  <span className="text-[0.6rem] text-edu-ink-400 font-medium">
-                    Pronto
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
+                      ? "bg-edu-primary-50 text-edu-primary font-semibold cursor-pointer"
+                      : ready
+                        ? "bg-transparent text-edu-ink-500 font-normal cursor-pointer hover:bg-edu-subtle hover:text-edu-ink-700"
+                        : "bg-transparent text-edu-ink-300 font-normal cursor-default"
+                    }`}
+                >
+                  <Icon className="w-[17px] h-[17px] shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  {!ready && (
+                    <span className="text-[0.6rem] text-edu-ink-400 font-medium">
+                      Pronto
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
 
-        {/* Usuario */}
-        <div className="px-2.5 py-3 border-t border-edu-border-soft flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-edu-primary-100 flex items-center justify-center shrink-0">
-            <User className="w-[15px] h-[15px] text-edu-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-edu-ink text-[0.8rem] font-semibold overflow-hidden text-ellipsis whitespace-nowrap">
-              {role.user.name}
+          {/* Usuario */}
+          <div className="px-2.5 py-3 border-t border-edu-border-soft flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-edu-primary-100 flex items-center justify-center shrink-0">
+              <User className="w-[15px] h-[15px] text-edu-primary" />
             </div>
-            <div className="text-edu-ink-400 text-[0.7rem] overflow-hidden text-ellipsis whitespace-nowrap">
-              {role.user.roleLabel}
+            <div className="flex-1 min-w-0">
+              <div className="text-edu-ink text-[0.8rem] font-semibold overflow-hidden text-ellipsis whitespace-nowrap">
+                {role.user.name}
+              </div>
+              <div className="text-edu-ink-400 text-[0.7rem] overflow-hidden text-ellipsis whitespace-nowrap">
+                {role.user.roleLabel}
+              </div>
             </div>
+            <button
+              onClick={() => navigate("/")}
+              className="bg-transparent border-0 cursor-pointer text-edu-ink-400 p-0.5 flex"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-[15px] h-[15px]" />
+            </button>
           </div>
-          <button
-            onClick={() => navigate("/")}
-            className="bg-transparent border-0 cursor-pointer text-edu-ink-400 p-0.5 flex"
-            title="Cerrar sesión"
-          >
-            <LogOut className="w-[15px] h-[15px]" />
-          </button>
-        </div>
-      </aside>
+        </aside>
       )}
 
       {/* Columna principal */}

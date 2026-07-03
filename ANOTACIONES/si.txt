@@ -1,0 +1,96 @@
+*Paginas generales
+Mensajes
+Configuración (Contraseña, Correo electrónico)
+
+*Paginas del estudiante
+Inicio
+Materias
+	Sub pagina
+Reparacion
+ 	Sub pagina
+Cursos / Actividades extracurriculares 
+	Sub pagina los cursos
+Pagos
+Datos del estudiante (Incidencias, promedios de notas, mayor nota menor nota, actividades que está o hizo, asistencias)
+Calificación
+Mis evaluaciones
+
+*Paginas del docente
+Inicio
+Secciones/Años
+  Subpagina
+  	Estudiantes
+ 	 Plan de evaluacion de la sección
+ 	 Subir notas
+  Subpagina
+	Estudiantes que falta por entregar
+	Raspados
+	Notas generales
+Cursos / Actividades extracurriculares
+Planes de evaluación
+  Crear, modificar
+Planificación
+  Crear, modificar
+Revisiones
+Concejo de profesores
+
+Administración
+Inicio
+Pagos
+Reportes (Caso de que sucedió algo y se ausentaran las clases)
+Inventario (Puedo no ir)
+
+Evaluador
+Inicio
+Plantillas (Planilla de evaluación y cronograma de evaluación)
+Boletines (Sabana de boletines)
+Discusion de notas
+Supervision
+	Planes de evaluacion, temas de reparacion, examenes
+
+*Coordinación
+Inicio
+Plantillas (Planificación y formato de asistencia de los estudiantes y docentes)
+Secciones/Años
+	Crear secciones
+Estudiantes
+	Ver, añadir, modificar datos, representantes
+Incidencias
+	Crear formato de incidencias y crearlas (docentes, alumno)
+Formato de horarios
+	Crear separación, y asignar docentes a horas
+Docentes 
+	Ver, modificar, asignar o cancelar
+Reuniones
+Supervisión
+	Planificaciones
+Cursos / actividades extracurriculares
+	Añadir, Aceptar o Eliminar
+Asistencias
+
+
+*Director
+Inicio / Estadisticas
+Pagos
+Incidencias
+Asistencias
+
+Estudiantes
+	Ver, añadir, modificar datos, representantes
+
+	Crear formato de incidencias y crearlas (docentes, alumno)
+Docentes 
+	Ver, modificar, asignar o cancelar
+Secciones/Años
+	Crear secciones
+Inventario
+
+Reuniones
+Formato de horarios
+	Crear separación, y asignar docentes a horas
+Cursos / actividades extracurriculares
+	Añadir, Aceptar o Eliminar
+
+
+
+
