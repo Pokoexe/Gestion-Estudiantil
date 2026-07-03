@@ -23,6 +23,7 @@ import { MensajesPage } from "./pages/MensajesPage";
 import { DocenteSeccionesPage } from "./pages/DocenteSeccionesPage";
 import { DocenteHorarioPage } from "./pages/DocenteHorarioPage";
 import { DocentePlanesPage } from "./pages/DocentePlanesPage";
+import { DocentePlanFormPage } from "./pages/DocentePlanFormPage";
 import { DocenteAsistenciaPage } from "./pages/DocenteAsistenciaPage";
 import { DocenteCalificacionesPage } from "./pages/DocenteCalificacionesPage";
 // Coordinador
@@ -81,6 +82,8 @@ export const router = createBrowserRouter([
       { path: "secciones", Component: DocenteSeccionesPage },
       { path: "horario", Component: DocenteHorarioPage },
       { path: "planes", Component: DocentePlanesPage },
+      { path: "planes/nuevo", Component: DocentePlanFormPage },
+      { path: "planes/:id/editar", Component: DocentePlanFormPage },
       { path: "asistencia", Component: DocenteAsistenciaPage },
       { path: "calificaciones", Component: DocenteCalificacionesPage },
       { path: "mensajes", Component: MensajesPage },
