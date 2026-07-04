@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Wallet,
   Coins,
@@ -8,9 +9,7 @@ import {
   PackagePlus,
   Check,
   X,
-  Bell,
   TrendingUp,
-  Package,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -118,29 +117,7 @@ const DEBTORS: {
   { id: 6, rep: "Aracelis Duque", student: "Daniela Duque · 2do C", months: 4, amount: "Bs 9.600" },
 ];
 
-const INVENTORY: {
-  id: number;
-  name: string;
-  qty: number;
-  status: "ok" | "low" | "out";
-  lastBuy: string;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-}[] = [
-  { id: 1, name: "Sillas de aula", qty: 340, status: "ok", lastBuy: "-$ 480", icon: Package },
-  { id: 2, name: "Mesas de trabajo", qty: 172, status: "ok", lastBuy: "-$ 620", icon: Package },
-  { id: 3, name: "Computadoras", qty: 24, status: "low", lastBuy: "-$ 3.200", icon: Package },
-  { id: 4, name: "Tabletas educativas", qty: 6, status: "low", lastBuy: "-$ 1.150", icon: Package },
-  { id: 5, name: "Escobas y coletos", qty: 3, status: "out", lastBuy: "-Bs 480", icon: Package },
-  { id: 6, name: "Líquidos de limpieza", qty: 42, status: "ok", lastBuy: "-$ 120", icon: Package },
-];
-
 /* ---------- Metadatos semánticos ---------- */
-
-const INV_STATUS: Record<"ok" | "low" | "out", { label: string; bg: string; fg: string }> = {
-  ok: { label: "Suficiente", bg: color.successBg, fg: color.success },
-  low: { label: "Bajo", bg: color.warningBg, fg: color.warning },
-  out: { label: "Agotado", bg: color.dangerBg, fg: color.danger },
-};
 
 function monthsBadge(m: number): { bg: string; fg: string } {
   if (m >= 4) return { bg: color.dangerBg, fg: color.danger };
@@ -177,6 +154,8 @@ function CustomTooltip({ active, payload, label }: any) {
 /* ---------- Vista principal ---------- */
 
 export function TesoreriaDashboard() {
+  const [tab, setTab] = useState<"pagos" | "solvencia">("pagos");
+
   return (
     <div className="flex flex-col gap-5">
       {/* Fila de KPIs */}
@@ -237,159 +216,123 @@ export function TesoreriaDashboard() {
         })}
       </div>
 
-      {/* Pagos del mes — gráfico */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Pagos del mes" subtitle="Recaudo en USD · últimos 6 meses" link="Ver reporte completo" />
-        <div className="px-4 pt-5 pb-3">
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={MONTHLY_COLLECTION} margin={{ top: 8, right: 12, left: 4, bottom: 0 }} barCategoryGap="32%">
-              <CartesianGrid vertical={false} stroke={color.borderSoft} />
-              <XAxis
-                dataKey="mes"
-                tickLine={false}
-                axisLine={{ stroke: color.border }}
-                tick={{ fill: color.ink400, fontSize: 12 }}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tick={{ fill: color.ink400, fontSize: 12 }}
-                tickFormatter={(v) => `$ ${(v / 1000).toLocaleString("es-ES")}k`}
-                width={48}
-              />
-              <Tooltip cursor={{ fill: color.primary50 }} content={<CustomTooltip />} />
-              <Bar dataKey="monto" radius={[6, 6, 0, 0]} maxBarSize={46}>
-                {MONTHLY_COLLECTION.map((entry, i) => (
-                  <Cell key={i} fill={i === MONTHLY_COLLECTION.length - 1 ? color.primary : color.primary200} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Pagos manuales por confirmar */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Pagos manuales por confirmar" subtitle={`${PENDING_PAYMENTS.length} comprobantes en espera de validación`} link="Ver todos" />
-        <div className="grid grid-cols-[1.3fr_1.3fr_1fr_1fr_0.9fr_1.1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-          {["Representante", "Estudiante", "Monto", "Método", "Fecha", "Acciones"].map((h) => (
-            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-          ))}
-        </div>
-        {PENDING_PAYMENTS.map((p, i) => (
-          <div
-            key={p.id}
-            className={`grid grid-cols-[1.3fr_1.3fr_1fr_1fr_0.9fr_1.1fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${
-              i < PENDING_PAYMENTS.length - 1 ? "border-b border-edu-border-soft" : ""
-            }`}
-          >
-            <div className="flex flex-col gap-[3px]">
-              <span className="text-sm text-edu-ink font-medium">{p.rep}</span>
-              <span className="inline-flex items-center w-fit gap-1 text-[0.65rem] font-semibold text-edu-warning bg-edu-warning-bg px-2 py-0.5 rounded-edu-pill">
-                Por confirmar
-              </span>
-            </div>
-            <span className="text-[0.8125rem] text-edu-ink-700">{p.student}</span>
-            <span className="text-sm text-edu-ink font-bold">{p.amount}</span>
-            <div className="flex flex-col gap-[1px]">
-              <span className="text-[0.8125rem] text-edu-ink-700">{p.method}</span>
-              <span className="text-[0.7rem] text-edu-ink-400">{p.ref}</span>
-            </div>
-            <span className="text-[0.8125rem] text-edu-ink-500">{p.date}</span>
-            <div className="flex gap-2">
-              <button className="inline-flex items-center gap-[5px] px-3 py-1.5 rounded-edu-chip border-none bg-edu-success text-white text-xs font-semibold cursor-pointer">
-                <Check style={{ width: "13px", height: "13px" }} />
-                Aceptar
-              </button>
-              <button className="inline-flex items-center gap-[5px] px-3 py-1.5 rounded-edu-chip border-[1.5px] border-edu-danger-bg bg-edu-danger-bg text-edu-danger text-xs font-semibold cursor-pointer">
-                <X style={{ width: "13px", height: "13px" }} />
-                Rechazar
-              </button>
-            </div>
+      {/* Pagos del mes (col-span-2) + panel con pestañas (col-span-1) */}
+      <div className="grid grid-cols-3 gap-5">
+        {/* Pagos del mes — gráfico */}
+        <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+          <SectionHeader title="Pagos del mes" subtitle="Recaudo en USD · últimos 6 meses" link="Ver reporte completo" />
+          <div className="px-4 pt-5 pb-3">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={MONTHLY_COLLECTION} margin={{ top: 8, right: 12, left: 4, bottom: 0 }} barCategoryGap="32%">
+                <CartesianGrid vertical={false} stroke={color.borderSoft} />
+                <XAxis
+                  dataKey="mes"
+                  tickLine={false}
+                  axisLine={{ stroke: color.border }}
+                  tick={{ fill: color.ink400, fontSize: 12 }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: color.ink400, fontSize: 12 }}
+                  tickFormatter={(v) => `$ ${(v / 1000).toLocaleString("es-ES")}k`}
+                  width={48}
+                />
+                <Tooltip cursor={{ fill: color.primary50 }} content={<CustomTooltip />} />
+                <Bar dataKey="monto" radius={[6, 6, 0, 0]} maxBarSize={46}>
+                  {MONTHLY_COLLECTION.map((entry, i) => (
+                    <Cell key={i} fill={i === MONTHLY_COLLECTION.length - 1 ? color.primary : color.primary200} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        ))}
-      </div>
-
-      {/* Representantes sin solvencia */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Representantes sin solvencia" subtitle={`${DEBTORS.length} representantes con mensualidades pendientes`} link="Gestionar cobranza" />
-        <div className="grid grid-cols-[1.4fr_1.4fr_1fr_1fr_0.9fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-          {["Representante", "Estudiante", "Meses sin pagar", "Monto adeudado", "Acción"].map((h) => (
-            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-          ))}
         </div>
-        {DEBTORS.map((d, i) => {
-          const badge = monthsBadge(d.months);
-          return (
-            <div
-              key={d.id}
-              className={`grid grid-cols-[1.4fr_1.4fr_1fr_1fr_0.9fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${
-                i < DEBTORS.length - 1 ? "border-b border-edu-border-soft" : ""
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-[34px] h-[34px] rounded-full bg-edu-subtle border border-edu-border flex items-center justify-center text-xs font-bold text-edu-ink-500 shrink-0">
-                  {d.rep.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                </div>
-                <span className="text-sm text-edu-ink font-medium">{d.rep}</span>
-              </div>
-              <span className="text-[0.8125rem] text-edu-ink-700">{d.student}</span>
-              <span
-                className="inline-flex items-center justify-center px-3 py-[3px] rounded-edu-pill text-[0.72rem] font-semibold w-fit"
-                style={{ backgroundColor: badge.bg, color: badge.fg }}
-              >
-                {d.months} {d.months === 1 ? "mes" : "meses"}
-              </span>
-              <span className="text-sm text-edu-danger font-bold">{d.amount}</span>
-              <button className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-edu-chip border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary text-[0.775rem] font-semibold cursor-pointer w-fit transition-colors hover:bg-edu-primary-100">
-                <Bell style={{ width: "13px", height: "13px" }} />
-                Notificar
-              </button>
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Inventario */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Inventario de la institución" subtitle="Bienes registrados · cada compra descuenta del saldo" link="Ver inventario" />
-        <div className="px-5 py-[18px] grid grid-cols-3 gap-3.5">
-          {INVENTORY.map((item) => {
-            const st = INV_STATUS[item.status];
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.id}
-                className="border border-edu-border rounded-xl p-4 flex flex-col gap-3 transition-all hover:border-edu-ink-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
-              >
-                <div className="flex justify-between items-start">
+        {/* Panel con 2 pestañas: por confirmar / sin solvencia (máx. 5 ítems) */}
+        <div className="col-span-1 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
+          <div className="px-2 pt-2 border-b border-edu-border-soft flex gap-1">
+            {([
+              { key: "pagos", label: "Por confirmar" },
+              { key: "solvencia", label: "Sin solvencia" },
+            ] as const).map((t) => {
+              const active = tab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`flex-1 px-2 py-2.5 text-[0.78rem] font-semibold border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${
+                    active ? "border-edu-primary text-edu-primary" : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Pagos manuales por confirmar */}
+          {tab === "pagos" && (
+            <div className="flex flex-col">
+              {PENDING_PAYMENTS.slice(0, 5).map((p, i, arr) => (
+                <div
+                  key={p.id}
+                  className={`px-4 py-3 flex flex-col gap-2 ${i < arr.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[0.8125rem] text-edu-ink font-medium truncate">{p.rep}</div>
+                      <div className="text-[0.72rem] text-edu-ink-400 truncate">{p.student}</div>
+                    </div>
+                    <span className="text-[0.8125rem] text-edu-ink font-bold shrink-0">{p.amount}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[0.7rem] text-edu-ink-400 truncate">{p.method} · {p.ref}</span>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button aria-label="Aceptar" className="w-7 h-7 rounded-edu-chip border-none bg-edu-success text-white flex items-center justify-center cursor-pointer">
+                        <Check style={{ width: "13px", height: "13px" }} />
+                      </button>
+                      <button aria-label="Rechazar" className="w-7 h-7 rounded-edu-chip border-none bg-edu-danger-bg text-edu-danger flex items-center justify-center cursor-pointer">
+                        <X style={{ width: "13px", height: "13px" }} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Representantes sin solvencia */}
+          {tab === "solvencia" && (
+            <div className="flex flex-col">
+              {DEBTORS.slice(0, 5).map((d, i, arr) => {
+                const badge = monthsBadge(d.months);
+                return (
                   <div
-                    className="w-[38px] h-[38px] rounded-edu-control flex items-center justify-center"
-                    style={{ backgroundColor: st.bg }}
+                    key={d.id}
+                    className={`px-4 py-3 flex items-center gap-2.5 ${i < arr.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                   >
-                    <Icon style={{ width: "18px", height: "18px", color: st.fg }} />
+                    <div className="w-8 h-8 rounded-full bg-edu-subtle border border-edu-border flex items-center justify-center text-[0.68rem] font-bold text-edu-ink-500 shrink-0">
+                      {d.rep.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[0.8125rem] text-edu-ink font-medium truncate">{d.rep}</div>
+                      <div className="text-[0.72rem] text-edu-ink-400 truncate">{d.student}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[0.8125rem] text-edu-danger font-bold">{d.amount}</span>
+                      <span
+                        className="inline-flex items-center justify-center px-2 py-[1px] rounded-edu-pill text-[0.65rem] font-semibold"
+                        style={{ backgroundColor: badge.bg, color: badge.fg }}
+                      >
+                        {d.months} {d.months === 1 ? "mes" : "meses"}
+                      </span>
+                    </div>
                   </div>
-                  <span
-                    className="inline-flex items-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold"
-                    style={{ backgroundColor: st.bg, color: st.fg }}
-                  >
-                    {st.label}
-                  </span>
-                </div>
-                <div>
-                  <div className="text-sm text-edu-ink-700 font-medium">{item.name}</div>
-                  <div className="flex items-baseline gap-[5px] mt-0.5">
-                    <span className="text-[1.35rem] font-bold text-edu-ink">{item.qty.toLocaleString("es-ES")}</span>
-                    <span className="text-[0.72rem] text-edu-ink-400">unidades</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-2.5 border-t border-edu-border-soft">
-                  <span className="text-[0.72rem] text-edu-ink-400">Última compra</span>
-                  <span className="text-[0.8125rem] text-edu-danger font-semibold">{item.lastBuy}</span>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

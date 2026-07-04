@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import {
   Gavel,
   UserPlus,
@@ -9,68 +9,22 @@ import {
   X,
   MessageSquare,
 } from "lucide-react";
+import {
+  POSTULACIONES,
+  postularEstudiante,
+  decidirPostulacion,
+  MATERIAS_DISCUSION,
+  ANIOS_DISCUSION,
+  type PostEstado,
+} from "../data/discusiones";
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Estilos del rol evaluador                                           */
 /* ------------------------------------------------------------------ */
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
 const TEAL_50 = "#f0fdfa";
-
-type PostEstado = "Pendiente" | "Aceptada" | "Rechazada";
-
-interface Postulacion {
-  id: number;
-  estudiante: string;
-  materia: string;
-  nota: number;
-  motivo: string;
-  actividades: string[];
-  estado: PostEstado;
-  observacion?: string;
-}
-
-const POSTULACIONES_INI: Postulacion[] = [
-  {
-    id: 1,
-    estudiante: "Carlos Bracho",
-    materia: "Matemáticas",
-    nota: 9,
-    motivo: "Reprobó por 1 punto tras mejorar notablemente en el 3.º lapso.",
-    actividades: ["Selección de baloncesto (2 pts.)", "Ayudante de laboratorio (1 pt.)"],
-    estado: "Pendiente",
-  },
-  {
-    id: 2,
-    estudiante: "Eduardo Marín",
-    materia: "Física",
-    nota: 7,
-    motivo: "Situación familiar durante el 2.º lapso; recuperó en actividades finales.",
-    actividades: ["Grupo de teatro (2 pts.)"],
-    estado: "Pendiente",
-  },
-  {
-    id: 3,
-    estudiante: "Jesús Alvarado",
-    materia: "Química",
-    nota: 8,
-    motivo: "Constancia en las asignaciones prácticas de la última unidad.",
-    actividades: ["Coro institucional (1 pt.)", "Brigada ecológica (2 pts.)"],
-    estado: "Aceptada",
-    observacion: "Se aprueba con nota mínima considerando las actividades extracurriculares.",
-  },
-  {
-    id: 4,
-    estudiante: "Gustavo Linares",
-    materia: "Historia",
-    nota: 9,
-    motivo: "Solicita revisión de la ponderación del proyecto final.",
-    actividades: ["Periódico escolar (1 pt.)"],
-    estado: "Rechazada",
-    observacion: "No alcanza los objetivos mínimos; se mantiene la nota.",
-  },
-];
 
 const ESTADO_META: Record<PostEstado, string> = {
   Pendiente: "bg-edu-warning-bg text-edu-warning",
@@ -78,19 +32,24 @@ const ESTADO_META: Record<PostEstado, string> = {
   Rechazada: "bg-edu-danger-bg text-edu-danger",
 };
 
-const MATERIAS = ["Castellano", "Matemáticas", "Biología", "Química", "Física", "Historia", "Inglés"];
-
 /* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
 
 export function EvalDiscusionPage() {
-  const [posts, setPosts] = useState<Postulacion[]>(POSTULACIONES_INI);
+  const [, forceRender] = useReducer((x) => x + 1, 0);
   const [showNueva, setShowNueva] = useState(false);
   const [decisionId, setDecisionId] = useState<number | null>(null);
   const [decisionTipo, setDecisionTipo] = useState<"Aceptada" | "Rechazada">("Aceptada");
   const [obs, setObs] = useState("");
-  const [form, setForm] = useState({ estudiante: "", materia: MATERIAS[0], nota: "", motivo: "", actividades: "" });
+  const [form, setForm] = useState({
+    estudiante: "",
+    materia: MATERIAS_DISCUSION[0],
+    anio: ANIOS_DISCUSION[0],
+    nota: "",
+    motivo: "",
+    actividades: "",
+  });
 
   const abrirDecision = (id: number, tipo: "Aceptada" | "Rechazada") => {
     setDecisionId(id);
@@ -100,34 +59,28 @@ export function EvalDiscusionPage() {
 
   const confirmarDecision = () => {
     if (decisionId === null) return;
-    setPosts((ps) =>
-      ps.map((p) =>
-        p.id === decisionId
-          ? { ...p, estado: decisionTipo, observacion: obs.trim() || (decisionTipo === "Aceptada" ? "Aprobada por el Concejo." : "Rechazada por el Concejo.") }
-          : p,
-      ),
-    );
+    decidirPostulacion(decisionId, decisionTipo, obs);
     setDecisionId(null);
     setObs("");
+    forceRender();
   };
 
   const crearPostulacion = (e: React.FormEvent) => {
     e.preventDefault();
-    const nueva: Postulacion = {
-      id: Date.now(),
+    postularEstudiante({
       estudiante: form.estudiante.trim() || "Estudiante sin nombre",
       materia: form.materia,
+      anio: form.anio,
       nota: Number(form.nota) || 0,
       motivo: form.motivo.trim() || "—",
       actividades: form.actividades.split(",").map((a) => a.trim()).filter(Boolean),
-      estado: "Pendiente",
-    };
-    setPosts([nueva, ...posts]);
+    });
     setShowNueva(false);
-    setForm({ estudiante: "", materia: MATERIAS[0], nota: "", motivo: "", actividades: "" });
+    setForm({ estudiante: "", materia: MATERIAS_DISCUSION[0], anio: ANIOS_DISCUSION[0], nota: "", motivo: "", actividades: "" });
+    forceRender();
   };
 
-  const pendientes = posts.filter((p) => p.estado === "Pendiente").length;
+  const pendientes = POSTULACIONES.filter((p) => p.estado === "Pendiente").length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -157,13 +110,13 @@ export function EvalDiscusionPage() {
 
       {/* Lista de postulaciones */}
       <div className="flex flex-col gap-3.5">
-        {posts.map((p) => (
+        {POSTULACIONES.map((p) => (
           <div key={p.id} className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-3">
             <div className="flex justify-between items-start gap-3 flex-wrap">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <span className="text-[0.95rem] font-semibold text-edu-ink">{p.estudiante}</span>
-                  <span className="text-[0.8125rem] text-edu-ink-500">{p.materia}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-500">{p.materia} · {p.anio}</span>
                   <span className="inline-flex items-center px-2 py-[2px] rounded-edu-chip text-[0.72rem] font-semibold bg-edu-danger-bg text-edu-danger">
                     Nota: {p.nota}
                   </span>
@@ -256,11 +209,21 @@ export function EvalDiscusionPage() {
                     onChange={(e) => setForm({ ...form, materia: e.target.value })}
                     className="border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full cursor-pointer focus:border-teal-600"
                   >
-                    {MATERIAS.map((m) => <option key={m}>{m}</option>)}
+                    {MATERIAS_DISCUSION.map((m) => <option key={m}>{m}</option>)}
                   </select>
                 </div>
-                <div className="flex flex-col gap-1.5 w-28">
-                  <label className="text-edu-ink-700 text-sm font-medium">Nota actual</label>
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label className="text-edu-ink-700 text-sm font-medium">Año</label>
+                  <select
+                    value={form.anio}
+                    onChange={(e) => setForm({ ...form, anio: e.target.value })}
+                    className="border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full cursor-pointer focus:border-teal-600"
+                  >
+                    {ANIOS_DISCUSION.map((a) => <option key={a}>{a}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5 w-24">
+                  <label className="text-edu-ink-700 text-sm font-medium">Nota</label>
                   <input
                     type="number"
                     min={1}

@@ -29,9 +29,11 @@ import {
   Plug,
   Settings,
   CalendarDays,
+  CalendarCheck,
   BookOpen,
   Wrench,
   IdCard,
+  Scale,
 } from "lucide-react";
 import { color } from "./theme/tokens";
 
@@ -105,7 +107,10 @@ export const ROLES: Record<RoleId, RoleConfig> = {
       { icon: Users, label: "Mis secciones", to: "secciones", ready: true },
       { icon: Calendar, label: "Horario", to: "horario", ready: true },
       { icon: ClipboardList, label: "Planes de evaluación", to: "planes", ready: true },
-      { icon: CheckSquare, label: "Asistencia", to: "asistencia", ready: true },
+      { icon: CalendarCheck, label: "Planificación", to: "planificacion", ready: true },
+      { icon: FileCheck2, label: "Revisiones", to: "revisiones", ready: true },
+      { icon: Wrench, label: "Reparaciones", to: "reparaciones", ready: true },
+      { icon: Scale, label: "Concejo de profesores", to: "concejo", ready: true },
       { icon: BarChart2, label: "Calificaciones", to: "calificaciones", ready: true },
       { icon: MessageSquare, label: "Mensajes", to: "mensajes", ready: true },
     ],
@@ -126,6 +131,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
       { icon: ClipboardCheck, label: "Planificaciones", to: "planificaciones", ready: true },
       { icon: FileText, label: "Incidencias", to: "incidencias", ready: true },
       { icon: Layers, label: "Secciones y materias", to: "secciones", ready: true },
+      { icon: CheckSquare, label: "Asistencia", to: "asistencia", ready: true },
       { icon: Users, label: "Personas", to: "personas", ready: true },
     ],
   },

@@ -3,13 +3,13 @@ import {
   Users,
   CalendarClock,
   ClipboardList,
-  ClipboardCheck,
   PlusCircle,
   FileSpreadsheet,
   Upload,
   Clock,
   AlertTriangle,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 import { accent } from "../theme/tokens";
 
 /* ------------------------------------------------------------------ */
@@ -33,12 +33,12 @@ const KPIS: {
 const QUICK_ACTIONS: {
   label: string;
   icon: React.FC<{ style?: React.CSSProperties }>;
+  to: string;
   primary?: boolean;
 }[] = [
-  { label: "Cargar asistencia", icon: ClipboardCheck, primary: true },
-  { label: "Añadir calificaciones", icon: FileSpreadsheet },
-  { label: "Crear plan de evaluación", icon: PlusCircle },
-  { label: "Subir prueba de examen", icon: Upload },
+  { label: "Añadir calificaciones", icon: FileSpreadsheet, to: "/docente/calificaciones", primary: true },
+  { label: "Crear plan de evaluación", icon: PlusCircle, to: "/docente/planes/nuevo" },
+  { label: "Subir prueba de examen", icon: Upload, to: "/docente/revisiones" },
 ];
 
 const TODAY_CLASSES: {
@@ -101,6 +101,7 @@ const SCHEDULE: {
 /* ------------------------------------------------------------------ */
 
 export function DocenteDashboard() {
+  const navigate = useNavigate();
   const today = new Date();
   const dayIndex = today.getDay();
   const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie"];
@@ -148,6 +149,7 @@ export function DocenteDashboard() {
           return (
             <button
               key={action.label}
+              onClick={() => navigate(action.to)}
               className={`inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer transition-colors ${
                 primary
                   ? "border-[1.5px] border-edu-primary bg-edu-primary text-white hover:bg-edu-primary-hover"

@@ -24,6 +24,12 @@ import { DocenteSeccionesPage } from "./pages/DocenteSeccionesPage";
 import { DocenteHorarioPage } from "./pages/DocenteHorarioPage";
 import { DocentePlanesPage } from "./pages/DocentePlanesPage";
 import { DocentePlanFormPage } from "./pages/DocentePlanFormPage";
+import { DocentePlanificacionPage } from "./pages/DocentePlanificacionPage";
+import { DocentePlanificacionFormPage } from "./pages/DocentePlanificacionFormPage";
+import { DocenteRevisionesPage } from "./pages/DocenteRevisionesPage";
+import { DocenteReparacionesPage } from "./pages/DocenteReparacionesPage";
+import { DocenteReparacionFormPage } from "./pages/DocenteReparacionFormPage";
+import { DocenteConcejoPage } from "./pages/DocenteConcejoPage";
 import { DocenteAsistenciaPage } from "./pages/DocenteAsistenciaPage";
 import { DocenteCalificacionesPage } from "./pages/DocenteCalificacionesPage";
 // Coordinador
@@ -84,7 +90,13 @@ export const router = createBrowserRouter([
       { path: "planes", Component: DocentePlanesPage },
       { path: "planes/nuevo", Component: DocentePlanFormPage },
       { path: "planes/:id/editar", Component: DocentePlanFormPage },
-      { path: "asistencia", Component: DocenteAsistenciaPage },
+      { path: "planificacion", Component: DocentePlanificacionPage },
+      { path: "planificacion/nuevo", Component: DocentePlanificacionFormPage },
+      { path: "planificacion/:id/editar", Component: DocentePlanificacionFormPage },
+      { path: "revisiones", Component: DocenteRevisionesPage },
+      { path: "reparaciones", Component: DocenteReparacionesPage },
+      { path: "reparaciones/:id", Component: DocenteReparacionFormPage },
+      { path: "concejo", Component: DocenteConcejoPage },
       { path: "calificaciones", Component: DocenteCalificacionesPage },
       { path: "mensajes", Component: MensajesPage },
     ],
@@ -99,6 +111,7 @@ export const router = createBrowserRouter([
       { path: "planificaciones", Component: CoordPlanificacionesPage },
       { path: "incidencias", Component: CoordIncidenciasPage },
       { path: "secciones", Component: CoordSeccionesPage },
+      { path: "asistencia", Component: DocenteAsistenciaPage },
       { path: "personas", Component: CoordPersonasPage },
     ],
   },

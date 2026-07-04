@@ -11,53 +11,31 @@ import {
     AlertTriangle,
     ClipboardCheck,
     ArrowLeft,
-    BookOpen,
+    Wrench,
 } from "lucide-react";
-import {
-    MATERIA_OPTIONS,
-    SECCION_OPTIONS,
-    LAPSO,
-    MIN_EVALS,
-    getPlanById,
-    addPlan,
-    updatePlan,
-    type PlanEvaluacion,
-} from "../data/plans";
+import { LAPSO, MIN_REP, getReparacionById, saveReparacion, type ReparacionEval } from "../data/reparaciones";
 
-const emptyRow = (id: number): PlanEvaluacion => ({
+const emptyRow = (id: number): ReparacionEval => ({
     id,
     content: "",
     description: "",
-    weight: "",
     date: "",
+    horario: "",
     files: [],
 });
 
-export function DocentePlanFormPage() {
+export function DocenteReparacionFormPage() {
     const navigate = useNavigate();
     const { id } = useParams();
-    const editing = id != null;
-    const plan = editing ? getPlanById(id) : undefined;
+    const reparacion = getReparacionById(id);
 
-    const [form, setForm] = useState(() => ({
-        subject: plan?.subject ?? "",
-        section: plan?.section ?? "",
-    }));
-    const [rows, setRows] = useState<PlanEvaluacion[]>(() => {
-        if (plan?.evaluations && plan.evaluations.length) return plan.evaluations.map((e) => ({ ...e, files: [...e.files] }));
-        if (plan) {
-            return Array.from({ length: plan.count }, (_, i) => ({
-                ...emptyRow(i + 1),
-                content: `Evaluación ${i + 1}`,
-            }));
-        }
-        return [emptyRow(1), emptyRow(2), emptyRow(3), emptyRow(4)];
+    const [rows, setRows] = useState<ReparacionEval[]>(() => {
+        if (reparacion?.evaluations && reparacion.evaluations.length) return reparacion.evaluations.map((e) => ({ ...e, files: [...e.files] }));
+        return Array.from({ length: MIN_REP }, (_, i) => ({ ...emptyRow(i + 1), content: `Evaluación ${i + 1}` }));
     });
     const [activeTab, setActiveTab] = useState<number | "review">(0);
 
-    const totalWeight = rows.reduce((a, r) => a + (parseFloat(r.weight) || 0), 0);
-
-    const updateRow = (rid: number, field: keyof PlanEvaluacion, value: string) => {
+    const updateRow = (rid: number, field: keyof ReparacionEval, value: string) => {
         setRows((rs) => rs.map((r) => (r.id === rid ? { ...r, [field]: value } : r)));
     };
 
@@ -68,7 +46,7 @@ export function DocentePlanFormPage() {
     };
 
     const removeRow = (index: number) => {
-        if (rows.length <= MIN_EVALS) return;
+        if (rows.length <= MIN_REP) return;
         setRows(rows.filter((_, i) => i !== index));
         setActiveTab((t) => (typeof t === "number" ? Math.max(0, Math.min(t, rows.length - 2)) : t));
     };
@@ -83,9 +61,7 @@ export function DocentePlanFormPage() {
     };
 
     // Validaciones para "Datos colocados"
-    const seleccionOk = !!form.subject && !!form.section;
-    const evalsComplete = rows.every((r) => r.content.trim() && r.weight && r.date);
-    const weightOk = totalWeight === 100;
+    const evalsComplete = rows.every((r) => r.content.trim() && r.date && r.horario.trim());
     const datesInRange = rows.every((r) => !r.date || (r.date >= LAPSO.start && r.date <= LAPSO.end));
     const sortedDates = rows.map((r) => r.date).filter(Boolean).sort();
     let spacingOk = true;
@@ -93,122 +69,74 @@ export function DocentePlanFormPage() {
         const diff = (new Date(sortedDates[i]).getTime() - new Date(sortedDates[i - 1]).getTime()) / 86_400_000;
         if (diff < LAPSO.minDays || diff > LAPSO.maxDays) spacingOk = false;
     }
-    const allValid = seleccionOk && evalsComplete && weightOk && datesInRange && spacingOk;
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const data = { subject: form.subject, section: form.section, evaluations: rows };
-        if (editing && plan) {
-            updatePlan(plan.id, data);
-            navigate("/docente/planes", { state: { feedback: "El plan de evaluación fue actualizado y enviado al evaluador." } });
-        } else {
-            addPlan(data);
-            navigate("/docente/planes", { state: { feedback: "Plan creado y enviado al evaluador para su revisión." } });
-        }
-    };
+    const allValid = evalsComplete && datesInRange && spacingOk;
 
     const inputCls =
         "border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full focus:border-edu-primary";
     const labelCls = "text-edu-ink-700 text-sm font-medium";
 
-    // Plan a editar inexistente
-    if (editing && !plan) {
+    // Reparación inexistente
+    if (!reparacion) {
         return (
             <div className="flex flex-col gap-4">
                 <button
-                    onClick={() => navigate("/docente/planes")}
+                    onClick={() => navigate("/docente/reparaciones")}
                     className="inline-flex items-center gap-1.5 text-edu-ink-500 text-sm font-medium bg-transparent border-none cursor-pointer w-fit hover:text-edu-primary transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Volver a planes
+                    Volver a reparaciones
                 </button>
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-12 text-center text-edu-ink-400 text-sm">
-                    El plan que intentas modificar no existe.
+                    La reparación no existe.
                 </div>
             </div>
         );
     }
 
+    const yaCreada = reparacion.status === "creada";
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        saveReparacion(reparacion.id, rows);
+        navigate("/docente/reparaciones", {
+            state: { feedback: yaCreada ? "La reparación fue actualizada." : "Reparación creada correctamente." },
+        });
+    };
+
     return (
         <div className="flex flex-col gap-5">
             {/* Volver */}
             <button
-                onClick={() => navigate("/docente/planes")}
+                onClick={() => navigate("/docente/reparaciones")}
                 className="inline-flex items-center gap-1.5 text-edu-ink-500 text-sm font-medium bg-transparent border-none cursor-pointer w-fit hover:text-edu-primary transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" />
-                Volver a planes
+                Volver a reparaciones
             </button>
 
-            {/* Encabezado */}
-            {editing ? (
-                /* En modificar, la materia y sección se muestran en banner azul (no editables) */
-                <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
-                            <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
-                                Modificar plan de evaluación · Ciclo escolar 2026-I
-                            </span>
-                        </div>
-                        <h2 className="text-white mb-1.5 text-xl font-bold m-0">{form.subject}</h2>
-                        <div className="flex gap-4 flex-wrap">
-                            <span className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{form.section}</span>
-                        </div>
+            {/* Banner de la materia en reparación */}
+            <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Wrench style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
+                        <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
+                            {yaCreada ? "Modificar reparación" : "Crear reparación"} · Ciclo escolar 2026-I
+                        </span>
+                    </div>
+                    <h2 className="text-white mb-1.5 text-xl font-bold m-0">{reparacion.subject}</h2>
+                    <div className="flex gap-4 flex-wrap">
+                        <span className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{reparacion.section}</span>
+                        <span className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">Materia reprobada</span>
                     </div>
                 </div>
-            ) : (
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-edu-control bg-edu-primary-50 flex items-center justify-center shrink-0">
-                        <PlusCircle className="w-5 h-5 text-edu-primary" />
-                    </div>
-                    <div>
-                        <h2 className="m-0 text-edu-ink font-bold text-[1.25rem]">Crear plan de evaluación</h2>
-                        <p className="text-edu-ink-500 text-sm mt-0.5 m-0">
-                            Define las evaluaciones del lapso y verifica los datos antes de enviarlo.
-                        </p>
-                    </div>
-                </div>
-            )}
+            </div>
 
             <form onSubmit={handleSubmit} className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-4">
-                {/* Materia + sección: selects solo al crear (en modificar van en el banner) */}
-                {!editing && (
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1.5">
-                            <label className={labelCls}>Materia</label>
-                            <select
-                                value={form.subject}
-                                onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                                className={`${inputCls} cursor-pointer`}
-                            >
-                                <option value="">Selecciona una materia</option>
-                                {MATERIA_OPTIONS.map((m) => (
-                                    <option key={m} value={m}>{m}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className={labelCls}>Sección</label>
-                            <select
-                                value={form.section}
-                                onChange={(e) => setForm({ ...form, section: e.target.value })}
-                                className={`${inputCls} cursor-pointer`}
-                            >
-                                <option value="">Selecciona una sección</option>
-                                {SECCION_OPTIONS.map((s) => (
-                                    <option key={s} value={s}>{s}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                )}
-
                 {/* Aviso del lapso */}
                 <div className="flex items-start gap-2 px-3.5 py-3 rounded-edu-control bg-edu-primary-50 text-edu-primary text-[0.8125rem] leading-[1.5]">
                     <Info className="w-4 h-4 shrink-0 mt-px" />
                     <span>
-                        El lapso va del <strong>{LAPSO.startLabel}</strong> al <strong>{LAPSO.endLabel}</strong>. Entre una
+                        El período de reparación va del <strong>{LAPSO.startLabel}</strong> al <strong>{LAPSO.endLabel}</strong>. Entre una
                         evaluación y otra debe haber <strong>mínimo {LAPSO.minDays} días</strong> y{" "}
                         <strong>máximo {LAPSO.maxDays} días</strong> de diferencia.
                     </span>
@@ -256,7 +184,7 @@ export function DocentePlanFormPage() {
                             <button
                                 type="button"
                                 onClick={() => removeRow(activeTab)}
-                                disabled={rows.length <= MIN_EVALS}
+                                disabled={rows.length <= MIN_REP}
                                 className="inline-flex items-center gap-1 text-[0.8rem] text-edu-danger font-medium cursor-pointer bg-transparent border-none p-0 disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -270,7 +198,7 @@ export function DocentePlanFormPage() {
                                 type="text"
                                 value={rows[activeTab].content}
                                 onChange={(e) => updateRow(rows[activeTab].id, "content", e.target.value)}
-                                placeholder="Ej. Prueba escrita · Unidad 1"
+                                placeholder="Ej. Examen final de recuperación"
                                 className={inputCls}
                             />
                         </div>
@@ -280,25 +208,13 @@ export function DocentePlanFormPage() {
                             <textarea
                                 value={rows[activeTab].description}
                                 onChange={(e) => updateRow(rows[activeTab].id, "description", e.target.value)}
-                                placeholder="Describe en qué consiste la evaluación…"
+                                placeholder="Describe la evaluación de recuperación…"
                                 rows={2}
                                 className={`${inputCls} resize-none`}
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="flex flex-col gap-1.5">
-                                <label className={labelCls}>Ponderación (%)</label>
-                                <input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    value={rows[activeTab].weight}
-                                    onChange={(e) => updateRow(rows[activeTab].id, "weight", e.target.value)}
-                                    placeholder="20"
-                                    className={inputCls}
-                                />
-                            </div>
                             <div className="flex flex-col gap-1.5">
                                 <label className={labelCls}>Fecha</label>
                                 <input
@@ -307,6 +223,16 @@ export function DocentePlanFormPage() {
                                     max={LAPSO.end}
                                     value={rows[activeTab].date}
                                     onChange={(e) => updateRow(rows[activeTab].id, "date", e.target.value)}
+                                    className={inputCls}
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className={labelCls}>Horario</label>
+                                <input
+                                    type="text"
+                                    value={rows[activeTab].horario}
+                                    onChange={(e) => updateRow(rows[activeTab].id, "horario", e.target.value)}
+                                    placeholder="Ej. Lun · 07:00 – 08:30"
                                     className={inputCls}
                                 />
                             </div>
@@ -325,15 +251,12 @@ export function DocentePlanFormPage() {
                                     className="sr-only"
                                 />
                                 <Upload className="w-4 h-4" />
-                                Adjuntar archivos de apoyo
+                                Adjuntar material de la evaluación
                             </label>
                             {rows[activeTab].files.length > 0 && (
                                 <div className="flex flex-col gap-1.5 mt-0.5">
                                     {rows[activeTab].files.map((f, fi) => (
-                                        <div
-                                            key={fi}
-                                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-edu-chip bg-edu-subtle border border-edu-border-soft"
-                                        >
+                                        <div key={fi} className="flex items-center gap-2 px-2.5 py-1.5 rounded-edu-chip bg-edu-subtle border border-edu-border-soft">
                                             <FileText className="w-3.5 h-3.5 text-edu-primary shrink-0" />
                                             <span className="text-[0.8rem] text-edu-ink flex-1 truncate">{f}</span>
                                             <button
@@ -358,49 +281,41 @@ export function DocentePlanFormPage() {
                         <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-3">
                             <div>
                                 <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Materia</div>
-                                <div className="text-[0.875rem] text-edu-ink font-medium">{form.subject || "—"}</div>
+                                <div className="text-[0.875rem] text-edu-ink font-medium">{reparacion.subject}</div>
                             </div>
                             <div>
                                 <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Sección</div>
-                                <div className="text-[0.875rem] text-edu-ink font-medium">{form.section || "—"}</div>
+                                <div className="text-[0.875rem] text-edu-ink font-medium">{reparacion.section}</div>
                             </div>
                         </div>
 
                         <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
-                            <div className="grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
-                                {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h, idx) => (
-                                    <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
-                                        {h}
-                                    </span>
+                            <div className="grid grid-cols-[0.4fr_1.6fr_1fr_1.2fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
+                                {["#", "Evaluación", "Fecha", "Horario", "Archivos"].map((h, idx) => (
+                                    <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">{h}</span>
                                 ))}
                             </div>
                             {rows.map((r, i) => (
                                 <div
                                     key={r.id}
-                                    className={`grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 items-center ${i < rows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    className={`grid grid-cols-[0.4fr_1.6fr_1fr_1.2fr_0.7fr] px-3 py-2 items-center ${i < rows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                                 >
                                     <span className="text-[0.8rem] text-edu-ink-500 font-semibold">{i + 1}</span>
                                     <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
                                         {r.content || <span className="text-edu-danger">Sin nombre</span>}
                                     </span>
-                                    <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.weight || "—"} %</span>
                                     <span className="text-[0.78rem] text-edu-ink-500">{r.date || "—"}</span>
+                                    <span className="text-[0.78rem] text-edu-ink-500 truncate pr-2">{r.horario || "—"}</span>
                                     <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
                                 </div>
                             ))}
-                            <div className="px-3 py-2 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
-                                <span className="text-edu-ink-500">Ponderación total</span>
-                                <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight} %</span>
-                            </div>
                         </div>
 
                         {/* Verificación */}
                         <div className="flex flex-col gap-2">
                             {[
-                                { ok: seleccionOk, text: "Materia y sección seleccionadas" },
-                                { ok: evalsComplete, text: "Todas las evaluaciones tienen nombre, ponderación y fecha" },
-                                { ok: weightOk, text: `La ponderación total es 100 % (actual: ${totalWeight} %)` },
-                                { ok: datesInRange, text: "Las fechas están dentro del lapso" },
+                                { ok: evalsComplete, text: "Todas las evaluaciones tienen nombre, fecha y horario" },
+                                { ok: datesInRange, text: "Las fechas están dentro del período de reparación" },
                                 { ok: spacingOk, text: `Entre evaluaciones hay entre ${LAPSO.minDays} y ${LAPSO.maxDays} días` },
                             ].map((c, i) => (
                                 <div key={i} className="flex items-center gap-2 text-[0.8125rem]">
@@ -420,7 +335,7 @@ export function DocentePlanFormPage() {
                 <div className="flex gap-2 justify-end border-t border-edu-border-soft -mx-5 px-5 pt-4 mt-1">
                     <button
                         type="button"
-                        onClick={() => navigate("/docente/planes")}
+                        onClick={() => navigate("/docente/reparaciones")}
                         className="px-4 py-2.5 rounded-edu-control border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-subtle"
                     >
                         Cancelar
@@ -432,7 +347,7 @@ export function DocentePlanFormPage() {
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-edu-control bg-edu-primary text-white text-sm font-semibold border-none cursor-pointer transition-colors hover:bg-edu-primary-hover disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <CheckCircle2 className="w-4 h-4" />
-                            {editing ? "Guardar cambios" : "Guardar plan"}
+                            {yaCreada ? "Guardar cambios" : "Crear reparación"}
                         </button>
                     ) : (
                         <button
