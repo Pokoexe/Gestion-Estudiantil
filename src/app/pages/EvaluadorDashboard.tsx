@@ -1,19 +1,12 @@
+import { useNavigate } from "react-router";
 import {
   ClipboardList,
   FileCheck2,
   FileBarChart2,
-  MessagesSquare,
   Upload,
   CalendarClock,
   FilePlus2,
   MessageSquarePlus,
-  Download,
-  Clock,
-  Star,
-  Trophy,
-  Music,
-  Palette,
-  Users,
 } from "lucide-react";
 import {
   BarChart,
@@ -37,6 +30,7 @@ const KPIS: {
   icon: React.FC<{ style?: React.CSSProperties }>;
   tone: { bg: string; fg: string };
   foot: string;
+  to: string;
 }[] = [
   {
     label: "Revisiones pendientes",
@@ -44,6 +38,7 @@ const KPIS: {
     icon: ClipboardList,
     tone: accent.amber,
     foot: "3 vencen esta semana",
+    to: "/evaluador/revisiones",
   },
   {
     label: "Exámenes por aprobar",
@@ -51,6 +46,7 @@ const KPIS: {
     icon: FileCheck2,
     tone: accent.blue,
     foot: "Enviados por 3 docentes",
+    to: "/evaluador/revisiones",
   },
   {
     label: "Boletines generados",
@@ -58,173 +54,26 @@ const KPIS: {
     icon: FileBarChart2,
     tone: accent.green,
     foot: "de 15 secciones",
-  },
-  {
-    label: "Discusiones activas",
-    value: "2",
-    icon: MessagesSquare,
-    tone: accent.purple,
-    foot: "En revisión del concejo",
+    to: "/evaluador/boletines",
   },
 ];
 
 const QUICK_ACTIONS: {
   label: string;
   icon: React.FC<{ style?: React.CSSProperties }>;
-  tone: { bg: string; fg: string };
+  primary: boolean;
+  to: string;
 }[] = [
-  { label: "Subir planilla de evaluación", icon: Upload, tone: accent.blue },
-  { label: "Asignar cronograma", icon: CalendarClock, tone: accent.amber },
-  { label: "Generar boletín", icon: FilePlus2, tone: accent.green },
-  { label: "Nueva discusión de notas", icon: MessageSquarePlus, tone: accent.purple },
-];
-
-type ReviewType = "Examen" | "Plan de evaluación" | "Tema de reparación";
-type ReviewStatus = "Pendiente" | "Aprobado" | "Cambios solicitados";
-
-const TYPE_META: Record<ReviewType, { bg: string; fg: string }> = {
-  Examen: accent.amber,
-  "Plan de evaluación": accent.blue,
-  "Tema de reparación": accent.purple,
-};
-
-const STATUS_META: Record<ReviewStatus, { bg: string; fg: string }> = {
-  Pendiente: { bg: color.primary50, fg: color.primary },
-  Aprobado: { bg: color.successBg, fg: color.success },
-  "Cambios solicitados": { bg: color.dangerBg, fg: color.danger },
-};
-
-const REVIEWS: {
-  id: number;
-  teacher: string;
-  subject: string;
-  type: ReviewType;
-  sent: string;
-  status: ReviewStatus;
-  note?: string;
-}[] = [
-  {
-    id: 1,
-    teacher: "Prof. Alejandro Morales",
-    subject: "Ciencias Naturales",
-    type: "Plan de evaluación",
-    sent: "1 jul 2026",
-    status: "Pendiente",
-  },
-  {
-    id: 2,
-    teacher: "Prof. Carmen Villalba",
-    subject: "Matemática",
-    type: "Examen",
-    sent: "30 jun 2026",
-    status: "Pendiente",
-  },
-  {
-    id: 3,
-    teacher: "Prof. Luis Fernández",
-    subject: "Historia",
-    type: "Examen",
-    sent: "28 jun 2026",
-    status: "Cambios solicitados",
-    note: "El examen supera el peso máximo permitido (30%). Ajustar la ponderación y reenviar.",
-  },
-  {
-    id: 4,
-    teacher: "Prof. Daniela Rojas",
-    subject: "Literatura",
-    type: "Tema de reparación",
-    sent: "26 jun 2026",
-    status: "Aprobado",
-  },
-  {
-    id: 5,
-    teacher: "Prof. Gabriel Suárez",
-    subject: "Física",
-    type: "Plan de evaluación",
-    sent: "24 jun 2026",
-    status: "Aprobado",
-  },
+  { label: "Subir planilla de evaluación", icon: Upload, primary: true, to: "/evaluador/revisiones" },
+  { label: "Asignar cronograma", icon: CalendarClock, primary: false, to: "/evaluador/cronograma" },
+  { label: "Generar boletín", icon: FilePlus2, primary: false, to: "/evaluador/boletines" },
+  { label: "Nueva discusión de notas", icon: MessageSquarePlus, primary: false, to: "/evaluador/discusion" },
 ];
 
 const CHART_DATA = [
   { estado: "Pendiente", cantidad: 7, fill: color.primary },
   { estado: "Aprobado", cantidad: 12, fill: color.success },
   { estado: "Cambios", cantidad: 3, fill: color.danger },
-];
-
-type BulletinStatus = "Generado" | "En proceso" | "Pendiente";
-
-const BULLETIN_STATUS: Record<BulletinStatus, { bg: string; fg: string }> = {
-  Generado: { bg: color.successBg, fg: color.success },
-  "En proceso": { bg: color.warningBg, fg: color.warning },
-  Pendiente: { bg: color.primary50, fg: color.primary },
-};
-
-const BULLETINS: {
-  id: number;
-  section: string;
-  students: number;
-  avg: string;
-  status: BulletinStatus;
-}[] = [
-  { id: 1, section: "4.º Año · Sección A", students: 32, avg: "16,4", status: "Generado" },
-  { id: 2, section: "4.º Año · Sección B", students: 30, avg: "15,8", status: "Generado" },
-  { id: 3, section: "5.º Año · Sección A", students: 28, avg: "17,1", status: "En proceso" },
-  { id: 4, section: "5.º Año · Sección B", students: 29, avg: "—", status: "Pendiente" },
-];
-
-type DebateStatus = "Postulado" | "Aceptado" | "Rechazado";
-
-const DEBATE_STATUS: Record<DebateStatus, { bg: string; fg: string }> = {
-  Postulado: { bg: color.warningBg, fg: color.warning },
-  Aceptado: { bg: color.successBg, fg: color.success },
-  Rechazado: { bg: color.dangerBg, fg: color.danger },
-};
-
-const ACTIVITY_ICONS: Record<string, React.FC<{ style?: React.CSSProperties }>> = {
-  Deporte: Trophy,
-  Música: Music,
-  Arte: Palette,
-  Voluntariado: Users,
-  Ciencia: Star,
-};
-
-const DEBATES: {
-  id: number;
-  student: string;
-  section: string;
-  subject: string;
-  reason: string;
-  activities: string[];
-  status: DebateStatus;
-}[] = [
-  {
-    id: 1,
-    student: "Valentina Ríos",
-    section: "5.º A",
-    subject: "Matemática",
-    reason: "Nota final 09; a 1 punto de aprobar con desempeño sostenido en el lapso.",
-    activities: ["Ciencia", "Voluntariado"],
-    status: "Postulado",
-  },
-  {
-    id: 2,
-    student: "Mateo Guerrero",
-    section: "4.º B",
-    subject: "Física",
-    reason: "Mejoró de 07 a 09 en el último corte; participación destacada en el laboratorio.",
-    activities: ["Deporte", "Ciencia"],
-    status: "Aceptado",
-  },
-  {
-    id: 3,
-    student: "Sofía Delgado",
-    section: "5.º A",
-    subject: "Historia",
-    reason: "Inasistencias por representación deportiva del plantel; recuperó contenidos.",
-    activities: ["Deporte", "Arte"],
-    status: "Rechazado",
-  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -278,18 +127,22 @@ function Pill({ label, tone }: { label: string; tone: { bg: string; fg: string }
 /* ------------------------------------------------------------------ */
 
 export function EvaluadorDashboard() {
-  const REVIEW_COLS = "1.6fr 1.2fr 1.1fr 0.9fr 1.1fr 0.7fr";
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Fila de KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Fila de KPIs — cada bloque redirige a su página */}
+      <div className="grid grid-cols-3 gap-4">
         {KPIS.map((kpi) => {
           const Icon = kpi.icon;
           return (
             <div
               key={kpi.label}
-              className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5"
+              onClick={() => navigate(kpi.to)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && navigate(kpi.to)}
+              className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-primary-200 focus:outline-none focus-visible:border-edu-primary"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -313,80 +166,25 @@ export function EvaluadorDashboard() {
         })}
       </div>
 
-      {/* Acciones rápidas */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* Acciones rápidas (estilo botones) */}
+      <div className="flex gap-3">
         {QUICK_ACTIONS.map((qa) => {
           const Icon = qa.icon;
           return (
             <button
               key={qa.label}
-              className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-[18px] py-4 flex items-center gap-3 cursor-pointer text-left transition-colors hover:border-edu-primary-200 hover:bg-edu-tint"
+              onClick={() => navigate(qa.to)}
+              className={`w-full inline-flex justify-center items-center gap-[9px] px-5 py-[11px] rounded-edu-control text-sm font-semibold cursor-pointer transition-colors ${qa.primary
+                ? "border-none bg-edu-primary text-white hover:bg-edu-primary-hover"
+                : "border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 hover:bg-edu-subtle"
+                }`}
             >
-              <div
-                className="w-[38px] h-[38px] rounded-edu-control flex items-center justify-center shrink-0"
-                style={{ backgroundColor: qa.tone.bg }}
-              >
-                <Icon style={{ width: "18px", height: "18px", color: qa.tone.fg }} />
-              </div>
-              <span className="text-[0.875rem] font-semibold text-edu-ink">{qa.label}</span>
+              <Icon style={{ width: "16px", height: "16px" }} />
+              {qa.label}
             </button>
           );
         })}
       </div>
-
-      {/* Cola de revisiones */}
-      <SectionCard
-        title="Cola de revisiones"
-        subtitle="Material enviado por los docentes para validación"
-        action="Ver todo →"
-      >
-        <div>
-          <div
-            className="grid px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft"
-            style={{ gridTemplateColumns: REVIEW_COLS }}
-          >
-            {["Docente", "Materia", "Tipo", "Envío", "Estado", ""].map((h, i) => (
-              <span
-                key={i}
-                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-              >
-                {h}
-              </span>
-            ))}
-          </div>
-          {REVIEWS.map((r, i) => (
-            <div
-              key={r.id}
-              className={`${i < REVIEWS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-            >
-              <div
-                className="grid px-5 py-[13px] items-center"
-                style={{ gridTemplateColumns: REVIEW_COLS }}
-              >
-                <span className="text-[0.875rem] text-edu-ink font-medium">{r.teacher}</span>
-                <span className="text-[0.875rem] text-edu-ink-700">{r.subject}</span>
-                <Pill label={r.type} tone={TYPE_META[r.type]} />
-                <div className="flex items-center gap-1">
-                  <Clock style={{ width: "12px", height: "12px", color: color.ink400, flexShrink: 0 }} />
-                  <span className="text-[0.8125rem] text-edu-ink-500">{r.sent}</span>
-                </div>
-                <Pill label={r.status} tone={STATUS_META[r.status]} />
-                <span className="text-[0.8rem] text-edu-primary font-semibold cursor-pointer justify-self-start">
-                  Revisar
-                </span>
-              </div>
-              {r.note && (
-                <div className="mx-5 mb-3.5 px-3.5 py-2.5 bg-edu-danger-bg rounded-edu-chip border-l-[3px] border-edu-danger flex gap-2 items-start">
-                  <span className="text-[0.7rem] font-bold text-edu-danger whitespace-nowrap">
-                    Observación:
-                  </span>
-                  <span className="text-[0.8125rem] text-edu-ink-700 leading-[1.5]">{r.note}</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </SectionCard>
 
       {/* Cronograma + gráfico */}
       <div className="grid grid-cols-[1.5fr_1fr] gap-5 items-stretch">
@@ -481,130 +279,6 @@ export function EvaluadorDashboard() {
           </div>
         </SectionCard>
       </div>
-
-      {/* Boletines / Sábana de notas */}
-      <SectionCard
-        title="Boletines / Sábana de notas"
-        subtitle="Estado de generación por sección"
-        action="Ver todo →"
-      >
-        {/* Resumen sábana de notas */}
-        <div className="flex gap-0 border-b border-edu-border-soft bg-edu-tint">
-          {[
-            { label: "Secciones", value: "15", tone: color.primary },
-            { label: "Boletines generados", value: "12", tone: color.success },
-            { label: "Estudiantes evaluados", value: "428", tone: color.purple },
-            { label: "Promedio general", value: "16,3", tone: color.warning },
-          ].map(({ label, value, tone }, i, arr) => (
-            <div
-              key={label}
-              className={`flex-1 px-5 py-3.5 flex flex-col gap-1 ${i < arr.length - 1 ? "border-r border-edu-border-soft" : ""}`}
-            >
-              <div className="text-[0.72rem] text-edu-ink-400 font-medium uppercase tracking-[0.05em]">
-                {label}
-              </div>
-              <div className="inline-flex items-center gap-1.5">
-                <span
-                  className="w-2 h-2 rounded-full inline-block shrink-0"
-                  style={{ backgroundColor: tone }}
-                />
-                <span className="text-[1.1rem] font-bold text-edu-ink">{value}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Tabla de boletines */}
-        <div>
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_0.9fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-            {["Sección / Año", "Estudiantes", "Promedio", "Estado", ""].map((h, i) => (
-              <span
-                key={i}
-                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-              >
-                {h}
-              </span>
-            ))}
-          </div>
-          {BULLETINS.map((b, i) => {
-            const enabled = b.status === "Generado";
-            return (
-              <div
-                key={b.id}
-                className={`grid grid-cols-[2fr_1fr_1fr_1fr_0.9fr] px-5 py-[13px] items-center ${i < BULLETINS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-              >
-                <span className="text-[0.875rem] text-edu-ink font-medium">{b.section}</span>
-                <span className="text-[0.875rem] text-edu-ink-700">{b.students}</span>
-                <span className="text-[0.875rem] text-edu-ink-700 font-semibold">{b.avg}</span>
-                <Pill label={b.status} tone={BULLETIN_STATUS[b.status]} />
-                <button
-                  disabled={!enabled}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-edu-control text-[0.775rem] font-semibold justify-self-start ${
-                    enabled
-                      ? "border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary cursor-pointer"
-                      : "border-[1.5px] border-edu-border bg-edu-subtle text-edu-ink-400 cursor-not-allowed"
-                  }`}
-                >
-                  <Download style={{ width: "13px", height: "13px" }} />
-                  Descargar
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </SectionCard>
-
-      {/* Discusión de notas */}
-      <SectionCard
-        title="Discusión de notas"
-        subtitle="Estudiantes postulados al concejo de profesores para revisión de casos"
-        action="Ver todo →"
-      >
-        <div className="flex flex-col">
-          {DEBATES.map((d, i) => (
-            <div
-              key={d.id}
-              className={`px-5 py-4 flex gap-3.5 items-start ${i < DEBATES.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-            >
-              <div className="w-[42px] h-[42px] rounded-full bg-edu-primary-50 border-2 border-edu-primary-100 flex items-center justify-center text-[0.85rem] font-bold text-edu-primary shrink-0">
-                {d.student
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[0.9rem] font-bold text-edu-ink">{d.student}</span>
-                  <span className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-edu-pill bg-edu-subtle text-edu-ink-500">
-                    {d.section} · {d.subject}
-                  </span>
-                </div>
-                <p className="mt-1.5 mb-0 text-[0.8125rem] text-edu-ink-700 leading-[1.55]">
-                  {d.reason}
-                </p>
-                <div className="flex gap-1.5 mt-2.5 flex-wrap items-center">
-                  <span className="text-[0.7rem] text-edu-ink-400 font-medium">Actividades:</span>
-                  {d.activities.map((act) => {
-                    const ActIcon = ACTIVITY_ICONS[act] ?? Star;
-                    return (
-                      <span
-                        key={act}
-                        className="inline-flex items-center gap-[5px] px-2.5 py-[3px] rounded-edu-pill bg-edu-purple-bg text-edu-purple text-[0.7rem] font-semibold"
-                      >
-                        <ActIcon style={{ width: "12px", height: "12px" }} />
-                        {act}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <Pill label={d.status} tone={DEBATE_STATUS[d.status]} />
-            </div>
-          ))}
-        </div>
-      </SectionCard>
     </div>
   );
 }

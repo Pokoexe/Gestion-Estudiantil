@@ -19,6 +19,15 @@ export interface Postulacion {
     actividades: string[];
     estado: PostEstado;
     observacion?: string;
+    /** Fecha propuesta por el evaluador para presentar el caso al Concejo (ISO). */
+    fechaPresentacion?: string;
+}
+
+/** Formatea una fecha ISO (YYYY-MM-DD) a DD/MM/YYYY. */
+export function fmtFechaPost(iso?: string): string {
+    if (!iso) return "";
+    const [y, m, d] = iso.split("-");
+    return d && m && y ? `${d}/${m}/${y}` : iso;
 }
 
 export const MATERIAS_DISCUSION = [

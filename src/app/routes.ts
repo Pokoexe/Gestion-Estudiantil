@@ -42,9 +42,15 @@ import { CoordPersonasPage } from "./pages/CoordPersonasPage";
 // Evaluador
 import { EvalRevisionesPage } from "./pages/EvalRevisionesPage";
 import { EvalCronogramaPage } from "./pages/EvalCronogramaPage";
+import { EvalPlanDetallePage } from "./pages/EvalPlanDetallePage";
 import { EvalBoletinesPage } from "./pages/EvalBoletinesPage";
+import { EvalSabanaEstudiantePage } from "./pages/EvalSabanaEstudiantePage";
 import { EvalDiscusionPage } from "./pages/EvalDiscusionPage";
+import { EvalConcejoDiscusionPage } from "./pages/EvalConcejoDiscusionPage";
+import { EvalPostularEstudiantePage } from "./pages/EvalPostularEstudiantePage";
+import { EvalDiscusionEstudiantePage } from "./pages/EvalDiscusionEstudiantePage";
 import { EvalPlantillasPage } from "./pages/EvalPlantillasPage";
+import { EvalPlantillaPreviewPage } from "./pages/EvalPlantillaPreviewPage";
 // Administración (Tesorería)
 import { TesoreriaPagosPage } from "./pages/TesoreriaPagosPage";
 import { TesoreriaSolvenciaPage } from "./pages/TesoreriaSolvenciaPage";
@@ -122,9 +128,15 @@ export const router = createBrowserRouter([
       { index: true, Component: EvaluadorDashboard },
       { path: "revisiones", Component: EvalRevisionesPage },
       { path: "cronograma", Component: EvalCronogramaPage },
+      { path: "cronograma/:id", Component: EvalPlanDetallePage },
       { path: "boletines", Component: EvalBoletinesPage },
+      { path: "boletines/:id/sabana", Component: EvalSabanaEstudiantePage },
       { path: "discusion", Component: EvalDiscusionPage },
+      { path: "discusion/concejo", Component: EvalConcejoDiscusionPage },
+      { path: "discusion/postular/:id", Component: EvalPostularEstudiantePage },
+      { path: "discusion/concejo/:id", Component: EvalDiscusionEstudiantePage },
       { path: "plantillas", Component: EvalPlantillasPage },
+      { path: "plantillas/preview", Component: EvalPlantillaPreviewPage },
     ],
   },
   {

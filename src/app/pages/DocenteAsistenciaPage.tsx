@@ -7,7 +7,20 @@ import {
     CheckCircle2,
     Phone,
     Users,
+    UserCheck,
+    ClipboardList,
 } from "lucide-react";
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Cell,
+} from "recharts";
+import { color } from "../theme/tokens";
 
 /* ------------------------------------------------------------------ */
 /* Tipos e interfaces locales                                          */
@@ -54,6 +67,38 @@ const ESTADOS: { key: EstadoAsistencia; label: string; icon: React.FC<{ classNam
     { key: "tarde", label: "Tarde", icon: Clock, on: "bg-edu-warning-strong text-white border-edu-warning-strong", off: "bg-edu-surface text-edu-ink-500 border-edu-border hover:border-edu-warning-strong" },
 ];
 
+/* ---- Control de asistencia de docentes (coordinación) ---- */
+
+interface TeacherAtt {
+    id: number;
+    name: string;
+    subject: string;
+    present: number;
+    total: number;
+}
+
+const TEACHER_ATT: TeacherAtt[] = [
+    { id: 1, name: "Marisela Ríos", subject: "Matemática", present: 21, total: 22 },
+    { id: 2, name: "Luis Aponte", subject: "Castellano", present: 20, total: 22 },
+    { id: 3, name: "Yaneth Bravo", subject: "Biología", present: 22, total: 22 },
+    { id: 4, name: "Óscar Medina", subject: "Historia", present: 18, total: 22 },
+    { id: 5, name: "Karina Suárez", subject: "Inglés", present: 19, total: 22 },
+];
+
+const RESPONSABLES = ["Coord. Luis Aponte", "Prof. Marisela Ríos", "Aux. Génesis Prieto", "Dir. Ana Belén Ferrer"];
+
+const ATT_COLS = "grid-cols-[1.4fr_1fr_1fr_1fr]";
+
+function TeacherAttTooltip({ active, payload, label }: any) {
+    if (!active || !payload || !payload.length) return null;
+    return (
+        <div className="bg-edu-surface border border-edu-border rounded-edu-chip shadow-[0_4px_16px_rgba(0,0,0,0.08)] px-3 py-2">
+            <div style={{ fontSize: "0.7rem", color: color.ink400, fontWeight: 600 }}>{label}</div>
+            <div style={{ fontSize: "0.9rem", color: color.ink, fontWeight: 700, marginTop: "2px" }}>{payload[0].value} % asistencia</div>
+        </div>
+    );
+}
+
 /* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
@@ -66,6 +111,9 @@ export function DocenteAsistenciaPage() {
         Object.fromEntries(ESTUDIANTES.map((e) => [e.id, "presente"])) as Record<number, EstadoAsistencia>,
     );
     const [saved, setSaved] = useState(false);
+    const [responsable, setResponsable] = useState(RESPONSABLES[0]);
+
+    const attChartData = TEACHER_ATT.map((t) => ({ name: t.name.split(" ")[0], pct: Math.round((t.present / t.total) * 100) }));
 
     const setEstado = (id: number, estado: EstadoAsistencia) => {
         setRegistro((r) => ({ ...r, [id]: estado }));
@@ -201,6 +249,77 @@ export function DocenteAsistenciaPage() {
                         Guardar asistencia
                     </button>
                 </div>
+            </div>
+
+            {/* Control de asistencia de docentes */}
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center gap-4 flex-wrap">
+                    <div>
+                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Control de asistencia de docentes</h3>
+                        <p className="mt-0.5 text-edu-ink-400 text-[0.78rem]">Resumen del mes · 22 días hábiles</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[0.8125rem] text-edu-ink-500 flex items-center gap-1.5">
+                            <UserCheck className="w-4 h-4 text-edu-ink-400" />
+                            Responsable
+                        </span>
+                        <select
+                            value={responsable}
+                            onChange={(e) => setResponsable(e.target.value)}
+                            className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-edu-ink outline-none transition-colors bg-edu-subtle text-[0.8125rem] cursor-pointer focus:border-edu-primary"
+                        >
+                            {RESPONSABLES.map((r) => (
+                                <option key={r} value={r}>{r}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Gráfica de asistencia */}
+                <div className="px-4 pt-5 pb-2">
+                    <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={attChartData} margin={{ top: 8, right: 12, left: 4, bottom: 0 }} barCategoryGap="30%">
+                            <CartesianGrid vertical={false} stroke={color.borderSoft} />
+                            <XAxis dataKey="name" tickLine={false} axisLine={{ stroke: color.border }} tick={{ fill: color.ink400, fontSize: 12 }} />
+                            <YAxis tickLine={false} axisLine={false} tick={{ fill: color.ink400, fontSize: 12 }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} width={40} />
+                            <Tooltip cursor={{ fill: color.successBg }} content={<TeacherAttTooltip />} />
+                            <Bar dataKey="pct" radius={[6, 6, 0, 0]} maxBarSize={46}>
+                                {attChartData.map((d, i) => (
+                                    <Cell key={i} fill={d.pct >= 90 ? color.success : color.warningStrong} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* Tabla resumen */}
+                <div className={`grid ${ATT_COLS} px-5 py-2.5 bg-edu-subtle border-y border-edu-border-soft`}>
+                    {["Docente", "Materia", "Asistencia", "% del mes"].map((h) => (
+                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                    ))}
+                </div>
+                {TEACHER_ATT.map((t, i) => {
+                    const pct = Math.round((t.present / t.total) * 100);
+                    const good = pct >= 90;
+                    return (
+                        <div key={t.id} className={`grid ${ATT_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < TEACHER_ATT.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-[34px] h-[34px] rounded-full bg-edu-subtle border border-edu-border flex items-center justify-center text-xs font-bold text-edu-ink-500 shrink-0">
+                                    {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                                </div>
+                                <span className="text-sm text-edu-ink font-medium">{t.name}</span>
+                            </div>
+                            <span className="text-[0.8125rem] text-edu-ink-700">{t.subject}</span>
+                            <span className="text-[0.8125rem] text-edu-ink-700 flex items-center gap-1.5">
+                                <ClipboardList className="w-3.5 h-3.5 text-edu-ink-400" />
+                                {t.present} / {t.total} días
+                            </span>
+                            <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${good ? "bg-edu-success-bg text-edu-success" : "bg-edu-warning-bg text-edu-warning"}`}>
+                                {pct} %
+                            </span>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
