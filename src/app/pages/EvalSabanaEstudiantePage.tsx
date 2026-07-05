@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from "react-router";
 import { ArrowLeft, FileSpreadsheet, User } from "lucide-react";
-import { BOLETINES, MATERIAS, promedio, notaColor, desglose } from "../data/boletines";
+import { BOLETINES, MATERIAS, promedio, notaColor, desglose, notasDe } from "../data/boletines";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
@@ -11,6 +13,7 @@ const EVAL_COLS = "grid-cols-[2fr_1fr_0.7fr_0.7fr]";
 export function EvalSabanaEstudiantePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { selectedId } = useLapso();
   const b = BOLETINES.find((x) => String(x.id) === id);
 
   if (!b) {
@@ -28,7 +31,8 @@ export function EvalSabanaEstudiantePage() {
     );
   }
 
-  const prom = promedio(b.notas);
+  const notas = notasDe(b, selectedId);
+  const prom = promedio(notas);
 
   return (
     <div className="flex flex-col gap-5">
@@ -40,9 +44,12 @@ export function EvalSabanaEstudiantePage() {
         >
           <ArrowLeft className="w-4 h-4" /> Volver a boletines
         </button>
-        <div>
-          <h2 className="m-0 text-edu-ink font-bold text-[1.2rem]">Sábana de notas</h2>
-          <p className="m-0 mt-0.5 text-edu-ink-500 text-[0.85rem]">Todas las evaluaciones de todas las materias</p>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <h2 className="m-0 text-edu-ink font-bold text-[1.2rem]">Sábana de notas</h2>
+            <p className="m-0 mt-0.5 text-edu-ink-500 text-[0.85rem]">Todas las evaluaciones de todas las materias</p>
+          </div>
+          <LapsoFilter />
         </div>
       </div>
 
@@ -66,8 +73,8 @@ export function EvalSabanaEstudiantePage() {
 
       {/* Por cada materia: sus evaluaciones y notas */}
       {MATERIAS.map((m, i) => {
-        const evals = desglose(b.notas[i]);
-        const def = b.notas[i];
+        const evals = desglose(notas[i]);
+        const def = notas[i];
         return (
           <div key={m} className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center gap-3">

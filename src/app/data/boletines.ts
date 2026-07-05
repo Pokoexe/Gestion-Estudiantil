@@ -2,6 +2,8 @@
 /* Datos ficticios de boletines de estudiantes (evaluador)             */
 /* ------------------------------------------------------------------ */
 
+import type { LapsoId } from "./lapsos";
+
 export const ANIOS = ["3.º Año", "4.º Año", "5.º Año"];
 export const SECCIONES = ["A", "B", "C"];
 export const MATERIAS = ["Castellano", "Matemáticas", "Biología", "Química", "Física", "Historia"];
@@ -41,6 +43,18 @@ export const promedio = (notas: number[]): number =>
   Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 100) / 100;
 
 export const notaColor = (n: number): string => (n >= 10 ? "text-edu-ink" : "text-edu-danger font-bold");
+
+/**
+ * Notas del boletín para un lapso dado. Las notas base corresponden al lapso
+ * en curso (II); los otros lapsos aplican un ajuste determinista para simular
+ * la evolución del estudiante a lo largo del año.
+ */
+const LAPSO_DELTA: Record<LapsoId, number> = { 1: -1, 2: 0, 3: 1 };
+
+export function notasDe(b: Boletin, lapso: LapsoId): number[] {
+  const d = LAPSO_DELTA[lapso];
+  return b.notas.map((n) => Math.max(1, Math.min(20, n + d)));
+}
 
 /* Desglose de evaluaciones por materia (para la sábana detallada) */
 export interface EvalNota {

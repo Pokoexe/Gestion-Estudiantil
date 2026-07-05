@@ -9,13 +9,19 @@ import {
     Presentation,
     FlaskConical,
     PenLine,
+    Pencil,
+    Users,
+    CheckCircle2,
+    AlertCircle,
 } from "lucide-react";
 import { color } from "../theme/tokens";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
 
 /* ------------------------------------------------------------------ */
-/* Tipos e interfaces locales                                          */
+/* Tipos                                                               */
 /* ------------------------------------------------------------------ */
-
 type EvalTipo = "exam" | "lab" | "presentation" | "essay";
 
 interface Estudiante {
@@ -23,7 +29,6 @@ interface Estudiante {
     name: string;
     cedula: string;
     average: number;
-    /** Nota obtenida en cada evaluación del plan (alineado al orden de PLAN). null = sin entregar/pendiente. */
     grades: (number | null)[];
 }
 
@@ -35,19 +40,49 @@ interface EvaluacionPlan {
     date: string;
 }
 
-interface Pendiente {
-    student: string;
-    evaluation: string;
+interface LapsoData {
+    plan: EvaluacionPlan[];
+    estudiantes: Estudiante[];
 }
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
 /* ------------------------------------------------------------------ */
-
 const ANIOS = ["3.º Año C", "4.º Año B", "5.º Año A", "5.º Año B"];
 const MATERIAS = ["Ciencias Naturales", "Biología", "Ciencias de la Tierra", "Química"];
 
-const ESTUDIANTES: Estudiante[] = [
+const NOMBRES: { id: number; name: string; cedula: string }[] = [
+    { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678" },
+    { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321" },
+    { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109" },
+    { id: 4, name: "Luis Alberto Contreras", cedula: "V-30.442.870" },
+    { id: 5, name: "Andrea Carolina Suárez", cedula: "V-31.778.542" },
+    { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233" },
+];
+
+const PLAN_I: EvaluacionPlan[] = [
+    { id: 1, name: "Diagnóstico · Unidad 1", type: "exam", weight: 20, date: "16 abr 2026" },
+    { id: 2, name: "Exposición: Ecosistemas", type: "presentation", weight: 20, date: "30 abr 2026" },
+    { id: 3, name: "Laboratorio · Suelos", type: "lab", weight: 25, date: "14 may 2026" },
+    { id: 4, name: "Examen del lapso", type: "exam", weight: 35, date: "28 may 2026" },
+];
+const ESTUDIANTES_I: Estudiante[] = [
+    { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678", average: 17.8, grades: [18, 17, 18, 18] },
+    { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321", average: 13.2, grades: [14, 13, 12, 14] },
+    { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109", average: 10.5, grades: [11, 10, 10, 11] },
+    { id: 4, name: "Luis Alberto Contreras", cedula: "V-30.442.870", average: 16.0, grades: [16, 15, 17, 16] },
+    { id: 5, name: "Andrea Carolina Suárez", cedula: "V-31.778.542", average: 9.2, grades: [10, 9, 8, 10] },
+    { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233", average: 17.2, grades: [17, 18, 17, 17] },
+];
+
+const PLAN_II: EvaluacionPlan[] = [
+    { id: 1, name: "Prueba escrita · Unidad 1", type: "exam", weight: 20, date: "12 jun 2026" },
+    { id: 2, name: "Exposición: El Petróleo", type: "presentation", weight: 15, date: "22 jun 2026" },
+    { id: 3, name: "Taller práctico de laboratorio", type: "lab", weight: 20, date: "3 jul 2026" },
+    { id: 4, name: "Informe de investigación", type: "essay", weight: 25, date: "17 jul 2026" },
+    { id: 5, name: "Examen final · Unidad 3", type: "exam", weight: 20, date: "29 jul 2026" },
+];
+const ESTUDIANTES_II: Estudiante[] = [
     { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678", average: 18.2, grades: [18, 19, 18, null, null] },
     { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321", average: 14.5, grades: [15, null, 14, null, null] },
     { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109", average: 9.4, grades: [10, 9, null, null, null] },
@@ -56,19 +91,24 @@ const ESTUDIANTES: Estudiante[] = [
     { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233", average: 17.9, grades: [18, 18, 17, null, null] },
 ];
 
-const PLAN: EvaluacionPlan[] = [
-    { id: 1, name: "Prueba escrita · Unidad 1", type: "exam", weight: 20, date: "12 may 2026" },
-    { id: 2, name: "Exposición: El Petróleo", type: "presentation", weight: 15, date: "28 may 2026" },
-    { id: 3, name: "Taller práctico de laboratorio", type: "lab", weight: 20, date: "10 jun 2026" },
-    { id: 4, name: "Informe de investigación", type: "essay", weight: 25, date: "25 jun 2026" },
-    { id: 5, name: "Examen final · Unidad 3", type: "exam", weight: 20, date: "8 jul 2026" },
+const PLAN_III: EvaluacionPlan[] = [
+    { id: 1, name: "Diagnóstico · Unidad 4", type: "exam", weight: 30, date: "7 ago 2026" },
+    { id: 2, name: "Proyecto de investigación", type: "essay", weight: 35, date: "28 ago 2026" },
+    { id: 3, name: "Examen final del lapso", type: "exam", weight: 35, date: "18 sep 2026" },
 ];
+const ESTUDIANTES_III: Estudiante[] = NOMBRES.map((n) => ({
+    ...n,
+    average: 0,
+    grades: [null, null, null],
+}));
 
-const PENDIENTES: Pendiente[] = [
-    { student: "Carla Valentina Pérez", evaluation: "Taller práctico de laboratorio" },
-    { student: "Andrea Carolina Suárez", evaluation: "Taller práctico de laboratorio" },
-    { student: "José Gregorio Martínez", evaluation: "Exposición: El Petróleo" },
-];
+const DATA_BY_LAPSO: Record<LapsoId, LapsoData> = {
+    1: { plan: PLAN_I, estudiantes: ESTUDIANTES_I },
+    2: { plan: PLAN_II, estudiantes: ESTUDIANTES_II },
+    3: { plan: PLAN_III, estudiantes: ESTUDIANTES_III },
+};
+
+const ATTENDANCE_BY_LAPSO: Record<LapsoId, number> = { 1: 93.2, 2: 87.4, 3: 0 };
 
 const TYPE_META: Record<EvalTipo, { icon: React.FC<{ style?: React.CSSProperties }>; bg: string; color: string; label: string }> = {
     exam: { icon: FileText, bg: color.warningBg, color: color.warning, label: "Examen" },
@@ -94,48 +134,73 @@ function Th({ children }: { children: React.ReactNode }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Donut SVG                                                           */
+/* ------------------------------------------------------------------ */
+function DonutChart({ pct, size = 76, fillColor, trackColor = "#e9edf2" }: {
+    pct: number; size?: number; fillColor: string; trackColor?: string;
+}) {
+    const sw = Math.round(size * 0.13);
+    const r = (size - sw) / 2;
+    const circ = 2 * Math.PI * r;
+    const dash = Math.max(0, Math.min(pct, 1)) * circ;
+    return (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackColor} strokeWidth={sw} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={fillColor} strokeWidth={sw}
+                strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
+        </svg>
+    );
+}
+
+/* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
-
 export function DocenteCalificacionesPage() {
-    // Selects de contexto: año y materia
+    const { selectedId } = useLapso();
+    const { plan: PLAN, estudiantes: ESTUDIANTES } = DATA_BY_LAPSO[selectedId];
+    const attendancePct = ATTENDANCE_BY_LAPSO[selectedId];
+
     const [anio, setAnio] = useState(ANIOS[1]);
     const [materia, setMateria] = useState(MATERIAS[0]);
-
-    // Buscador + filtro de estudiantes
     const [query, setQuery] = useState("");
     const [filtro, setFiltro] = useState<FiltroNota>("todos");
+    const [selectedStudent, setSelectedStudent] = useState<Estudiante | null>(null);
 
-    // Evaluación seleccionada (panel derecho)
-    const [selectedEvalId, setSelectedEvalId] = useState<number>(3);
-    const [notas, setNotas] = useState<Record<number, string>>({});
-
-    // Modal para subir la nota de un estudiante
-    const [gradeStudent, setGradeStudent] = useState<Estudiante | null>(null);
+    // Modal state
+    const [gradeCtx, setGradeCtx] = useState<{ student: Estudiante; ev: EvaluacionPlan } | null>(null);
     const [gradeValue, setGradeValue] = useState("");
     const [gradeFile, setGradeFile] = useState<{ url: string; name: string; isImage: boolean } | null>(null);
+    const [notas, setNotas] = useState<Record<string, string>>({});
 
-    const selectedEval = PLAN.find((p) => p.id === selectedEvalId) ?? PLAN[0];
-    const porEntregarNames = new Set(
-        PENDIENTES.filter((p) => p.evaluation === selectedEval.name).map((p) => p.student),
-    );
+    // KPI values
+    const classAverage = ESTUDIANTES.length > 0
+        ? ESTUDIANTES.reduce((s, e) => s + e.average, 0) / ESTUDIANTES.length
+        : 0;
+    const approvedCount = ESTUDIANTES.filter(e => e.average >= 10).length;
+    const avgKpiColor = classAverage >= 14 ? color.success : classAverage >= 10 ? color.warning : color.danger;
+    const attKpiColor = attendancePct >= 80 ? color.success : attendancePct >= 70 ? color.warning : color.danger;
+
+    // Filtered student list
     const filteredStudents = ESTUDIANTES.filter((e) => {
         if (query.trim() && !e.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
         if (filtro === "aprobados") return e.average >= 10;
         if (filtro === "reprobados") return e.average < 10;
-        if (filtro === "por_entregar") return porEntregarNames.has(e.name);
+        if (filtro === "por_entregar") return e.grades.some(g => g === null);
         return true;
     });
 
-    // Contexto para el modal de subir/cambiar nota
-    const gradeIdx = PLAN.findIndex((p) => p.id === selectedEvalId);
-    const gradePrev = gradeStudent
-        ? notas[gradeStudent.id] ?? (gradeStudent.grades[gradeIdx] != null ? gradeStudent.grades[gradeIdx]!.toFixed(1) : null)
+    // Modal helpers
+    const gradeKey = gradeCtx ? `${gradeCtx.student.id}_${gradeCtx.ev.id}` : "";
+    const gradeEvalIdx = gradeCtx ? PLAN.findIndex(p => p.id === gradeCtx.ev.id) : -1;
+    const gradePrev = gradeCtx
+        ? (notas[gradeKey] ?? (gradeEvalIdx >= 0 && gradeCtx.student.grades[gradeEvalIdx] != null
+            ? gradeCtx.student.grades[gradeEvalIdx]!.toFixed(1)
+            : null))
         : null;
     const gradeIsChange = gradePrev != null;
 
-    const openGrade = (e: Estudiante) => {
-        setGradeStudent(e);
+    const openGrade = (student: Estudiante, ev: EvaluacionPlan) => {
+        setGradeCtx({ student, ev });
         setGradeValue("");
         setGradeFile(null);
     };
@@ -147,8 +212,8 @@ export function DocenteCalificacionesPage() {
     };
 
     const saveGrade = () => {
-        if (gradeStudent) setNotas((prev) => ({ ...prev, [gradeStudent.id]: gradeValue }));
-        setGradeStudent(null);
+        if (gradeCtx) setNotas(prev => ({ ...prev, [gradeKey]: gradeValue }));
+        setGradeCtx(null);
     };
 
     const selectCls =
@@ -156,39 +221,87 @@ export function DocenteCalificacionesPage() {
 
     return (
         <div className="flex flex-col gap-5">
-            {/* Encabezado */}
-            <div>
-                <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Calificaciones</h2>
-                <p className="text-edu-ink-500 text-sm mt-1 m-0">
-                    Sube y actualiza las notas de tus estudiantes por evaluación
-                </p>
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                    <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Calificaciones</h2>
+                    <p className="text-edu-ink-500 text-sm mt-1 m-0">
+                        Sube y actualiza las notas de tus estudiantes por evaluación
+                    </p>
+                </div>
+                <LapsoFilter />
             </div>
 
-            {/* Selects de año y materia */}
+            {/* Año y materia */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-wrap items-end gap-4">
                 <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
                     <label className="text-edu-ink-700 text-sm font-medium">Año</label>
                     <select value={anio} onChange={(e) => setAnio(e.target.value)} className={selectCls}>
-                        {ANIOS.map((a) => (
-                            <option key={a} value={a}>{a}</option>
-                        ))}
+                        {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
                     </select>
                 </div>
                 <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
                     <label className="text-edu-ink-700 text-sm font-medium">Materia</label>
                     <select value={materia} onChange={(e) => setMateria(e.target.value)} className={selectCls}>
-                        {MATERIAS.map((m) => (
-                            <option key={m} value={m}>{m}</option>
-                        ))}
+                        {MATERIAS.map((m) => <option key={m} value={m}>{m}</option>)}
                     </select>
                 </div>
             </div>
 
-            {/* Subir notas — estudiantes (izq) + plan visual (der) */}
+            {/* KPI donuts */}
+            <div className="grid grid-cols-2 gap-4">
+                {/* Promedio de notas */}
+                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex items-center gap-5">
+                    <div className="relative shrink-0 w-[76px] h-[76px]">
+                        <DonutChart pct={classAverage / 20} fillColor={avgKpiColor} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-edu-ink font-bold text-[0.9rem]">
+                                {classAverage > 0 ? classAverage.toFixed(1) : "—"}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">Promedio de notas</p>
+                        <p className="text-edu-ink text-[1.5rem] font-bold mt-0.5 m-0 leading-none">
+                            {classAverage > 0 ? classAverage.toFixed(1) : "—"}
+                            {classAverage > 0 && <span className="text-edu-ink-400 font-normal text-sm ml-1">/20</span>}
+                        </p>
+                        <p className="text-edu-ink-400 text-xs mt-1.5 m-0 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-edu-success shrink-0" />
+                            {approvedCount} de {ESTUDIANTES.length} aprobados
+                        </p>
+                    </div>
+                </div>
+
+                {/* Asistencia */}
+                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex items-center gap-5">
+                    <div className="relative shrink-0 w-[76px] h-[76px]">
+                        <DonutChart pct={attendancePct / 100} fillColor={attendancePct > 0 ? attKpiColor : "#e9edf2"} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-edu-ink font-bold text-[0.85rem]">
+                                {attendancePct > 0 ? `${attendancePct}%` : "—"}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">Asistencia</p>
+                        <p className="text-edu-ink text-[1.5rem] font-bold mt-0.5 m-0 leading-none">
+                            {attendancePct > 0 ? `${attendancePct} %` : "—"}
+                        </p>
+                        <p className="text-edu-ink-400 text-xs mt-1.5 m-0 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-edu-warning shrink-0" />
+                            Mínimo exigido: 75 %
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tabla + panel de notas */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 <div className="grid grid-cols-3">
-                    {/* Izquierda: estudiantes con buscador y filtro */}
+                    {/* Izquierda: listado de estudiantes */}
                     <div className="col-span-2 border-r border-edu-border-soft">
+                        {/* Buscador y filtros */}
                         <div className="px-5 py-3 border-b border-edu-border-soft flex gap-2 items-center flex-wrap">
                             <div className="relative flex-1 min-w-[160px]">
                                 <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -216,8 +329,9 @@ export function DocenteCalificacionesPage() {
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Estudiante", "Nota", "Estado", "Subir"].map((h) => (
+                        {/* Cabecera tabla */}
+                        <div className="grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                            {["Estudiante", "Promedio", "Realizadas", "Estado", ""].map((h) => (
                                 <Th key={h}>{h}</Th>
                             ))}
                         </div>
@@ -229,25 +343,33 @@ export function DocenteCalificacionesPage() {
                         )}
 
                         {filteredStudents.map((e, i) => {
-                            const pendiente = porEntregarNames.has(e.name);
-                            const nota = notas[e.id];
+                            const realizadas = e.grades.filter(g => g !== null).length;
+                            const isApproved = e.average >= 10;
+                            const isSelected = selectedStudent?.id === e.id;
+                            const firstPendingIdx = e.grades.findIndex(g => g === null);
+                            const firstActionEval = firstPendingIdx >= 0 ? PLAN[firstPendingIdx] : PLAN[0];
+
                             return (
                                 <div
                                     key={e.id}
-                                    className={`grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-[11px] items-center ${i < filteredStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    onClick={() => setSelectedStudent(e)}
+                                    className={`grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-[11px] items-center cursor-pointer transition-colors ${isSelected ? "bg-edu-primary-50 border-l-[3px] border-edu-primary" : "hover:bg-edu-subtle border-l-[3px] border-transparent"} ${i < filteredStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                                 >
                                     <div className="min-w-0">
                                         <div className="text-sm text-edu-ink font-medium truncate">{e.name}</div>
                                         <div className="text-[0.75rem] text-edu-ink-400">{e.cedula}</div>
                                     </div>
-                                    <span className={`text-sm font-bold ${nota ? notaColor(Number(nota)) : "text-edu-ink-300"}`}>
-                                        {nota ? Number(nota).toFixed(1) : "—"}
+                                    <span className={`text-sm font-bold ${e.average > 0 ? notaColor(e.average) : "text-edu-ink-300"}`}>
+                                        {e.average > 0 ? e.average.toFixed(1) : "—"}
                                     </span>
-                                    {pendiente ? (
-                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-warning-bg text-edu-warning">
-                                            Por entregar
+                                    <span className="text-sm text-edu-ink-700 font-medium">
+                                        {realizadas}/{PLAN.length}
+                                    </span>
+                                    {e.average <= 0 ? (
+                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-subtle text-edu-ink-400 border border-edu-border-soft">
+                                            Sin notas
                                         </span>
-                                    ) : e.average >= 10 ? (
+                                    ) : isApproved ? (
                                         <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-success-bg text-edu-success">
                                             Aprobado
                                         </span>
@@ -257,69 +379,124 @@ export function DocenteCalificacionesPage() {
                                         </span>
                                     )}
                                     <button
-                                        onClick={() => openGrade(e)}
-                                        aria-label={`Subir nota de ${e.name}`}
-                                        className="w-9 h-9 rounded-edu-control border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary flex items-center justify-center cursor-pointer transition-colors hover:bg-edu-primary-100"
+                                        onClick={(evt) => {
+                                            evt.stopPropagation();
+                                            setSelectedStudent(e);
+                                            openGrade(e, firstActionEval);
+                                        }}
+                                        aria-label={isApproved ? `Modificar nota de ${e.name}` : `Subir nota de ${e.name}`}
+                                        className={`w-9 h-9 rounded-edu-control border-[1.5px] flex items-center justify-center cursor-pointer transition-colors shrink-0 ${isApproved
+                                            ? "border-edu-border bg-edu-surface text-edu-ink-500 hover:bg-edu-subtle hover:text-edu-ink"
+                                            : "border-edu-primary-200 bg-edu-primary-50 text-edu-primary hover:bg-edu-primary-100"
+                                        }`}
                                     >
-                                        <Upload className="w-4 h-4" />
+                                        {isApproved ? <Pencil className="w-[15px] h-[15px]" /> : <Upload className="w-[15px] h-[15px]" />}
                                     </button>
                                 </div>
                             );
                         })}
                     </div>
 
-                    {/* Derecha: plan de evaluación (visual, seleccionable) */}
-                    <div>
-                        <div className="px-4 py-3 border-b border-edu-border-soft">
-                            <h3 className="m-0 text-edu-ink font-semibold text-[0.85rem]">Plan de evaluación</h3>
-                            <p className="text-[0.72rem] text-edu-ink-400 m-0 mt-0.5">Selecciona la evaluación a calificar</p>
-                        </div>
-                        <div className="p-3 flex flex-col gap-2">
-                            {PLAN.map((ev) => {
-                                const tm = TYPE_META[ev.type];
-                                const active = ev.id === selectedEvalId;
-                                return (
+                    {/* Derecha: notas del estudiante seleccionado */}
+                    <div className="flex flex-col min-h-[300px]">
+                        {selectedStudent ? (
+                            <>
+                                <div className="px-4 py-3 border-b border-edu-border-soft flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <h3 className="m-0 text-edu-ink font-semibold text-[0.85rem] truncate">{selectedStudent.name}</h3>
+                                        <p className="text-[0.72rem] text-edu-ink-400 m-0 mt-0.5">
+                                            {selectedStudent.grades.filter(g => g !== null).length}/{PLAN.length} notas subidas
+                                        </p>
+                                    </div>
                                     <button
-                                        key={ev.id}
-                                        onClick={() => setSelectedEvalId(ev.id)}
-                                        className={`text-left rounded-edu-control border-[1.5px] p-3 flex items-start gap-2.5 cursor-pointer transition-colors ${active ? "border-edu-primary bg-edu-primary-50" : "border-edu-border-soft bg-edu-surface hover:border-edu-primary-200"}`}
+                                        onClick={() => setSelectedStudent(null)}
+                                        aria-label="Cerrar panel"
+                                        className="text-edu-ink-400 bg-transparent border-none cursor-pointer p-1 flex items-center hover:text-edu-ink-700 shrink-0 mt-0.5"
                                     >
-                                        <div className="w-8 h-8 rounded-edu-chip flex items-center justify-center shrink-0" style={{ backgroundColor: tm.bg }}>
-                                            <tm.icon style={{ width: "15px", height: "15px", color: tm.color }} />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="text-[0.8rem] font-semibold text-edu-ink leading-snug">{ev.name}</div>
-                                            <div className="text-[0.72rem] text-edu-ink-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                                <span>{ev.weight} %</span>
-                                                <span>·</span>
-                                                <span>{ev.date}</span>
-                                            </div>
-                                        </div>
+                                        <X className="w-3.5 h-3.5" />
                                     </button>
-                                );
-                            })}
-                        </div>
+                                </div>
+                                <div className="flex flex-col">
+                                    {PLAN.map((ev, idx) => {
+                                        const key = `${selectedStudent.id}_${ev.id}`;
+                                        const nota: number | null = key in notas
+                                            ? Number(notas[key])
+                                            : selectedStudent.grades[idx];
+                                        const isPending = nota === null;
+                                        const tm = TYPE_META[ev.type];
+                                        return (
+                                            <div
+                                                key={ev.id}
+                                                className={`px-4 py-3 flex items-center gap-2.5 ${idx < PLAN.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                            >
+                                                <div className="w-7 h-7 rounded-edu-chip flex items-center justify-center shrink-0" style={{ backgroundColor: tm.bg }}>
+                                                    <tm.icon style={{ width: "12px", height: "12px", color: tm.color }} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[0.78rem] font-medium text-edu-ink leading-snug truncate">{ev.name}</div>
+                                                    <div className="text-[0.68rem] text-edu-ink-400 mt-px">{ev.weight}% · {ev.date}</div>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    {isPending ? (
+                                                        <>
+                                                            <span className="text-[0.7rem] text-edu-ink-300">Sin subir</span>
+                                                            <button
+                                                                onClick={() => openGrade(selectedStudent, ev)}
+                                                                title="Subir nota"
+                                                                className="w-7 h-7 rounded-edu-control border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary flex items-center justify-center cursor-pointer hover:bg-edu-primary-100 transition-colors"
+                                                            >
+                                                                <Upload className="w-3 h-3" />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className={`text-sm font-bold ${notaColor(nota!)}`}>{nota!.toFixed(1)}</span>
+                                                            <button
+                                                                onClick={() => openGrade(selectedStudent, ev)}
+                                                                className="px-2 py-[3px] rounded-edu-control border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-600 text-[0.68rem] font-medium cursor-pointer hover:bg-edu-subtle transition-colors whitespace-nowrap"
+                                                            >
+                                                                Modificar
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center flex-1 py-12 px-4 text-center">
+                                <div className="w-12 h-12 rounded-edu-control bg-edu-subtle flex items-center justify-center mb-3">
+                                    <Users className="w-6 h-6 text-edu-ink-300" />
+                                </div>
+                                <p className="text-edu-ink-500 text-sm font-medium m-0">Selecciona un estudiante</p>
+                                <p className="text-edu-ink-400 text-xs mt-1 m-0">para ver y gestionar sus notas</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Modal: subir nota de un estudiante */}
-            {gradeStudent && (
+            {/* Modal: subir / modificar nota */}
+            {gradeCtx && (
                 <div
                     className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-                    onClick={() => setGradeStudent(null)}
+                    onClick={() => setGradeCtx(null)}
                 >
                     <div
                         className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-start gap-3">
+                        {/* Header: nombre del estudiante + evaluación en grande */}
+                        <div className="px-5 py-5 border-b border-edu-border-soft flex justify-between items-start gap-3">
                             <div className="min-w-0">
-                                <h3 className="m-0 text-edu-ink font-semibold text-[0.95rem]">{gradeIsChange ? "Cambiar nota" : "Subir nota"}</h3>
-                                <div className="text-[0.8rem] text-edu-ink-500 mt-0.5 truncate">{gradeStudent.name}</div>
+                                <h3 className="m-0 text-edu-ink font-bold text-[1.3rem] leading-tight">{gradeCtx.student.name}</h3>
+                                <p className="text-edu-ink-700 text-[0.9rem] font-semibold mt-1 m-0">{gradeCtx.ev.name}</p>
+                                <p className="text-edu-ink-400 text-[0.78rem] mt-0.5 m-0">{materia} · {anio} · {gradeCtx.ev.weight}%</p>
                             </div>
                             <button
-                                onClick={() => setGradeStudent(null)}
+                                onClick={() => setGradeCtx(null)}
                                 aria-label="Cerrar"
                                 className="text-edu-ink-400 bg-transparent border-none cursor-pointer p-1 flex items-center hover:text-edu-ink-700 shrink-0"
                             >
@@ -328,10 +505,25 @@ export function DocenteCalificacionesPage() {
                         </div>
 
                         <div className="p-5 flex flex-col gap-4">
-                            <div className="px-3.5 py-2.5 rounded-edu-control bg-edu-primary-50 text-[0.8125rem] text-edu-primary">
-                                {materia} · {anio} — <strong>{selectedEval.name}</strong> ({selectedEval.weight} %)
-                            </div>
+                            {/* Adjunto anterior (cuando se modifica) */}
+                            {gradeIsChange && (
+                                <div>
+                                    <label className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium block mb-2">
+                                        Adjunto anterior
+                                    </label>
+                                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-edu-control border border-edu-border-soft bg-edu-subtle">
+                                        <div className="w-8 h-8 rounded-edu-chip bg-edu-primary-50 flex items-center justify-center shrink-0">
+                                            <FileText className="w-4 h-4 text-edu-primary" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-edu-ink truncate">Prueba_evaluacion.jpg</div>
+                                            <div className="text-xs text-edu-ink-400">Archivo adjunto previo</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
+                            {/* Nota anterior */}
                             {gradeIsChange && (
                                 <div className="flex items-center justify-between px-3.5 py-2.5 rounded-edu-control bg-edu-subtle border border-edu-border-soft">
                                     <span className="text-[0.8125rem] text-edu-ink-500 font-medium">Nota anterior</span>
@@ -341,6 +533,7 @@ export function DocenteCalificacionesPage() {
                                 </div>
                             )}
 
+                            {/* Nota nueva */}
                             <div>
                                 <label className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium block mb-1">
                                     {gradeIsChange ? "Nota nueva (0 – 20)" : "Nota (0 – 20)"}
@@ -357,6 +550,7 @@ export function DocenteCalificacionesPage() {
                                 />
                             </div>
 
+                            {/* Adjuntar imagen / archivo */}
                             <div>
                                 <label className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium block mb-1">
                                     {gradeIsChange ? "Adjuntar imagen" : "Prueba adjunta"}
@@ -388,7 +582,7 @@ export function DocenteCalificacionesPage() {
 
                         <div className="px-5 py-3.5 border-t border-edu-border-soft flex items-center justify-end gap-2">
                             <button
-                                onClick={() => setGradeStudent(null)}
+                                onClick={() => setGradeCtx(null)}
                                 className="px-4 py-2.5 rounded-edu-control border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-subtle"
                             >
                                 Cancelar

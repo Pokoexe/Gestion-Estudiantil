@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AppLayout } from "./components/AppLayout";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -19,6 +20,7 @@ import { StudentDataPage } from "./pages/StudentDataPage";
 import { CalificacionPage } from "./pages/CalificacionPage";
 import { MisEvaluacionesPage } from "./pages/MisEvaluacionesPage";
 import { MensajesPage } from "./pages/MensajesPage";
+import { MateriasPendientesPage } from "./pages/MateriasPendientesPage";
 // Docente
 import { DocenteSeccionesPage } from "./pages/DocenteSeccionesPage";
 import { DocenteHorarioPage } from "./pages/DocenteHorarioPage";
@@ -30,7 +32,8 @@ import { DocenteRevisionesPage } from "./pages/DocenteRevisionesPage";
 import { DocenteReparacionesPage } from "./pages/DocenteReparacionesPage";
 import { DocenteReparacionFormPage } from "./pages/DocenteReparacionFormPage";
 import { DocenteConcejoPage } from "./pages/DocenteConcejoPage";
-import { DocenteAsistenciaPage } from "./pages/DocenteAsistenciaPage";
+import { DocenteConcejoDiscusionPage } from "./pages/DocenteConcejoDiscusionPage";
+import { DocentePostulacionesPage } from "./pages/DocentePostulacionesPage";
 import { DocenteCalificacionesPage } from "./pages/DocenteCalificacionesPage";
 // Coordinador
 import { CoordReunionesPage } from "./pages/CoordReunionesPage";
@@ -39,6 +42,7 @@ import { CoordPlanificacionesPage } from "./pages/CoordPlanificacionesPage";
 import { CoordIncidenciasPage } from "./pages/CoordIncidenciasPage";
 import { CoordSeccionesPage } from "./pages/CoordSeccionesPage";
 import { CoordPersonasPage } from "./pages/CoordPersonasPage";
+import { CoordAsistenciaPage } from "./pages/CoordAsistenciaPage";
 // Evaluador
 import { EvalRevisionesPage } from "./pages/EvalRevisionesPage";
 import { EvalCronogramaPage } from "./pages/EvalCronogramaPage";
@@ -51,6 +55,8 @@ import { EvalPostularEstudiantePage } from "./pages/EvalPostularEstudiantePage";
 import { EvalDiscusionEstudiantePage } from "./pages/EvalDiscusionEstudiantePage";
 import { EvalPlantillasPage } from "./pages/EvalPlantillasPage";
 import { EvalPlantillaPreviewPage } from "./pages/EvalPlantillaPreviewPage";
+import { EvalReparacionesPage } from "./pages/EvalReparacionesPage";
+import { LapsosPage } from "./pages/LapsosPage";
 // Administración (Tesorería)
 import { TesoreriaPagosPage } from "./pages/TesoreriaPagosPage";
 import { TesoreriaSolvenciaPage } from "./pages/TesoreriaSolvenciaPage";
@@ -60,12 +66,13 @@ import { TesoreriaReportesPage } from "./pages/TesoreriaReportesPage";
 // Director
 import { DirAcademicoPage } from "./pages/DirAcademicoPage";
 import { DirFinanzasPage } from "./pages/DirFinanzasPage";
-import { DirPersonalPage } from "./pages/DirPersonalPage";
 import { DirActividadesPage } from "./pages/DirActividadesPage";
 import { DirReportesPage } from "./pages/DirReportesPage";
+import { DirectorPresentacionPage } from "./pages/DirectorPresentacionPage";
 
 export const router = createBrowserRouter([
-  { path: "/", Component: LoginPage },
+  { path: "/", Component: LandingPage },
+  { path: "/login", Component: LoginPage },
 
 
   {
@@ -76,6 +83,7 @@ export const router = createBrowserRouter([
       { path: "datos", Component: StudentDataPage },
       { path: "materias", Component: MateriasPage },
       { path: "materias/:id", Component: CoursesPage },
+      { path: "pendientes", Component: MateriasPendientesPage },
       { path: "calificaciones", Component: CalificacionPage },
       { path: "evaluaciones", Component: MisEvaluacionesPage },
       { path: "reparacion", Component: RepairPage },
@@ -103,6 +111,8 @@ export const router = createBrowserRouter([
       { path: "reparaciones", Component: DocenteReparacionesPage },
       { path: "reparaciones/:id", Component: DocenteReparacionFormPage },
       { path: "concejo", Component: DocenteConcejoPage },
+      { path: "concejo/:id", Component: DocenteConcejoDiscusionPage },
+      { path: "postulaciones", Component: DocentePostulacionesPage },
       { path: "calificaciones", Component: DocenteCalificacionesPage },
       { path: "mensajes", Component: MensajesPage },
     ],
@@ -117,8 +127,9 @@ export const router = createBrowserRouter([
       { path: "planificaciones", Component: CoordPlanificacionesPage },
       { path: "incidencias", Component: CoordIncidenciasPage },
       { path: "secciones", Component: CoordSeccionesPage },
-      { path: "asistencia", Component: DocenteAsistenciaPage },
+      { path: "asistencia", Component: CoordAsistenciaPage },
       { path: "personas", Component: CoordPersonasPage },
+      { path: "lapsos", Component: LapsosPage },
     ],
   },
   {
@@ -137,6 +148,8 @@ export const router = createBrowserRouter([
       { path: "discusion/concejo/:id", Component: EvalDiscusionEstudiantePage },
       { path: "plantillas", Component: EvalPlantillasPage },
       { path: "plantillas/preview", Component: EvalPlantillaPreviewPage },
+      { path: "reparaciones", Component: EvalReparacionesPage },
+      { path: "lapsos", Component: LapsosPage },
     ],
   },
   {
@@ -158,9 +171,18 @@ export const router = createBrowserRouter([
       { index: true, Component: DirectorDashboard },
       { path: "academico", Component: DirAcademicoPage },
       { path: "finanzas", Component: DirFinanzasPage },
-      { path: "personal", Component: DirPersonalPage },
       { path: "actividades", Component: DirActividadesPage },
       { path: "reportes", Component: DirReportesPage },
+      { path: "presentacion", Component: DirectorPresentacionPage },
+      { path: "actividades-coord", Component: CoordActividadesPage },
+      { path: "reuniones", Component: CoordReunionesPage },
+      { path: "planificaciones", Component: CoordPlanificacionesPage },
+      { path: "incidencias", Component: CoordIncidenciasPage },
+      { path: "secciones", Component: CoordSeccionesPage },
+      { path: "asistencia", Component: CoordAsistenciaPage },
+      { path: "personas", Component: CoordPersonasPage },
+      { path: "docentes", Component: CoordPersonasPage },
+      { path: "lapsos", Component: LapsosPage },
     ],
   },
   {

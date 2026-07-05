@@ -14,6 +14,9 @@ import {
 import { color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
 
 type EvalType = "presentation" | "exam" | "lab" | "essay";
 
@@ -25,6 +28,7 @@ interface Attachment {
 
 interface Grade {
     id: number;
+    lapso: LapsoId;
     subject: string;
     teacher: string;
     title: string;
@@ -44,17 +48,19 @@ const TYPE_META: Record<EvalType, { icon: React.FC<{ style?: React.CSSProperties
 };
 
 const GRADES: Grade[] = [
-    { id: 1, subject: "Física", teacher: "Prof. Torres", title: "Examen · Cinemática", type: "exam", date: "12 jun 2026", weight: "30%", grade: 19, description: "Examen escrito sobre movimiento rectilíneo, velocidad y aceleración.", attachment: { name: "Examen_Cinematica.jpg", kind: "image", url: "https://picsum.photos/seed/examfisica/900/1200" } },
-    { id: 2, subject: "Química", teacher: "Prof. Méndez", title: "Informe de laboratorio · Reacciones", type: "lab", date: "10 jun 2026", weight: "25%", grade: 14, description: "Informe del experimento de reacciones ácido-base realizado en el laboratorio.", attachment: { name: "Informe_Reacciones.pdf", kind: "file", url: "#" } },
-    { id: 3, subject: "Literatura", teacher: "Prof. García", title: "Ensayo sobre el Realismo", type: "essay", date: "6 jun 2026", weight: "20%", grade: 17, description: "Ensayo de 600 palabras analizando las características del movimiento realista.", attachment: { name: "Ensayo_Realismo.pdf", kind: "file", url: "#" } },
-    { id: 4, subject: "Historia", teacher: "Prof. Flores", title: "Exposición · Independencia", type: "presentation", date: "4 jun 2026", weight: "25%", grade: 9, description: "Exposición oral sobre el proceso de independencia y sus protagonistas.", attachment: { name: "Diapositivas_Independencia.jpg", kind: "image", url: "https://picsum.photos/seed/histexpo/1200/800" } },
-    { id: 5, subject: "Matemática", teacher: "Prof. Ramírez", title: "Prueba corta · Funciones", type: "exam", date: "2 jun 2026", weight: "15%", grade: 16, description: "Prueba corta sobre dominio, rango y gráficas de funciones.", attachment: { name: "Prueba_Funciones.jpg", kind: "image", url: "https://picsum.photos/seed/matefunc/900/1200" } },
-    { id: 6, subject: "Biología", teacher: "Prof. Ruiz", title: "Laboratorio · Célula", type: "lab", date: "28 may 2026", weight: "20%", grade: 18, description: "Práctica de observación de células vegetales en el microscopio.", attachment: { name: "Practica_Celula.pdf", kind: "file", url: "#" } },
-    { id: 7, subject: "Inglés", teacher: "Prof. Collins", title: "Examen · Present Perfect", type: "exam", date: "26 may 2026", weight: "30%", grade: 8, description: "Examen escrito sobre el uso del present perfect y vocabulario de la unidad.", attachment: { name: "Examen_Ingles.jpg", kind: "image", url: "https://picsum.photos/seed/exingles/900/1200" } },
-    { id: 8, subject: "Arte", teacher: "Prof. Vega", title: "Proyecto · Autorretrato", type: "presentation", date: "22 may 2026", weight: "35%", grade: 20, description: "Presentación del autorretrato realizado con técnica libre.", attachment: { name: "Autorretrato.jpg", kind: "image", url: "https://picsum.photos/seed/autorretrato/1000/1000" } },
-    { id: 9, subject: "Física", teacher: "Prof. Torres", title: "Laboratorio · Péndulo", type: "lab", date: "18 may 2026", weight: "20%", grade: 15, description: "Informe del experimento del péndulo simple y cálculo del período.", attachment: { name: "Lab_Pendulo.pdf", kind: "file", url: "#" } },
-    { id: 10, subject: "Química", teacher: "Prof. Méndez", title: "Examen · Tabla periódica", type: "exam", date: "14 may 2026", weight: "30%", grade: 13, description: "Examen sobre organización de la tabla periódica y propiedades de los elementos.", attachment: { name: "Examen_Tabla.jpg", kind: "image", url: "https://picsum.photos/seed/tablaperiodica/900/1200" } },
-    { id: 11, subject: "Literatura", teacher: "Prof. García", title: "Exposición · Poesía", type: "presentation", date: "10 may 2026", weight: "20%", grade: 12, description: "Exposición grupal sobre recursos literarios en la poesía contemporánea.", attachment: { name: "Poesia.pdf", kind: "file", url: "#" } },
+    // Lapso II (en curso) — junio 2026
+    { id: 1, lapso: 2, subject: "Física", teacher: "Prof. Torres", title: "Examen · Cinemática", type: "exam", date: "12 jun 2026", weight: "30%", grade: 19, description: "Examen escrito sobre movimiento rectilíneo, velocidad y aceleración.", attachment: { name: "Examen_Cinematica.jpg", kind: "image", url: "https://picsum.photos/seed/examfisica/900/1200" } },
+    { id: 2, lapso: 2, subject: "Química", teacher: "Prof. Méndez", title: "Informe de laboratorio · Reacciones", type: "lab", date: "10 jun 2026", weight: "25%", grade: 14, description: "Informe del experimento de reacciones ácido-base realizado en el laboratorio.", attachment: { name: "Informe_Reacciones.pdf", kind: "file", url: "#" } },
+    { id: 3, lapso: 2, subject: "Literatura", teacher: "Prof. García", title: "Ensayo sobre el Realismo", type: "essay", date: "6 jun 2026", weight: "20%", grade: 17, description: "Ensayo de 600 palabras analizando las características del movimiento realista.", attachment: { name: "Ensayo_Realismo.pdf", kind: "file", url: "#" } },
+    { id: 4, lapso: 2, subject: "Historia", teacher: "Prof. Flores", title: "Exposición · Independencia", type: "presentation", date: "4 jun 2026", weight: "25%", grade: 9, description: "Exposición oral sobre el proceso de independencia y sus protagonistas.", attachment: { name: "Diapositivas_Independencia.jpg", kind: "image", url: "https://picsum.photos/seed/histexpo/1200/800" } },
+    { id: 5, lapso: 2, subject: "Matemática", teacher: "Prof. Ramírez", title: "Prueba corta · Funciones", type: "exam", date: "2 jun 2026", weight: "15%", grade: 16, description: "Prueba corta sobre dominio, rango y gráficas de funciones.", attachment: { name: "Prueba_Funciones.jpg", kind: "image", url: "https://picsum.photos/seed/matefunc/900/1200" } },
+    // Lapso I (finalizado) — mayo 2026
+    { id: 6, lapso: 1, subject: "Biología", teacher: "Prof. Ruiz", title: "Laboratorio · Célula", type: "lab", date: "28 may 2026", weight: "20%", grade: 18, description: "Práctica de observación de células vegetales en el microscopio.", attachment: { name: "Practica_Celula.pdf", kind: "file", url: "#" } },
+    { id: 7, lapso: 1, subject: "Inglés", teacher: "Prof. Collins", title: "Examen · Present Perfect", type: "exam", date: "26 may 2026", weight: "30%", grade: 8, description: "Examen escrito sobre el uso del present perfect y vocabulario de la unidad.", attachment: { name: "Examen_Ingles.jpg", kind: "image", url: "https://picsum.photos/seed/exingles/900/1200" } },
+    { id: 8, lapso: 1, subject: "Arte", teacher: "Prof. Vega", title: "Proyecto · Autorretrato", type: "presentation", date: "22 may 2026", weight: "35%", grade: 20, description: "Presentación del autorretrato realizado con técnica libre.", attachment: { name: "Autorretrato.jpg", kind: "image", url: "https://picsum.photos/seed/autorretrato/1000/1000" } },
+    { id: 9, lapso: 1, subject: "Física", teacher: "Prof. Torres", title: "Laboratorio · Péndulo", type: "lab", date: "18 may 2026", weight: "20%", grade: 15, description: "Informe del experimento del péndulo simple y cálculo del período.", attachment: { name: "Lab_Pendulo.pdf", kind: "file", url: "#" } },
+    { id: 10, lapso: 1, subject: "Química", teacher: "Prof. Méndez", title: "Examen · Tabla periódica", type: "exam", date: "14 may 2026", weight: "30%", grade: 13, description: "Examen sobre organización de la tabla periódica y propiedades de los elementos.", attachment: { name: "Examen_Tabla.jpg", kind: "image", url: "https://picsum.photos/seed/tablaperiodica/900/1200" } },
+    { id: 11, lapso: 1, subject: "Literatura", teacher: "Prof. García", title: "Exposición · Poesía", type: "presentation", date: "10 may 2026", weight: "20%", grade: 12, description: "Exposición grupal sobre recursos literarios en la poesía contemporánea.", attachment: { name: "Poesia.pdf", kind: "file", url: "#" } },
 ];
 
 const GRADES_PER_PAGE = 6;
@@ -72,12 +78,15 @@ export function CalificacionPage() {
     const [subjectFilter, setSubjectFilter] = useState("todas");
     const [statusFilter, setStatusFilter] = useState<"todos" | "aprobada" | "reprobada">("todos");
 
-    const done = GRADES.length;
-    const average = GRADES.reduce((sum, g) => sum + g.grade, 0) / (done || 1);
+    const { selectedId } = useLapso();
+    const lapsoGrades = GRADES.filter((g) => g.lapso === selectedId);
 
-    const subjects = Array.from(new Set(GRADES.map((g) => g.subject)));
+    const done = lapsoGrades.length;
+    const average = lapsoGrades.reduce((sum, g) => sum + g.grade, 0) / (done || 1);
 
-    const filtered = GRADES.filter((g) => {
+    const subjects = Array.from(new Set(lapsoGrades.map((g) => g.subject)));
+
+    const filtered = lapsoGrades.filter((g) => {
         if (subjectFilter !== "todas" && g.subject !== subjectFilter) return false;
         const passed = g.grade >= PASS_MARK;
         if (statusFilter === "aprobada" && !passed) return false;
@@ -134,6 +143,7 @@ export function CalificacionPage() {
 
                 {/* Buscador y filtros */}
                 <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
+                    <LapsoFilter />
                     <div className="relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input

@@ -8,6 +8,7 @@ import {
   Landmark,
   Hash,
   CalendarDays,
+  MailQuestion,
 } from "lucide-react";
 import { BAUCHE_MOCK } from "../data/baucheMock";
 
@@ -25,6 +26,7 @@ interface BaucheModalProps {
   onClose: () => void;
   onAccept: () => void;
   onReject: () => void;
+  showOptions: boolean;
 }
 
 export function BaucheModal({
@@ -37,6 +39,7 @@ export function BaucheModal({
   onClose,
   onAccept,
   onReject,
+  showOptions
 }: BaucheModalProps) {
   return (
     <div
@@ -85,26 +88,33 @@ export function BaucheModal({
             <InfoRow icon={Landmark} label="Banco / método" value={method} />
             <InfoRow icon={Hash} label="Referencia (bauche)" value={reference} />
             <InfoRow icon={CalendarDays} label="Fecha del pago" value={date} />
+            {!showOptions &&
+              <InfoRow icon={MailQuestion} label="Estado del pago" value={'En revisión'} />
+            }
           </div>
         </div>
 
         {/* Acciones */}
-        <div className="px-5 py-4 border-t border-edu-border-soft flex gap-2 justify-end sticky bottom-0 bg-edu-surface">
-          <button
-            onClick={onReject}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-edu-control border-[1.5px] border-edu-danger-bg bg-edu-danger-bg text-edu-danger text-sm font-semibold cursor-pointer transition-colors hover:brightness-95"
-          >
-            <X className="w-4 h-4" />
-            Rechazar
-          </button>
-          <button
-            onClick={onAccept}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-edu-control border-none bg-edu-success text-white text-sm font-semibold cursor-pointer transition-colors hover:brightness-95"
-          >
-            <Check className="w-4 h-4" />
-            Confirmar pago
-          </button>
-        </div>
+        {
+          showOptions &&
+          <div className="px-5 py-4 border-t border-edu-border-soft flex gap-2 justify-end sticky bottom-0 bg-edu-surface">
+            <button
+              onClick={onReject}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-edu-control border-[1.5px] border-edu-danger-bg bg-edu-danger-bg text-edu-danger text-sm font-semibold cursor-pointer transition-colors hover:brightness-95"
+            >
+              <X className="w-4 h-4" />
+              Rechazar
+            </button>
+            <button
+              onClick={onAccept}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-edu-control border-none bg-edu-success text-white text-sm font-semibold cursor-pointer transition-colors hover:brightness-95"
+            >
+              <Check className="w-4 h-4" />
+              Confirmar pago
+            </button>
+          </div>
+        }
+
       </div>
     </div>
   );

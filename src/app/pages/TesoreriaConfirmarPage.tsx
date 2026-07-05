@@ -164,6 +164,7 @@ export function TesoreriaConfirmarPage() {
       {/* Modal: datos + bauche de la transferencia */}
       {selected && (
         <BaucheModal
+          showOptions={true}
           rep={selected.rep}
           student={selected.student}
           amount={`${money(selected.amount)} ${selected.currency}`}

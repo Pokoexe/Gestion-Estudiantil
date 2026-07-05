@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { Pagination } from "../components/Pagination";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
 
 /* ------------------------------------------------------------------ */
 /* Tipos y datos ficticios                                             */
@@ -27,6 +30,7 @@ type TabOpt = RevTipo | "Todas";
 
 interface Revision {
   id: number;
+  lapso: LapsoId;
   docente: string;
   materia: string;
   seccion: string;
@@ -38,15 +42,19 @@ interface Revision {
 }
 
 const REVISIONES_INI: Revision[] = [
-  { id: 1, docente: "Prof. María Fernández", materia: "Biología", seccion: "5.º Año A", tipo: "Planes de evaluación", fecha: "28 jun 2026", estado: "Pendiente", adjunto: "plan_biologia_5A.pdf" },
-  { id: 2, docente: "Prof. José Rangel", materia: "Ciencias Naturales", seccion: "4.º Año B", tipo: "Exámenes", fecha: "27 jun 2026", estado: "Pendiente", adjunto: "examen_u3_4B.pdf" },
-  { id: 3, docente: "Prof. Carmen Ortega", materia: "Química", seccion: "5.º Año B", tipo: "Planes de evaluación", fecha: "25 jun 2026", estado: "Aprobado", adjunto: "plan_quimica_5B.pdf" },
-  { id: 4, docente: "Prof. Luis Guerra", materia: "Física", seccion: "5.º Año A", tipo: "Temas de reparación", fecha: "24 jun 2026", estado: "Revisión solicitada", adjunto: "reparacion_fisica_5A.pdf", observacion: "Faltan los objetivos de la Unidad 2 y el cronograma del período de reparación." },
-  { id: 5, docente: "Prof. Ana Díaz", materia: "Matemáticas", seccion: "3.º Año C", tipo: "Exámenes", fecha: "23 jun 2026", estado: "Aprobado", adjunto: "examen_lapso2_3C.pdf" },
-  { id: 6, docente: "Prof. Pedro Salas", materia: "Ciencias de la Tierra", seccion: "3.º Año C", tipo: "Temas de reparación", fecha: "22 jun 2026", estado: "Pendiente", adjunto: "reparacion_ct_3C.pdf" },
-  { id: 7, docente: "Prof. María Fernández", materia: "Biología", seccion: "4.º Año A", tipo: "Exámenes", fecha: "21 jun 2026", estado: "Pendiente", adjunto: "examen_u2_4A.pdf" },
-  { id: 8, docente: "Prof. Gabriel Suárez", materia: "Historia", seccion: "4.º Año B", tipo: "Planes de evaluación", fecha: "20 jun 2026", estado: "Revisión solicitada", adjunto: "plan_historia_4B.pdf", observacion: "El peso del examen final supera el 30% permitido. Ajustar la ponderación." },
-  { id: 9, docente: "Prof. Ana Díaz", materia: "Matemáticas", seccion: "5.º Año B", tipo: "Exámenes", fecha: "19 jun 2026", estado: "Pendiente", adjunto: "examen_u4_5B.pdf" },
+  // Lapso II (en curso)
+  { id: 1, lapso: 2, docente: "Prof. María Fernández", materia: "Biología", seccion: "5.º Año A", tipo: "Planes de evaluación", fecha: "28 jun 2026", estado: "Pendiente", adjunto: "plan_biologia_5A.pdf" },
+  { id: 2, lapso: 2, docente: "Prof. José Rangel", materia: "Ciencias Naturales", seccion: "4.º Año B", tipo: "Exámenes", fecha: "27 jun 2026", estado: "Pendiente", adjunto: "examen_u3_4B.pdf" },
+  { id: 3, lapso: 2, docente: "Prof. Carmen Ortega", materia: "Química", seccion: "5.º Año B", tipo: "Planes de evaluación", fecha: "25 jun 2026", estado: "Aprobado", adjunto: "plan_quimica_5B.pdf" },
+  { id: 4, lapso: 2, docente: "Prof. Luis Guerra", materia: "Física", seccion: "5.º Año A", tipo: "Temas de reparación", fecha: "24 jun 2026", estado: "Revisión solicitada", adjunto: "reparacion_fisica_5A.pdf", observacion: "Faltan los objetivos de la Unidad 2 y el cronograma del período de reparación." },
+  { id: 5, lapso: 2, docente: "Prof. Ana Díaz", materia: "Matemáticas", seccion: "3.º Año C", tipo: "Exámenes", fecha: "23 jun 2026", estado: "Aprobado", adjunto: "examen_lapso2_3C.pdf" },
+  { id: 6, lapso: 2, docente: "Prof. Pedro Salas", materia: "Ciencias de la Tierra", seccion: "3.º Año C", tipo: "Temas de reparación", fecha: "22 jun 2026", estado: "Pendiente", adjunto: "reparacion_ct_3C.pdf" },
+  { id: 7, lapso: 2, docente: "Prof. María Fernández", materia: "Biología", seccion: "4.º Año A", tipo: "Exámenes", fecha: "21 jun 2026", estado: "Pendiente", adjunto: "examen_u2_4A.pdf" },
+  { id: 8, lapso: 2, docente: "Prof. Gabriel Suárez", materia: "Historia", seccion: "4.º Año B", tipo: "Planes de evaluación", fecha: "20 jun 2026", estado: "Revisión solicitada", adjunto: "plan_historia_4B.pdf", observacion: "El peso del examen final supera el 30% permitido. Ajustar la ponderación." },
+  { id: 9, lapso: 2, docente: "Prof. Ana Díaz", materia: "Matemáticas", seccion: "5.º Año B", tipo: "Exámenes", fecha: "19 jun 2026", estado: "Pendiente", adjunto: "examen_u4_5B.pdf" },
+  // Lapso I (finalizado) — entregas ya validadas
+  { id: 10, lapso: 1, docente: "Prof. María Fernández", materia: "Biología", seccion: "5.º Año A", tipo: "Planes de evaluación", fecha: "18 may 2026", estado: "Aprobado", adjunto: "plan_biologia_5A_l1.pdf" },
+  { id: 11, lapso: 1, docente: "Prof. José Rangel", materia: "Ciencias Naturales", seccion: "4.º Año B", tipo: "Exámenes", fecha: "15 may 2026", estado: "Aprobado", adjunto: "examen_u1_4B.pdf" },
 ];
 
 const ESTADO_META: Record<RevEstado, string> = {
@@ -81,9 +89,12 @@ export function EvalRevisionesPage() {
   const [detail, setDetail] = useState<Revision | null>(null);
   const [confirmAprobar, setConfirmAprobar] = useState<Revision | null>(null);
 
-  const pendientes = revisiones.filter((r) => r.estado === "Pendiente").length;
+  const { selectedId } = useLapso();
+  const enLapso = revisiones.filter((r) => r.lapso === selectedId);
 
-  const filtradas = revisiones.filter((r) => {
+  const pendientes = enLapso.filter((r) => r.estado === "Pendiente").length;
+
+  const filtradas = enLapso.filter((r) => {
     if (tab !== "Todas" && r.tipo !== tab) return false;
     if (estadoFilter !== "todos" && r.estado !== estadoFilter) return false;
     if (query.trim() && !`${r.docente} ${r.materia} ${r.seccion}`.toLowerCase().includes(query.trim().toLowerCase())) return false;
@@ -114,9 +125,9 @@ export function EvalRevisionesPage() {
 
   const KPIS = [
     { label: "Por revisar", value: String(pendientes), icon: ClipboardList, bg: TEAL_BG, fg: TEAL },
-    { label: "Aprobados", value: String(revisiones.filter((r) => r.estado === "Aprobado").length), icon: CheckCircle2, bg: "#dcfce7", fg: "#16a34a" },
-    { label: "En revisión", value: String(revisiones.filter((r) => r.estado === "Revisión solicitada").length), icon: MessageSquareWarning, bg: "#fee2e2", fg: "#dc2626" },
-    { label: "Total de entregas", value: String(revisiones.length), icon: ClipboardCheck, bg: "#ede9fe", fg: "#7c3aed" },
+    { label: "Aprobados", value: String(enLapso.filter((r) => r.estado === "Aprobado").length), icon: CheckCircle2, bg: "#dcfce7", fg: "#16a34a" },
+    { label: "En revisión", value: String(enLapso.filter((r) => r.estado === "Revisión solicitada").length), icon: MessageSquareWarning, bg: "#fee2e2", fg: "#dc2626" },
+    { label: "Total de entregas", value: String(enLapso.length), icon: ClipboardCheck, bg: "#ede9fe", fg: "#7c3aed" },
   ];
 
   return (
@@ -168,6 +179,7 @@ export function EvalRevisionesPage() {
 
         {/* Buscador y filtro por estado */}
         <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
+          <LapsoFilter />
           <div className="relative flex-1 min-w-[180px]">
             <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input

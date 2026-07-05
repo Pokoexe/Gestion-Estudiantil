@@ -37,8 +37,8 @@ interface Stat {
 
 const STATS: Stat[] = [
     { label: "Promedio de notas", value: "16,8", hint: "sobre 20 · buen rendimiento", icon: BarChart2, iconBg: "bg-edu-primary-100", iconFg: "text-edu-primary" },
-    { label: "Mayor nota", value: "19", hint: "Física · Prof. Torres", icon: TrendingUp, iconBg: "bg-edu-success-bg", iconFg: "text-edu-success", subjectId: 1 },
-    { label: "Menor nota", value: "8", hint: "Inglés · Prof. Collins", icon: TrendingDown, iconBg: "bg-edu-danger-bg", iconFg: "text-edu-danger", subjectId: 8 },
+    { label: "Promedio mayor de materia", value: "19", hint: "Física · Prof. Torres", icon: TrendingUp, iconBg: "bg-edu-success-bg", iconFg: "text-edu-success", subjectId: 1 },
+    { label: "Promedio menor de materia", value: "8", hint: "Inglés · Prof. Collins", icon: TrendingDown, iconBg: "bg-edu-danger-bg", iconFg: "text-edu-danger", subjectId: 8 },
     { label: "Asistencia promedio", value: "92,4 %", hint: "2 inasistencias este lapso", icon: CalendarCheck, iconBg: "bg-edu-warning-bg", iconFg: "text-edu-warning-strong" },
 ];
 
@@ -233,12 +233,12 @@ export function StudentDataPage() {
 
                 <div className="grid grid-cols-2 gap-4">
 
-                    {/* Materias reprobadas o en reprobación */}
+                    {/* Materias reprobadas*/}
                     <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
                         <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <TrendingDown className="w-4 h-4 text-edu-danger" />
-                                <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias reprobadas o en reprobación</h3>
+                                <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias reprobadas</h3>
                             </div>
                             <span className="text-[0.72rem] text-edu-danger font-medium">{reprobadas.length} en riesgo</span>
                         </div>

@@ -1,67 +1,44 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import {
-  Gavel,
-  UserPlus,
-  Award,
-  X,
-  MessageSquare,
-  ArrowLeft,
-  ChevronRight,
-  CalendarClock,
-  Eye,
-  Search,
-} from "lucide-react";
-import { POSTULACIONES, fmtFechaPost, ANIOS_DISCUSION, type PostEstado } from "../data/discusiones";
-import { BOLETINES, ANIOS, SECCIONES, promedio } from "../data/boletines";
+import { Gavel, ArrowLeft, ChevronRight, Search, Users } from "lucide-react";
+import { Pagination } from "../components/Pagination";
+import { POSTULACIONES } from "../data/discusiones";
+import { BOLETINES, ANIOS, promedio, notaColor, type Boletin } from "../data/boletines";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
 const TEAL_50 = "#f0fdfa";
 
-const ESTADO_META: Record<PostEstado, string> = {
-  Pendiente: "bg-edu-warning-bg text-edu-warning",
-  Aceptada: "bg-edu-success-bg text-edu-success",
-  Rechazada: "bg-edu-danger-bg text-edu-danger",
-};
-
-/* Año y sección por separado, derivados de ANIOS_DISCUSION ("4.º Año A") */
-const anioDe = (s: string) => s.split(" ").slice(0, -1).join(" ");
-const seccionDe = (s: string) => s.split(" ").slice(-1)[0];
-const ANIOS_SOLO = Array.from(new Set(ANIOS_DISCUSION.map(anioDe)));
-const SECCIONES_SOLO = Array.from(new Set(ANIOS_DISCUSION.map(seccionDe)));
+const COLS = "grid-cols-[1.8fr_0.8fr_0.8fr_1fr_0.5fr]";
+const HEADERS = ["Estudiante", "Sección", "Promedio", "Estado", ""];
+const PER_PAGE = 8;
 
 export function EvalConcejoDiscusionPage() {
   const navigate = useNavigate();
-  const [selAnio, setSelAnio] = useState("todos");
-  const [selSeccion, setSelSeccion] = useState("todas");
+  const [selAnio, setSelAnio] = useState("");
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
-  // Selector para postular un estudiante
-  const [showPicker, setShowPicker] = useState(false);
-  const [pickAnio, setPickAnio] = useState(ANIOS[0]);
-  const [pickSeccion, setPickSeccion] = useState(SECCIONES[0]);
-  const [pickQuery, setPickQuery] = useState("");
+  // Basta con elegir el año para mostrar la lista de estudiantes.
+  const listo = selAnio !== "";
 
-  const filtradas = POSTULACIONES.filter((p) => {
-    if (selAnio !== "todos" && anioDe(p.anio) !== selAnio) return false;
-    if (selSeccion !== "todas" && seccionDe(p.anio) !== selSeccion) return false;
-    return true;
-  });
-
-  const pendientes = filtradas.filter((p) => p.estado === "Pendiente").length;
-
-  // Estudiantes del año / sección elegidos en el selector
-  const estudiantesPicker = BOLETINES.filter(
-    (b) =>
-      b.anio === pickAnio &&
-      b.seccion === pickSeccion &&
-      (!pickQuery.trim() || b.student.toLowerCase().includes(pickQuery.trim().toLowerCase())),
+  // Estudiantes del año elegido (todas las secciones), estén o no postulados.
+  const estudiantes = listo ? BOLETINES.filter((b) => b.anio === selAnio) : [];
+  const filtrados = estudiantes.filter(
+    (b) => !query.trim() || b.student.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
-  const abrirPicker = () => {
-    setShowPicker(true);
-    setPickQuery("");
-  };
+  const totalPages = Math.max(1, Math.ceil(filtrados.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtrados.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+  const estaPostulado = (b: Boletin) =>
+    POSTULACIONES.some(
+      (p) => p.estudiante === b.student && p.anio === `${b.anio} ${b.seccion}`,
+    );
+
+  const abrirEstudiante = (b: Boletin) =>
+    navigate(`/evaluador/discusion/concejo/${b.id}`);
 
   return (
     <div className="flex flex-col gap-5">
@@ -76,191 +53,111 @@ export function EvalConcejoDiscusionPage() {
       </div>
 
       {/* Encabezado */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex justify-between items-center flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-edu-card flex items-center justify-center shrink-0" style={{ backgroundColor: TEAL_BG }}>
-            <Gavel className="w-7 h-7" style={{ color: TEAL }} />
-          </div>
-          <div>
-            <p className="text-edu-ink text-[1.05rem] font-bold m-0">Concejo de Profesores</p>
-            <p className="text-edu-ink-500 text-[0.85rem] m-0 mt-0.5">
-              {pendientes} postulacion{pendientes === 1 ? "" : "es"} en espera de la decisión de los docentes
-            </p>
-          </div>
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex items-center gap-4 flex-wrap">
+        <div className="w-14 h-14 rounded-edu-card flex items-center justify-center shrink-0" style={{ backgroundColor: TEAL_BG }}>
+          <Gavel className="w-7 h-7" style={{ color: TEAL }} />
         </div>
-        <button
-          type="button"
-          onClick={abrirPicker}
-          className="inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold text-white border-none cursor-pointer transition-opacity hover:opacity-90"
-          style={{ backgroundColor: TEAL }}
-        >
-          <UserPlus className="w-4 h-4" />
-          Postular estudiante
-        </button>
+        <div>
+          <p className="text-edu-ink text-[1.05rem] font-bold m-0">Concejo de Profesores</p>
+          <p className="text-edu-ink-500 text-[0.85rem] m-0 mt-0.5">
+            Elige un año para revisar a los estudiantes y postularlos al Concejo
+          </p>
+        </div>
       </div>
 
-      {/* Filtros por año / sección */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-3 flex gap-2 items-center flex-wrap">
-        <span className="text-[0.8125rem] text-edu-ink-500 font-medium mr-1">Filtrar por:</span>
-        <select
-          value={selAnio}
-          onChange={(e) => setSelAnio(e.target.value)}
-          className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-teal-600"
-        >
-          <option value="todos">Todos los años</option>
-          {ANIOS_SOLO.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
-        <select
-          value={selSeccion}
-          onChange={(e) => setSelSeccion(e.target.value)}
-          className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-teal-600"
-        >
-          <option value="todas">Todas las secciones</option>
-          {SECCIONES_SOLO.map((s) => <option key={s} value={s}>Sección {s}</option>)}
-        </select>
-        <span className="text-[0.8rem] text-edu-ink-400 ml-auto">{filtradas.length} postulaciones</span>
-      </div>
-
-      {/* Lista de postulaciones (clic → detalle del estudiante) */}
-      <div className="flex flex-col gap-3.5">
-        {filtradas.length === 0 && (
-          <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-10 text-center text-edu-ink-400 text-sm">
-            No hay postulaciones para el filtro seleccionado.
-          </div>
-        )}
-        {filtradas.map((p) => (
-          <div
-            key={p.id}
-            onClick={() => navigate(`/evaluador/discusion/concejo/${p.id}`)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && navigate(`/evaluador/discusion/concejo/${p.id}`)}
-            className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-3 cursor-pointer transition-colors hover:border-edu-primary-200 focus:outline-none focus-visible:border-edu-primary-200"
+      {/* Selección obligatoria: año */}
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-4 flex gap-3 items-end flex-wrap">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-edu-ink-700 text-[0.8125rem] font-medium">Año</label>
+          <select
+            value={selAnio}
+            onChange={(e) => { setSelAnio(e.target.value); setPage(1); }}
+            className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-teal-600 min-w-[160px]"
           >
-            <div className="flex justify-between items-start gap-3 flex-wrap">
-              <div>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="text-[0.95rem] font-semibold text-edu-ink">{p.estudiante}</span>
-                  <span className="text-[0.8125rem] text-edu-ink-500">{p.materia} · {p.anio}</span>
-                  <span className="inline-flex items-center px-2 py-[2px] rounded-edu-chip text-[0.72rem] font-semibold bg-edu-danger-bg text-edu-danger">Nota: {p.nota}</span>
-                </div>
-                <p className="text-[0.85rem] text-edu-ink-700 m-0 mt-2 max-w-2xl">{p.motivo}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${ESTADO_META[p.estado]}`}>{p.estado}</span>
-                <ChevronRight className="w-4 h-4 text-edu-ink-300" />
-              </div>
-            </div>
-
-            {p.actividades.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {p.actividades.map((a) => (
-                  <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-edu-chip text-[0.72rem] font-medium" style={{ backgroundColor: TEAL_50, color: TEAL }}>
-                    <Award className="w-3 h-3" />
-                    {a}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {p.estado === "Pendiente" && p.fechaPresentacion && (
-              <div className="inline-flex items-center gap-1.5 text-[0.78rem] text-edu-ink-500 w-fit">
-                <CalendarClock className="w-3.5 h-3.5 text-edu-ink-400" />
-                Se presentará al Concejo el <strong className="text-edu-ink-700">{fmtFechaPost(p.fechaPresentacion)}</strong>
-              </div>
-            )}
-
-            {p.observacion && (
-              <div className={`flex items-start gap-1.5 text-xs rounded-edu-chip px-2.5 py-1.5 w-fit ${p.estado === "Rechazada" ? "text-edu-danger bg-edu-danger-bg" : "text-edu-success bg-edu-success-bg"}`}>
-                <MessageSquare className="w-3.5 h-3.5 shrink-0 mt-px" />
-                {p.observacion}
-              </div>
-            )}
-          </div>
-        ))}
+            <option value="">Selecciona un año…</option>
+            {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
       </div>
 
-      {/* Modal: seleccionar estudiante para postular */}
-      {showPicker && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowPicker(false)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-lg max-h-[90vh] flex flex-col shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
-            <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-edu-control flex items-center justify-center" style={{ backgroundColor: TEAL_50 }}>
-                  <UserPlus className="w-4 h-4" style={{ color: TEAL }} />
-                </div>
-                <h3 className="m-0 text-edu-ink font-semibold text-[0.95rem]">Postular estudiante</h3>
-              </div>
-              <button onClick={() => setShowPicker(false)} aria-label="Cerrar" className="text-edu-ink-400 bg-transparent border-none cursor-pointer p-1 flex items-center hover:text-edu-ink-700">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      {!listo ? (
+        /* Estado vacío: aún no se ha elegido año */
+        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-14 text-center flex flex-col items-center gap-2">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: TEAL_50 }}>
+            <Users className="w-6 h-6" style={{ color: TEAL }} />
+          </div>
+          <p className="text-edu-ink font-semibold text-[0.95rem] m-0">Selecciona un año</p>
+          <p className="text-edu-ink-400 text-[0.8125rem] m-0 max-w-sm">
+            Para ver la lista de estudiantes y decidir a quiénes postular al Concejo, primero elige un año.
+          </p>
+        </div>
+      ) : (
+        /* Tabla de estudiantes (diseño estándar con buscador + paginación) */
+        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+          <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
+              Estudiantes · {selAnio}
+            </h3>
+            <span className="text-[0.8rem] text-edu-ink-400 font-medium">
+              {filtrados.length} estudiante{filtrados.length === 1 ? "" : "s"}
+            </span>
+          </div>
 
-            {/* Selección de año / sección */}
-            <div className="px-5 py-3 border-b border-edu-border-soft flex flex-col gap-2.5">
-              <p className="m-0 text-[0.8125rem] text-edu-ink-500">Elige el año y la sección para ver la lista de estudiantes.</p>
-              <div className="flex gap-2 flex-wrap">
-                <select
-                  value={pickAnio}
-                  onChange={(e) => setPickAnio(e.target.value)}
-                  className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-teal-600"
-                >
-                  {ANIOS.map((a) => <option key={a} value={a}>{a}</option>)}
-                </select>
-                <select
-                  value={pickSeccion}
-                  onChange={(e) => setPickSeccion(e.target.value)}
-                  className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-teal-600"
-                >
-                  {SECCIONES.map((s) => <option key={s} value={s}>Sección {s}</option>)}
-                </select>
-                <div className="relative flex-1 min-w-[150px]">
-                  <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={pickQuery}
-                    onChange={(e) => setPickQuery(e.target.value)}
-                    placeholder="Buscar estudiante…"
-                    className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-teal-600"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Lista de estudiantes */}
-            <div className="overflow-y-auto flex-1">
-              {estudiantesPicker.length === 0 ? (
-                <div className="px-5 py-10 text-center text-sm text-edu-ink-400">
-                  No hay estudiantes en {pickAnio} · Sección {pickSeccion}.
-                </div>
-              ) : (
-                estudiantesPicker.map((b, i, arr) => (
-                  <div key={b.id} className={`px-5 py-3 flex items-center justify-between gap-3 ${i < arr.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-[0.78rem] font-bold shrink-0" style={{ backgroundColor: TEAL_50, color: TEAL }}>
-                        {b.student.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-edu-ink truncate">{b.student}</div>
-                        <div className="text-[0.78rem] text-edu-ink-500">
-                          {b.anio} · Sección {b.seccion} · Prom. {promedio(b.notas).toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/evaluador/discusion/postular/${b.id}`)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold text-white border-none cursor-pointer transition-opacity hover:opacity-90 shrink-0"
-                      style={{ backgroundColor: TEAL }}
-                    >
-                      <Eye className="w-4 h-4" />
-                      Ver
-                    </button>
-                  </div>
-                ))
-              )}
+          {/* Buscador */}
+          <div className="px-5 py-3 border-b border-edu-border-soft">
+            <div className="relative">
+              <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                placeholder="Buscar estudiante…"
+                className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-teal-600"
+              />
             </div>
           </div>
+
+          {/* Cabecera de tabla */}
+          <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+            {HEADERS.map((h, i) => (
+              <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+            ))}
+          </div>
+
+          {paged.length === 0 ? (
+            <div className="px-5 py-10 text-center text-sm text-edu-ink-400">
+              No hay estudiantes que coincidan con la búsqueda.
+            </div>
+          ) : (
+            paged.map((b, i) => {
+              const prom = promedio(b.notas);
+              const postulado = estaPostulado(b);
+              return (
+                <div
+                  key={b.id}
+                  onClick={() => abrirEstudiante(b)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && abrirEstudiante(b)}
+                  className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle focus:outline-none focus-visible:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                >
+                  <span className="text-sm text-edu-ink font-medium">{b.student}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-500">{b.seccion}</span>
+                  <span className={`text-[0.9rem] font-bold ${notaColor(prom)}`}>{prom.toFixed(2)}</span>
+                  <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${postulado ? "bg-edu-success-bg text-edu-success" : "bg-edu-subtle text-edu-ink-500"}`}>
+                    {postulado ? "Postulado" : "Sin postular"}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-edu-ink-300 justify-self-end" />
+                </div>
+              );
+            })
+          )}
+
+          {totalPages > 1 && (
+            <div className="px-5 py-4 border-t border-edu-border-soft">
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          )}
         </div>
       )}
     </div>

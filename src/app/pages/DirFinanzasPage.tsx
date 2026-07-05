@@ -14,6 +14,9 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -38,6 +41,12 @@ const INCOME_KPIS: IncomeKpi[] = [
   { label: "Ingresos Bs.", value: "Bs. 308.000", icon: Banknote, ac: accent.amber, hint: "Recaudado este mes" },
   { label: "Ingresos COP", value: "$ 29,1 M", icon: Coins, ac: accent.blue, hint: "Recaudado este mes" },
   { label: "Solvencia", value: "78 %", icon: ShieldCheck, ac: accent.purple, hint: "478 de 612 al día" },
+];
+
+const PAGOS_MONEDA = [
+  { name: "USD", value: 46, fill: color.success },
+  { name: "Bs.", value: 33, fill: color.warning },
+  { name: "COP", value: 21, fill: color.primary },
 ];
 
 const MONTHLY = [
@@ -138,6 +147,19 @@ function TooltipBox({ active, payload, label }: any) {
   );
 }
 
+function PieTooltipBox({ active, payload }: any) {
+  if (!active || !payload || payload.length === 0) return null;
+  const p = payload[0];
+  return (
+    <div className="bg-edu-surface border border-edu-border rounded-edu-chip px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.1)]">
+      <div className="flex items-center gap-1.5 text-[0.72rem] text-edu-ink-700">
+        <span className="w-2 h-2 rounded-[3px] inline-block" style={{ backgroundColor: p.payload.fill }} />
+        {p.name}: <strong>{p.value} %</strong>
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
@@ -179,8 +201,8 @@ export function DirFinanzasPage() {
         })}
       </div>
 
-      {/* Ingresos mensuales + inventario */}
-      <div className="grid grid-cols-[1.7fr_1fr] gap-4 items-stretch">
+      {/* Ingresos mensuales + pagos por moneda + inventario */}
+      <div className="grid grid-cols-[1.5fr_0.9fr_1fr] gap-4 items-stretch">
         <SectionCard title="Ingresos mensuales" hint="Equivalente en USD · últimos 6 meses">
           <div className="px-3 pt-[18px] pb-3 flex-1">
             <ResponsiveContainer width="100%" height={230}>
@@ -198,6 +220,28 @@ export function DirFinanzasPage() {
                 <Area type="monotone" dataKey="ingresos" name="Ingresos" stroke={color.warning} strokeWidth={2.5} fill="url(#gradIngresos)" dot={{ r: 3, fill: color.warning, strokeWidth: 0 }} activeDot={{ r: 5 }} />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Pagos por moneda" hint="% del total recaudado">
+          <div className="px-3 pt-2 pb-3 flex-1 flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height={160}>
+              <PieChart>
+                <Pie data={PAGOS_MONEDA} dataKey="value" nameKey="name" innerRadius="52%" outerRadius="80%" paddingAngle={3} stroke="none">
+                  {PAGOS_MONEDA.map((entry) => (
+                    <Cell key={entry.name} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTooltipBox />} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex flex-col gap-1.5 mt-1 w-full px-2">
+              {PAGOS_MONEDA.map((m) => (
+                <span key={m.name} className="inline-flex items-center gap-1.5 text-[0.75rem] text-edu-ink-500">
+                  <span className="w-2.5 h-2.5 rounded-[3px]" style={{ backgroundColor: m.fill }} /> {m.name} · {m.value} %
+                </span>
+              ))}
+            </div>
           </div>
         </SectionCard>
 

@@ -112,16 +112,7 @@ export function MensajesPage() {
                             {selected.online ? "En línea" : selected.subtitle}
                         </div>
                     </div>
-                    <div className="flex items-center gap-1 text-edu-ink-400">
-                        {[Phone, Video, MoreVertical].map((Icon, i) => (
-                            <button
-                                key={i}
-                                className="w-8 h-8 rounded-full flex items-center justify-center bg-transparent border-none cursor-pointer hover:bg-edu-subtle hover:text-edu-ink-700 transition-colors"
-                            >
-                                <Icon className="w-[18px] h-[18px]" />
-                            </button>
-                        ))}
-                    </div>
+
                 </div>
 
                 {/* Mensajes */}

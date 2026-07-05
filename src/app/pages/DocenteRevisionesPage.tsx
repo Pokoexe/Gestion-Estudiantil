@@ -11,16 +11,24 @@ import {
     Upload,
     Send,
     Pencil,
+    Search,
 } from "lucide-react";
 import { color } from "../theme/tokens";
 import { PLANIFICACIONES } from "../data/planificaciones";
 import { PLANS } from "../data/plans";
+import { Pagination } from "../components/Pagination";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
+
+const PER_PAGE = 5;
 
 type RevType = "examen" | "tema" | "planificacion" | "plan";
 type RevEstado = "Por revisar" | "Cambios enviados";
 
 interface Revision {
     id: string;
+    lapso: LapsoId;
     type: RevType;
     title: string;
     materia: string;
@@ -44,18 +52,20 @@ const TYPE_META: Record<
 /* Exámenes y temas de materias reprobadas (mock). Planificaciones y planes se
    derivan de los stores compartidos (los que están "En revisión"). */
 const EXAMENES: Omit<Revision, "estado">[] = [
-    { id: "ex-1", type: "examen", title: "Examen · Unidad 3", materia: "Ciencias Naturales", seccion: "4.º Año B", fecha: "5 jul 2026", adjunto: "examen_u3_4B.pdf", detalle: "El evaluador solicitó reformular la pregunta 4 y ajustar la ponderación." },
-    { id: "ex-2", type: "examen", title: "Examen · Genética", materia: "Biología", seccion: "5.º Año A", fecha: "7 jul 2026", adjunto: "examen_genetica_5A.pdf", detalle: "Corregir el enunciado del problema 2." },
+    { id: "ex-1", lapso: 2, type: "examen", title: "Examen · Unidad 3", materia: "Ciencias Naturales", seccion: "4.º Año B", fecha: "5 jul 2026", adjunto: "examen_u3_4B.pdf", detalle: "El evaluador solicitó reformular la pregunta 4 y ajustar la ponderación." },
+    { id: "ex-2", lapso: 2, type: "examen", title: "Examen · Genética", materia: "Biología", seccion: "5.º Año A", fecha: "7 jul 2026", adjunto: "examen_genetica_5A.pdf", detalle: "Corregir el enunciado del problema 2." },
+    { id: "ex-3", lapso: 1, type: "examen", title: "Examen del lapso · Suelos", materia: "Ciencias de la Tierra", seccion: "3.º Año C", fecha: "26 may 2026", adjunto: "examen_suelos_3C.pdf", detalle: "Ajustar la ponderación de la sección práctica." },
 ];
 
 const TEMAS: Omit<Revision, "estado">[] = [
-    { id: "tm-1", type: "tema", title: "Temario de recuperación", materia: "Química", seccion: "5.º Año B", fecha: "9 jul 2026", adjunto: "reparacion_quimica_5B.pdf", detalle: "Detallar los temas del período de reparación y adjuntar el material corregido." },
-    { id: "tm-2", type: "tema", title: "Temario de recuperación", materia: "Ciencias de la Tierra", seccion: "3.º Año C", fecha: "10 jul 2026", adjunto: "reparacion_ct_3C.pdf", detalle: "Incluir el cronograma de las evaluaciones de recuperación." },
+    { id: "tm-1", lapso: 2, type: "tema", title: "Temario de recuperación", materia: "Química", seccion: "5.º Año B", fecha: "9 jul 2026", adjunto: "reparacion_quimica_5B.pdf", detalle: "Detallar los temas del período de reparación y adjuntar el material corregido." },
+    { id: "tm-2", lapso: 2, type: "tema", title: "Temario de recuperación", materia: "Ciencias de la Tierra", seccion: "3.º Año C", fecha: "10 jul 2026", adjunto: "reparacion_ct_3C.pdf", detalle: "Incluir el cronograma de las evaluaciones de recuperación." },
 ];
 
 function buildRevisiones(): Revision[] {
     const planif: Revision[] = PLANIFICACIONES.filter((p) => p.status === "review").map((p) => ({
         id: `planif-${p.id}`,
+        lapso: 2,
         type: "planificacion",
         title: `Planificación · ${p.count} sesiones`,
         materia: p.subject,
@@ -67,6 +77,7 @@ function buildRevisiones(): Revision[] {
     }));
     const planes: Revision[] = PLANS.filter((p) => p.status === "review").map((p) => ({
         id: `plan-${p.id}`,
+        lapso: 2,
         type: "plan",
         title: `Plan de evaluación · ${p.count} evaluaciones`,
         materia: p.subject,
@@ -99,11 +110,25 @@ export function DocenteRevisionesPage() {
     const navigate = useNavigate();
     const [items, setItems] = useState<Revision[]>(() => buildRevisiones());
     const [tab, setTab] = useState<"todos" | RevType>("todos");
+    const [query, setQuery] = useState("");
+    const [estadoFilter, setEstadoFilter] = useState<"todos" | RevEstado>("todos");
+    const [page, setPage] = useState(1);
     const [selected, setSelected] = useState<Revision | null>(null);
     const [changeFile, setChangeFile] = useState<{ url: string; name: string; isImage: boolean } | null>(null);
 
-    const countOf = (t: RevType) => items.filter((i) => i.type === t).length;
-    const filtradas = tab === "todos" ? items : items.filter((i) => i.type === tab);
+    const { selectedId } = useLapso();
+    const lapsoItems = items.filter((i) => i.lapso === selectedId);
+
+    const countOf = (t: RevType) => lapsoItems.filter((i) => i.type === t).length;
+
+    const filtered = lapsoItems
+        .filter((r) => tab === "todos" || r.type === tab)
+        .filter((r) => estadoFilter === "todos" || r.estado === estadoFilter)
+        .filter((r) => !query.trim() || `${r.title} ${r.materia} ${r.seccion}`.toLowerCase().includes(query.trim().toLowerCase()));
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const paged = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     const openItem = (r: Revision) => {
         setSelected(r);
@@ -169,13 +194,38 @@ export function DocenteRevisionesPage() {
                             <button
                                 key={t.key}
                                 type="button"
-                                onClick={() => setTab(t.key)}
+                                onClick={() => { setTab(t.key); setPage(1); }}
                                 className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${active ? "border-edu-primary text-edu-primary" : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"}`}
                             >
                                 {t.label}
                             </button>
                         );
                     })}
+                </div>
+
+                {/* Buscador + filtro estado */}
+                <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
+                    <LapsoFilter />
+                    <div className="relative flex-1 min-w-[180px]">
+                        <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                            placeholder="Buscar por título, materia o sección…"
+                            className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
+                        />
+                    </div>
+                    <select
+                        value={estadoFilter}
+                        onChange={(e) => { setEstadoFilter(e.target.value as "todos" | RevEstado); setPage(1); }}
+                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                    >
+                        <option value="todos">Todos los estados</option>
+                        <option value="Por revisar">Por revisar</option>
+                        <option value="Cambios enviados">Cambios enviados</option>
+                    </select>
+                    <span className="text-[0.8rem] text-edu-ink-400 font-medium shrink-0">{filtered.length} revisión{filtered.length === 1 ? "" : "es"}</span>
                 </div>
 
                 {/* Cabecera de tabla */}
@@ -186,10 +236,10 @@ export function DocenteRevisionesPage() {
                 </div>
 
                 {/* Filas */}
-                {filtradas.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-sm text-edu-ink-400">No hay revisiones de este tipo.</div>
+                {filtered.length === 0 ? (
+                    <div className="px-5 py-10 text-center text-sm text-edu-ink-400">No hay revisiones que coincidan con el filtro.</div>
                 ) : (
-                    filtradas.map((r, i) => {
+                    paged.map((r, i) => {
                         const m = TYPE_META[r.type];
                         const Icon = m.icon;
                         const redirige = r.type === "planificacion" || r.type === "plan";
@@ -197,7 +247,7 @@ export function DocenteRevisionesPage() {
                             <div
                                 key={r.id}
                                 onClick={() => openItem(r)}
-                                className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < filtradas.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <span
                                     className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
@@ -221,6 +271,11 @@ export function DocenteRevisionesPage() {
                             </div>
                         );
                     })
+                )}
+                {totalPages > 1 && (
+                    <div className="px-5 py-4 border-t border-edu-border-soft">
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+                    </div>
                 )}
             </div>
 

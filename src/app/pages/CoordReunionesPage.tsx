@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
     CalendarClock,
-    Users,
     CheckCircle2,
     XCircle,
     PlusCircle,
@@ -12,6 +11,7 @@ import {
     UserCog,
 } from "lucide-react";
 import { accent } from "../theme/tokens";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 
 /* ------------------------------------------------------------------ */
 /* Tipos y datos ficticios                                             */
@@ -54,6 +54,7 @@ const HEADERS = ["Tema", "Fecha", "Hora", "Convocados", "Estado", "Acciones"];
 export function CoordReunionesPage() {
     const [reuniones, setReuniones] = useState<Reunion[]>(REUNIONES_INICIALES);
     const [showModal, setShowModal] = useState(false);
+    const [confirm, setConfirm] = useState<{ id: number; action: "Realizada" | "Cancelada"; tema: string } | null>(null);
     const [form, setForm] = useState({
         tema: "",
         fecha: "",
@@ -93,9 +94,9 @@ export function CoordReunionesPage() {
     };
 
     const kpis = [
-        { label: "Programadas", value: totalProgramadas, icon: CalendarClock, ac: accent.purple },
+        { label: "Programadas", value: totalProgramadas, icon: Clock, ac: accent.purple },
         { label: "Realizadas", value: totalRealizadas, icon: CalendarCheck, ac: accent.green },
-        { label: "Total en agenda", value: reuniones.length, icon: Users, ac: accent.blue },
+        { label: "Próxima reunión", value: "14 Feb, 2027", icon: CalendarClock, ac: accent.amber },
     ];
 
     return (
@@ -171,13 +172,13 @@ export function CoordReunionesPage() {
                                     {editable ? (
                                         <>
                                             <button
-                                                onClick={() => cambiarEstado(r.id, "Realizada")}
+                                                onClick={() => setConfirm({ id: r.id, action: "Realizada", tema: r.tema })}
                                                 className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-success cursor-pointer bg-transparent border-none p-0 hover:underline"
                                             >
                                                 <CheckCircle2 style={{ width: 14, height: 14 }} /> Realizada
                                             </button>
                                             <button
-                                                onClick={() => cambiarEstado(r.id, "Cancelada")}
+                                                onClick={() => setConfirm({ id: r.id, action: "Cancelada", tema: r.tema })}
                                                 className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-danger cursor-pointer bg-transparent border-none p-0 hover:underline"
                                             >
                                                 <XCircle style={{ width: 14, height: 14 }} /> Cancelar
@@ -192,6 +193,31 @@ export function CoordReunionesPage() {
                     })}
                 </div>
             </div>
+
+            {/* Diálogo de confirmación */}
+            {confirm && (
+                confirm.action === "Realizada" ? (
+                    <ConfirmDialog
+                        tone="success"
+                        icon={CheckCircle2}
+                        title="Marcar como realizada"
+                        message={<>¿Confirmas que la reunión <strong>"{confirm.tema}"</strong> se llevó a cabo?</>}
+                        confirmLabel="Sí, realizada"
+                        onConfirm={() => { cambiarEstado(confirm.id, "Realizada"); setConfirm(null); }}
+                        onCancel={() => setConfirm(null)}
+                    />
+                ) : (
+                    <ConfirmDialog
+                        tone="danger"
+                        icon={XCircle}
+                        title="Cancelar reunión"
+                        message={<>¿Seguro que deseas cancelar la reunión <strong>"{confirm.tema}"</strong>? Esta acción no se puede deshacer.</>}
+                        confirmLabel="Sí, cancelar"
+                        onConfirm={() => { cambiarEstado(confirm.id, "Cancelada"); setConfirm(null); }}
+                        onCancel={() => setConfirm(null)}
+                    />
+                )
+            )}
 
             {/* Modal crear reunión */}
             {showModal && (

@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Gavel, ArrowRight, Award } from "lucide-react";
+import { Gavel, ArrowRight, Search } from "lucide-react";
+import { Pagination } from "../components/Pagination";
 import { POSTULACIONES, type PostEstado } from "../data/discusiones";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import { CURRENT_LAPSO_ID } from "../data/lapsos";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
-const TEAL_50 = "#f0fdfa";
 
 const ESTADO_META: Record<PostEstado, string> = {
   Pendiente: "bg-edu-warning-bg text-edu-warning",
@@ -12,8 +16,26 @@ const ESTADO_META: Record<PostEstado, string> = {
   Rechazada: "bg-edu-danger-bg text-edu-danger",
 };
 
+const COLS = "grid-cols-[1.6fr_1.2fr_1fr_0.7fr_0.9fr]";
+const HEADERS = ["Estudiante", "Materia", "Año", "Nota", "Estado"];
+const PER_PAGE = 8;
+
 export function EvalDiscusionPage() {
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+
+  const { selectedId } = useLapso();
+  const enLapso = POSTULACIONES.filter((p) => (p.lapso ?? CURRENT_LAPSO_ID) === selectedId);
+
+  const q = query.trim().toLowerCase();
+  const filtrado = enLapso.filter(
+    (p) => !q || `${p.estudiante} ${p.materia} ${p.anio}`.toLowerCase().includes(q),
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filtrado.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtrado.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
   return (
     <div className="flex flex-col gap-5">
@@ -39,45 +61,65 @@ export function EvalDiscusionPage() {
         </button>
       </div>
 
-      {/* Lista de discusiones (diseño de tarjetas) */}
+      {/* Tabla de postulaciones (diseño estándar con buscador + paginación) */}
       <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
         <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
           <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Estudiantes postulados al Concejo</h3>
-          <span className="text-[0.8rem] text-edu-ink-400 font-medium">{POSTULACIONES.length} casos</span>
+          <span className="text-[0.8rem] text-edu-ink-400 font-medium">
+            {filtrado.length} caso{filtrado.length === 1 ? "" : "s"}
+          </span>
         </div>
-        <div className="flex flex-col">
-          {POSTULACIONES.map((p, i, arr) => (
-            <div key={p.id} className={`px-5 py-4 flex gap-3.5 items-start ${i < arr.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-              <div className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-[0.85rem] font-bold shrink-0" style={{ backgroundColor: TEAL_50, color: TEAL }}>
-                {p.estudiante.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[0.9rem] font-bold text-edu-ink">{p.estudiante}</span>
-                  <span className="text-[0.7rem] font-semibold px-2 py-0.5 rounded-edu-pill bg-edu-subtle text-edu-ink-500">{p.anio} · {p.materia}</span>
-                  <span className="inline-flex items-center px-2 py-[2px] rounded-edu-chip text-[0.72rem] font-semibold bg-edu-danger-bg text-edu-danger">Nota: {p.nota}</span>
-                </div>
-                <p className="mt-1.5 mb-0 text-[0.8125rem] text-edu-ink-700 leading-[1.55]">{p.motivo}</p>
-                {p.actividades.length > 0 && (
-                  <div className="flex gap-1.5 mt-2.5 flex-wrap items-center">
-                    <span className="text-[0.7rem] text-edu-ink-400 font-medium">Actividades:</span>
-                    {p.actividades.map((a) => (
-                      <span key={a} className="inline-flex items-center gap-[5px] px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold" style={{ backgroundColor: TEAL_50, color: TEAL }}>
-                        <Award className="w-3 h-3" /> {a}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {p.observacion && (
-                  <div className={`mt-2.5 text-xs rounded-edu-chip px-2.5 py-1.5 w-fit ${p.estado === "Rechazada" ? "text-edu-danger bg-edu-danger-bg" : "text-edu-success bg-edu-success-bg"}`}>
-                    {p.observacion}
-                  </div>
-                )}
-              </div>
-              <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit shrink-0 ${ESTADO_META[p.estado]}`}>{p.estado}</span>
-            </div>
+
+        {/* Buscador + filtro de lapso */}
+        <div className="px-5 py-3 border-b border-edu-border-soft flex gap-2 items-center flex-wrap">
+          <LapsoFilter />
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              placeholder="Buscar por estudiante, materia o año…"
+              className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-teal-600"
+            />
+          </div>
+        </div>
+
+        {/* Cabecera de tabla */}
+        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+          {HEADERS.map((h) => (
+            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
           ))}
         </div>
+
+        {paged.length === 0 ? (
+          <div className="px-5 py-10 text-center text-sm text-edu-ink-400">
+            {enLapso.length === 0
+              ? "Aún no hay estudiantes postulados al Concejo en este lapso."
+              : "No hay registros que coincidan con la búsqueda."}
+          </div>
+        ) : (
+          paged.map((p, i) => (
+            <div
+              key={p.id}
+              className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+            >
+              <span className="text-sm text-edu-ink font-medium">{p.estudiante}</span>
+              <span className="text-[0.8125rem] text-edu-ink-500">{p.materia}</span>
+              <span className="text-[0.8125rem] text-edu-ink-500">{p.anio}</span>
+              <span className="text-sm text-edu-ink-700 font-semibold">{p.nota}</span>
+              <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${ESTADO_META[p.estado]}`}>
+                {p.estado}
+              </span>
+            </div>
+          ))
+        )}
+
+        {totalPages > 1 && (
+          <div className="px-5 py-4 border-t border-edu-border-soft">
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
       </div>
     </div>
   );

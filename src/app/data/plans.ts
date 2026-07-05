@@ -4,6 +4,8 @@
  * (DocentePlanFormPage) para que los cambios se reflejen entre vistas.
  */
 
+import { CURRENT_LAPSO_ID, type LapsoId } from "./lapsos";
+
 export type PlanEstado = "approved" | "review" | "draft" | "changes";
 
 export interface PlanEvaluacion {
@@ -17,6 +19,8 @@ export interface PlanEvaluacion {
 
 export interface Plan {
     id: number;
+    /** Lapso al que pertenece el plan. Si falta, se asume el lapso en curso. */
+    lapso?: LapsoId;
     subject: string;
     section: string;
     count: number;
@@ -40,11 +44,23 @@ export const LAPSO = {
 
 export const MIN_EVALS = 4;
 
+const STATIC_EVALS: PlanEvaluacion[] = [
+    { id: 1, content: "Evaluación 1", description: "", weight: "25", date: "2026-07-15", files: [] },
+    { id: 2, content: "Evaluación 2", description: "", weight: "25", date: "2026-08-05", files: [] },
+    { id: 3, content: "Evaluación 3", description: "", weight: "25", date: "2026-08-26", files: [] },
+    { id: 4, content: "Evaluación 4", description: "", weight: "25", date: "2026-09-16", files: [] },
+];
+
 export let PLANS: Plan[] = [
-    { id: 1, subject: "Biología", section: "5.º Año A", count: 5, status: "approved" },
-    { id: 2, subject: "Ciencias Naturales", section: "4.º Año B", count: 5, status: "review", note: "En espera de aprobación del evaluador" },
-    { id: 3, subject: "Química", section: "5.º Año B", count: 4, status: "changes", note: "El evaluador solicitó ajustar la ponderación de la Unidad 2" },
-    { id: 4, subject: "Ciencias de la Tierra", section: "3.º Año C", count: 4, status: "draft" },
+    // Lapso II (en curso)
+    { id: 1, lapso: 2, subject: "Biología", section: "5.º Año A", count: 5, status: "approved", evaluations: STATIC_EVALS },
+    { id: 2, lapso: 2, subject: "Ciencias Naturales", section: "4.º Año B", count: 5, status: "review", note: "En espera de aprobación del evaluador", evaluations: STATIC_EVALS },
+    { id: 3, lapso: 2, subject: "Química", section: "5.º Año B", count: 4, status: "changes", note: "El evaluador solicitó ajustar la ponderación de la Unidad 2", evaluations: STATIC_EVALS },
+    { id: 4, lapso: 2, subject: "Ciencias de la Tierra", section: "3.º Año C", count: 4, status: "draft", evaluations: STATIC_EVALS },
+    // Lapso I (finalizado) — planes ya aprobados
+    { id: 5, lapso: 1, subject: "Biología", section: "5.º Año A", count: 4, status: "approved", evaluations: STATIC_EVALS },
+    { id: 6, lapso: 1, subject: "Ciencias Naturales", section: "4.º Año B", count: 4, status: "approved", evaluations: STATIC_EVALS },
+    { id: 7, lapso: 1, subject: "Química", section: "5.º Año B", count: 4, status: "approved", evaluations: STATIC_EVALS },
 ];
 
 export const getPlanById = (id: string | number | undefined): Plan | undefined =>
@@ -59,6 +75,7 @@ interface PlanInput {
 export function addPlan(data: PlanInput): Plan {
     const plan: Plan = {
         id: Date.now(),
+        lapso: CURRENT_LAPSO_ID,
         subject: data.subject,
         section: data.section,
         count: data.evaluations.length,

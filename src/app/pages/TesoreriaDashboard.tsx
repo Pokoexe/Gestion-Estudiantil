@@ -371,6 +371,7 @@ export function TesoreriaDashboard() {
       {/* Modal: datos + bauche de la transferencia seleccionada */}
       {selectedPay && (
         <BaucheModal
+          showOptions={true}
           rep={selectedPay.rep}
           student={selectedPay.student}
           amount={selectedPay.amount}

@@ -14,7 +14,10 @@ import {
   Phone,
 } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { BOLETINES, ANIOS, SECCIONES, MATERIAS, promedio, notaColor, type Boletin } from "../data/boletines";
+import { BOLETINES, ANIOS, SECCIONES, MATERIAS, promedio, notaColor, notasDe, type Boletin } from "../data/boletines";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
 
 /* ------------------------------------------------------------------ */
 /* Constantes                                                          */
@@ -32,7 +35,7 @@ interface Grupo {
   recibidos: number;
 }
 
-const GRUPOS: Grupo[] = (() => {
+function buildGrupos(lapso: LapsoId): Grupo[] {
   const map = new Map<string, Boletin[]>();
   for (const b of BOLETINES) {
     const key = `${b.anio} ${b.seccion}`;
@@ -43,10 +46,10 @@ const GRUPOS: Grupo[] = (() => {
   return Array.from(map.entries()).map(([label, items]) => ({
     label,
     estudiantes: items.length,
-    promedio: items.reduce((a, b) => a + promedio(b.notas), 0) / items.length,
+    promedio: items.reduce((a, b) => a + promedio(notasDe(b, lapso)), 0) / items.length,
     recibidos: items.filter((b) => b.retirado).length,
   }));
-})();
+}
 
 const GRUPO_COLS = "grid-cols-[2fr_1fr_1fr_1.1fr_1fr]";
 
@@ -69,9 +72,12 @@ export function EvalBoletinesPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [vista, setVista] = useState<"estudiante" | "seccion">("estudiante");
 
+  const { selectedId } = useLapso();
+  const GRUPOS = buildGrupos(selectedId);
+
   // Totales globales (para la sábana por año / sección)
   const recibidosGlobal = BOLETINES.filter((b) => b.retirado).length;
-  const promGlobal = (BOLETINES.reduce((a, b) => a + promedio(b.notas), 0) / BOLETINES.length).toFixed(2);
+  const promGlobal = (BOLETINES.reduce((a, b) => a + promedio(notasDe(b, selectedId)), 0) / BOLETINES.length).toFixed(2);
   const descargarGrupo = (g: Grupo) => setFeedback(`Se generaron ${g.estudiantes} boletines de ${g.label} en un solo archivo PDF.`);
 
   // Filtro por selects (año / sección / materia) — base de los KPIs y de la descarga masiva
@@ -94,7 +100,7 @@ export function EvalBoletinesPage() {
 
   // KPIs sobre el filtro seleccionado
   const total = porSelects.length;
-  const prom = total ? (porSelects.reduce((a, b) => a + promedio(b.notas), 0) / total).toFixed(2) : "—";
+  const prom = total ? (porSelects.reduce((a, b) => a + promedio(notasDe(b, selectedId)), 0) / total).toFixed(2) : "—";
   const recibidos = porSelects.filter((b) => b.retirado).length;
   const porEntregar = total - recibidos;
 
@@ -127,7 +133,8 @@ export function EvalBoletinesPage() {
         </div>
       )}
 
-      {/* Pestañas */}
+      {/* Pestañas + filtro de lapso */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
       <div className="inline-flex gap-1 bg-edu-subtle rounded-edu-control p-1 w-fit">
         {([
           { key: "estudiante", label: "Por estudiante" },
@@ -143,6 +150,8 @@ export function EvalBoletinesPage() {
             {t.label}
           </button>
         ))}
+      </div>
+        <LapsoFilter />
       </div>
 
       {vista === "estudiante" && (
@@ -234,7 +243,7 @@ export function EvalBoletinesPage() {
           <div className="px-5 py-10 text-center text-sm text-edu-ink-400">No hay boletines que coincidan con el filtro.</div>
         ) : (
           paged.map((b, i) => {
-            const p = promedio(b.notas);
+            const p = promedio(notasDe(b, selectedId));
             return (
               <div
                 key={b.id}
@@ -344,7 +353,8 @@ export function EvalBoletinesPage() {
 
       {/* Modal: detalle del boletín */}
       {selected && (() => {
-        const p = promedio(selected.notas);
+        const notasSel = notasDe(selected, selectedId);
+        const p = promedio(notasSel);
         return (
           <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
             <div className="bg-edu-surface rounded-edu-card w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
@@ -410,7 +420,7 @@ export function EvalBoletinesPage() {
                     {MATERIAS.map((m, i) => (
                       <div key={m} className={`flex items-center justify-between px-3.5 py-2 text-[0.8125rem] ${i < MATERIAS.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
                         <span className="text-edu-ink-700">{m}</span>
-                        <span className={`font-semibold ${notaColor(selected.notas[i])}`}>{selected.notas[i]}</span>
+                        <span className={`font-semibold ${notaColor(notasSel[i])}`}>{notasSel[i]}</span>
                       </div>
                     ))}
                   </div>

@@ -6,10 +6,14 @@
  * vistas comparten este store para que el flujo evaluador → concejo sea real.
  */
 
+import { CURRENT_LAPSO_ID, type LapsoId } from "./lapsos";
+
 export type PostEstado = "Pendiente" | "Aceptada" | "Rechazada";
 
 export interface Postulacion {
     id: number;
+    /** Lapso al que corresponde la discusión. Si falta, se asume el lapso en curso. */
+    lapso?: LapsoId;
     estudiante: string;
     materia: string;
     /** Año / sección del estudiante postulado. */
@@ -52,28 +56,33 @@ export const ANIOS_DISCUSION = [
 ];
 
 export let POSTULACIONES: Postulacion[] = [
+    // Lapso II (en curso)
     {
         id: 1,
+        lapso: 2,
         estudiante: "Carlos Bracho",
         materia: "Matemáticas",
         anio: "4.º Año A",
         nota: 9,
-        motivo: "Reprobó por 1 punto tras mejorar notablemente en el 3.º lapso.",
+        motivo: "Reprobó por 1 punto tras mejorar notablemente en las últimas evaluaciones.",
         actividades: ["Selección de baloncesto (2 pts.)", "Ayudante de laboratorio (1 pt.)"],
         estado: "Pendiente",
     },
     {
         id: 2,
+        lapso: 2,
         estudiante: "Eduardo Marín",
         materia: "Física",
         anio: "5.º Año B",
         nota: 7,
-        motivo: "Situación familiar durante el 2.º lapso; recuperó en actividades finales.",
+        motivo: "Situación familiar durante el lapso; recuperó en actividades finales.",
         actividades: ["Grupo de teatro (2 pts.)"],
         estado: "Pendiente",
     },
+    // Lapso I (finalizado) — ya decididas por el Concejo
     {
         id: 3,
+        lapso: 1,
         estudiante: "Jesús Alvarado",
         materia: "Química",
         anio: "5.º Año B",
@@ -85,6 +94,7 @@ export let POSTULACIONES: Postulacion[] = [
     },
     {
         id: 4,
+        lapso: 1,
         estudiante: "Gustavo Linares",
         materia: "Historia",
         anio: "3.º Año A",
@@ -98,7 +108,10 @@ export let POSTULACIONES: Postulacion[] = [
 
 /** El evaluador postula un estudiante ante el Concejo (queda Pendiente). */
 export function postularEstudiante(data: Omit<Postulacion, "id" | "estado">): void {
-    POSTULACIONES = [{ ...data, id: Date.now(), estado: "Pendiente" }, ...POSTULACIONES];
+    POSTULACIONES = [
+        { ...data, lapso: data.lapso ?? CURRENT_LAPSO_ID, id: Date.now(), estado: "Pendiente" },
+        ...POSTULACIONES,
+    ];
 }
 
 /** El Concejo decide una postulación pendiente. */

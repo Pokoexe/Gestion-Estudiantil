@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Eye, EyeOff, GraduationCap, MessageCircle } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, GraduationCap, MessageCircle } from "lucide-react";
 import { ROLE_ORDER, ROLES } from "../roles";
 
 export function LoginPage() {
@@ -24,6 +24,15 @@ export function LoginPage() {
       {/* Panel izquierdo — Formulario de acceso */}
       <div className="flex flex-1 flex-col justify-center items-center px-8 py-12 bg-white lg:max-w-[540px] w-full">
         <div className="w-full max-w-[380px]">
+          {/* Volver a la página de inicio (landing pública) */}
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-1.5 mb-6 text-[0.8125rem] font-medium text-edu-ink-500 bg-transparent border-none cursor-pointer hover:text-edu-primary transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al inicio
+          </button>
+
           {/* Logo */}
           <div className="flex items-center gap-2.5 mb-9">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-edu-primary">

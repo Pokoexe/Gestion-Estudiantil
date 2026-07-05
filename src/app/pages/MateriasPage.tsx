@@ -1,4 +1,5 @@
-import { Award, TrendingDown, AlertCircle, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { Award, TrendingDown, AlertCircle, ChevronRight, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 import { color } from "../theme/tokens";
 
@@ -225,10 +226,17 @@ const SUBJECT_HEADERS_FAILS = ["Materia", "Promedio", "Estado"];
 
 export function MateriasPage() {
     const navigate = useNavigate();
+    const [query, setQuery] = useState("");
 
     const best = SUBJECTS.reduce((a, b) => (b.average > a.average ? b : a));
     const worst = SUBJECTS.reduce((a, b) => (b.average < a.average ? b : a));
     const failing = SUBJECTS.filter((s) => s.status !== "aprobado");
+
+    const filteredSubjects = SUBJECTS.filter((s) =>
+        !query.trim() ||
+        s.name.toLowerCase().includes(query.trim().toLowerCase()) ||
+        s.teacher.toLowerCase().includes(query.trim().toLowerCase()),
+    );
 
     const goToSubject = (id: number) => navigate(`/estudiante/materias/${id}`);
 
@@ -322,11 +330,11 @@ export function MateriasPage() {
                     </div>
                 </div>
 
-                {/* Materias reprobadas o por reprobar */}
+                {/* Materias reprobadas*/}
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                     <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
                         <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
-                            Materias reprobadas o por reprobar
+                            Materias reprobadas
                         </h3>
                         <span className="text-[0.8rem] text-edu-danger font-medium">
                             {failing.length} en riesgo
@@ -382,8 +390,20 @@ export function MateriasPage() {
                         Todas las materias
                     </h3>
                     <span className="text-[0.8rem] text-edu-ink-400 font-medium">
-                        {SUBJECTS.length} materias
+                        {filteredSubjects.length} materias
                     </span>
+                </div>
+                <div className="px-5 py-3 border-b border-edu-border-soft">
+                    <div className="relative">
+                        <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Buscar materia o profesor…"
+                            className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
+                        />
+                    </div>
                 </div>
                 <div>
                     <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
@@ -396,13 +416,18 @@ export function MateriasPage() {
                             </span>
                         ))}
                     </div>
-                    {SUBJECTS.map((s, i) => {
+                    {filteredSubjects.length === 0 && (
+                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                            No hay materias que coincidan con la búsqueda.
+                        </div>
+                    )}
+                    {filteredSubjects.map((s, i) => {
                         const st = STATUS_META[s.status];
                         return (
                             <div
                                 key={s.id}
                                 onClick={() => goToSubject(s.id)}
-                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < SUBJECTS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < filteredSubjects.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <div className="flex items-center gap-2">
                                     <span
