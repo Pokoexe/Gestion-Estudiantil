@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import {
   Layers,
   BookOpen,
@@ -12,12 +13,19 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
 } from "recharts";
 import { color, accent } from "../theme/tokens";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
@@ -63,6 +71,28 @@ const PERFORMANCE = [
   { anio: "4.º", promedio: 15.6 },
   { anio: "5.º", promedio: 16.1 },
   { anio: "6.º", promedio: 14.8 },
+];
+
+const RENDIMIENTO_LAPSO = [
+  { lapso: "Lapso I", promedio: 15.1 },
+  { lapso: "Lapso II", promedio: 15.6 },
+  { lapso: "Lapso III", promedio: 15.8 },
+];
+
+/* Ajustes por lapso aplicados a las cifras agregadas del panorama. */
+const PROMEDIO_POR_LAPSO: Record<LapsoId, number> = { 1: 15.1, 2: 15.6, 3: 15.8 };
+const DELTA_PROMEDIO: Record<LapsoId, number> = { 1: -0.5, 2: 0, 3: 0.2 };
+const DELTA_ASISTENCIA: Record<LapsoId, number> = { 1: -2, 2: 0, 3: 1 };
+const round1 = (n: number) => Math.round(n * 10) / 10;
+const clampPct = (n: number) => Math.max(0, Math.min(100, n));
+
+const ASISTENCIA_MES = [
+  { mes: "Feb", asistencia: 88 },
+  { mes: "Mar", asistencia: 90 },
+  { mes: "Abr", asistencia: 89 },
+  { mes: "May", asistencia: 92 },
+  { mes: "Jun", asistencia: 91 },
+  { mes: "Jul", asistencia: 93 },
 ];
 
 interface Incident {
@@ -131,7 +161,7 @@ function Th({ children }: { children: React.ReactNode }) {
   );
 }
 
-function TooltipBox({ active, payload, label }: any) {
+function TooltipBox({ active, payload, label, suffix }: any) {
   if (!active || !payload || payload.length === 0) return null;
   return (
     <div className="bg-edu-surface border border-edu-border rounded-edu-chip px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.1)]">
@@ -139,10 +169,26 @@ function TooltipBox({ active, payload, label }: any) {
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-1.5 text-[0.72rem] text-edu-ink-700">
           <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: p.color }} />
-          {p.name}: <strong>{p.value}</strong>
+          {p.name}: <strong>{p.value}{suffix ?? ""}</strong>
         </div>
       ))}
     </div>
+  );
+}
+
+/** Punto del gráfico de lapsos; resalta el lapso actualmente seleccionado. */
+function LapsoDot({ cx, cy, index, selectedIndex }: any) {
+  if (cx == null || cy == null) return null;
+  const sel = index === selectedIndex;
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={sel ? 7 : 4}
+      fill={color.warning}
+      stroke={sel ? color.primary : "transparent"}
+      strokeWidth={sel ? 2.5 : 0}
+    />
   );
 }
 
@@ -151,19 +197,40 @@ function TooltipBox({ active, payload, label }: any) {
 /* ------------------------------------------------------------------ */
 
 export function DirAcademicoPage() {
+  const navigate = useNavigate();
+  const { selected, selectedId } = useLapso();
+
+  // Cifras agregadas ajustadas al lapso seleccionado.
+  const kpis = KPIS.map((k) => {
+    if (k.label === "Promedio general")
+      return { ...k, value: PROMEDIO_POR_LAPSO[selectedId].toLocaleString("es-ES", { minimumFractionDigits: 1 }), hint: `Escala 0 – 20 · ${selected.label}` };
+    if (k.label === "Asistencia global")
+      return { ...k, value: `${clampPct(91 + DELTA_ASISTENCIA[selectedId])} %`, hint: `Promedio del ${selected.label.toLowerCase()}` };
+    return k;
+  });
+  const sections = SECTIONS.map((s) => ({
+    ...s,
+    average: round1(s.average + DELTA_PROMEDIO[selectedId]),
+    attendance: clampPct(s.attendance + DELTA_ASISTENCIA[selectedId]),
+  }));
+  const performance = PERFORMANCE.map((p) => ({ ...p, promedio: round1(p.promedio + DELTA_PROMEDIO[selectedId]) }));
+
   return (
     <div className="flex flex-col gap-5">
       {/* Encabezado de sección */}
-      <div>
-        <h2 className="m-0 text-edu-ink font-bold text-xl">Panorama académico global</h2>
-        <p className="m-0 mt-1 text-edu-ink-400 text-[0.85rem]">
-          Rendimiento, asistencia e incidencias de toda la institución · Período 2026-I
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="m-0 text-edu-ink font-bold text-xl">Panorama académico global</h2>
+          <p className="m-0 mt-1 text-edu-ink-400 text-[0.85rem]">
+            Rendimiento, asistencia e incidencias de toda la institución · Período 2026-I
+          </p>
+        </div>
+        <LapsoFilter />
       </div>
 
       {/* Fila de KPIs */}
       <div className="grid grid-cols-5 gap-4">
-        {KPIS.map((kpi) => {
+        {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
             <div key={kpi.label} className="bg-edu-surface rounded-edu-card p-5 flex flex-col gap-3 border border-edu-border-soft">
@@ -187,7 +254,7 @@ export function DirAcademicoPage() {
         <SectionCard title="Rendimiento por año" hint="Promedio institucional 0 – 20">
           <div className="px-3 pt-[18px] pb-3 flex-1">
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={PERFORMANCE} margin={{ top: 6, right: 12, left: -14, bottom: 0 }}>
+              <BarChart data={performance} margin={{ top: 6, right: 12, left: -14, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={color.borderSoft} vertical={false} />
                 <XAxis dataKey="anio" tick={{ fontSize: 12, fill: color.ink500 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: color.ink400 }} axisLine={false} tickLine={false} domain={[0, 20]} width={40} />
@@ -218,6 +285,43 @@ export function DirAcademicoPage() {
         </SectionCard>
       </div>
 
+      {/* Asistencia mensual + Rendimiento por lapso */}
+      <div className="grid grid-cols-2 gap-4 items-stretch">
+        <SectionCard title="Asistencia mensual" hint="% promedio · últimos 6 meses">
+          <div className="px-3 pt-[18px] pb-3 flex-1">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={ASISTENCIA_MES} margin={{ top: 6, right: 12, left: -18, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradAsistAcad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color.success} stopOpacity={0.28} />
+                    <stop offset="100%" stopColor={color.success} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={color.borderSoft} vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 12, fill: color.ink500 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: color.ink400 }} axisLine={false} tickLine={false} width={40} domain={[80, 100]} />
+                <Tooltip content={<TooltipBox suffix=" %" />} />
+                <Area type="monotone" dataKey="asistencia" name="Asistencia" stroke={color.success} strokeWidth={2.5} fill="url(#gradAsistAcad)" dot={{ r: 3, fill: color.success, strokeWidth: 0 }} activeDot={{ r: 5 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Rendimiento por lapso" hint="Promedio 0 – 20">
+          <div className="px-3 pt-[18px] pb-3 flex-1">
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={RENDIMIENTO_LAPSO} margin={{ top: 6, right: 16, left: -18, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={color.borderSoft} vertical={false} />
+                <XAxis dataKey="lapso" tick={{ fontSize: 12, fill: color.ink500 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: color.ink400 }} axisLine={false} tickLine={false} width={40} domain={[14, 17]} />
+                <Tooltip content={<TooltipBox />} />
+                <Line type="monotone" dataKey="promedio" name="Promedio" stroke={color.warning} strokeWidth={2.5} dot={(p: any) => <LapsoDot key={p.index} {...p} selectedIndex={selectedId - 1} />} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+      </div>
+
       {/* Tabla de secciones por año */}
       <SectionCard title="Secciones por año" hint="24 secciones activas">
         <div>
@@ -226,10 +330,11 @@ export function DirAcademicoPage() {
               <Th key={h}>{h}</Th>
             ))}
           </div>
-          {SECTIONS.map((r, i) => (
+          {sections.map((r, i) => (
             <div
               key={r.year}
-              className={`grid grid-cols-[1fr_1fr_0.8fr_0.9fr_1fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < SECTIONS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+              onClick={() => navigate("/director/secciones")}
+              className={`grid grid-cols-[1fr_1fr_0.8fr_0.9fr_1fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle cursor-pointer ${i < sections.length - 1 ? "border-b border-edu-border-soft" : ""}`}
             >
               <span className="text-sm text-edu-ink font-semibold">{r.year}</span>
               <span className="text-[0.8125rem] text-edu-ink-500">{r.section}</span>
@@ -246,37 +351,6 @@ export function DirAcademicoPage() {
         </div>
       </SectionCard>
 
-      {/* Incidencias recientes */}
-      <SectionCard title="Incidencias recientes" hint="Docentes y estudiantes">
-        <div>
-          {INCIDENTS.map((inc, i) => {
-            const meta = LEVEL_META[inc.level];
-            return (
-              <div
-                key={i}
-                className={`flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-edu-subtle ${i < INCIDENTS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-              >
-                <div className={`w-9 h-9 rounded-edu-control flex items-center justify-center shrink-0 ${inc.role === "Docente" ? "bg-edu-purple-bg" : "bg-edu-warning-bg"}`}>
-                  {inc.role === "Docente" ? (
-                    <GraduationCap style={{ width: "18px", height: "18px", color: color.purple }} />
-                  ) : (
-                    <Users style={{ width: "18px", height: "18px", color: color.warning }} />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[0.9rem] font-semibold text-edu-ink">{inc.who}</span>
-                    <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded-edu-pill bg-edu-subtle text-edu-ink-500">{inc.role}</span>
-                  </div>
-                  <div className="text-[0.8rem] text-edu-ink-500 mt-0.5">{inc.detail}</div>
-                </div>
-                <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${meta.cls}`}>{meta.label}</span>
-                <span className="text-[0.8rem] text-edu-ink-400 w-12 text-right shrink-0">{inc.date}</span>
-              </div>
-            );
-          })}
-        </div>
-      </SectionCard>
     </div>
   );
 }

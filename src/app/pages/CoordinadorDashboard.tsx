@@ -28,7 +28,7 @@ import { color, radius, shadow, accent } from "../theme/tokens";
 /* ---------- Datos ficticios ---------- */
 
 const KPIS = [
-  { label: "Reuniones esta semana", value: "3", ac: accent.blue, icon: CalendarClock, note: "1 hoy · 2 esta semana" },
+  { label: "Próxima reunión", value: "3 jul 2026, 10:00", ac: accent.blue, icon: CalendarClock, note: "Docentes · Ajuste de plan de evaluación" },
   { label: "Planificaciones por revisar", value: "4", ac: accent.amber, icon: ClipboardList, note: "2 vencen esta semana" },
   { label: "Actividades activas", value: "6", ac: accent.green, icon: Sparkles, note: "Deportivas, culturales y académicas" },
   { label: "Incidencias del mes", value: "9", ac: accent.red, icon: AlertTriangle, note: "3 más que el mes anterior" },
@@ -94,11 +94,9 @@ const ACTIVITIES: {
   status: string;
   statusOk: boolean;
 }[] = [
-  { name: "Torneo de fútbol", type: "Deportiva", icon: Trophy, teacher: "Prof. Óscar Delgado", taken: 18, cap: 25, status: "En curso", statusOk: true },
-  { name: "Festival de danzas", type: "Cultural", icon: Music, teacher: "Prof. Marisol Cabrera", taken: 22, cap: 30, status: "Inscripciones abiertas", statusOk: true },
-  { name: "Feria de ciencias", type: "Académica", icon: FlaskConical, teacher: "Prof. Alejandro Morales", taken: 25, cap: 25, status: "Cupo lleno", statusOk: false },
-  { name: "Club de ajedrez", type: "Académica", icon: Brain, teacher: "Prof. Daniela Fuentes", taken: 12, cap: 20, status: "Inscripciones abiertas", statusOk: true },
-];
+    { name: "Torneo de fútbol", type: "Deportiva", icon: Trophy, teacher: "Prof. Óscar Delgado", taken: 18, cap: 25, status: "En curso", statusOk: true },
+    { name: "Festival de danzas", type: "Cultural", icon: Music, teacher: "Prof. Marisol Cabrera", taken: 22, cap: 30, status: "Inscripciones abiertas", statusOk: true },
+  ];
 
 type PersonRole = "Estudiante" | "Docente";
 type Severity = "Leve" | "Moderada" | "Grave";
@@ -152,6 +150,7 @@ function Pill({ bg, fg, children }: { bg: string; fg: string; children: React.Re
 export function CoordinadorDashboard() {
   return (
     <div className="flex flex-col gap-5">
+
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
         {KPIS.map((kpi) => {
@@ -176,150 +175,10 @@ export function CoordinadorDashboard() {
         })}
       </div>
 
-      {/* Acciones rápidas */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden px-5 py-4 flex items-center gap-3 flex-wrap">
-        <span className="text-[0.72rem] text-edu-ink-400 font-semibold uppercase tracking-[0.05em] mr-1">Acciones rápidas</span>
-        {QUICK_ACTIONS.map((a) => {
-          const Icon = a.icon;
-          return (
-            <button
-              key={a.label}
-              className={`inline-flex items-center gap-2 px-4 py-[9px] rounded-edu-control text-sm font-semibold cursor-pointer transition-colors ${
-                a.primary
-                  ? "border-[1.5px] border-transparent bg-edu-primary text-white hover:bg-edu-primary-hover"
-                  : "border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 hover:bg-edu-subtle"
-              }`}
-            >
-              <Icon style={{ width: "15px", height: "15px" }} />
-              {a.label}
-            </button>
-          );
-        })}
-      </div>
+      <div className="grid grid-cols-3 gap-5">
 
-      {/* Próximas reuniones */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Próximas reuniones" link="Ver todo →" />
-        <div>
-          {MEETINGS.map((m, i) => {
-            const meta = MEETING_META[m.status];
-            return (
-              <div
-                key={m.topic}
-                className={`flex items-center gap-3.5 px-5 py-3.5 cursor-pointer transition-colors hover:bg-edu-subtle ${
-                  i < MEETINGS.length - 1 ? "border-b border-edu-border-soft" : ""
-                }`}
-              >
-                <div className="w-[38px] h-[38px] rounded-edu-control bg-edu-primary-50 flex items-center justify-center shrink-0">
-                  <CalendarClock style={{ width: "18px", height: "18px", color: accent.blue.fg }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[0.9rem] font-semibold text-edu-ink">{m.topic}</div>
-                  <div className="flex gap-3 mt-[3px] flex-wrap">
-                    <span className="text-[0.775rem] text-edu-ink-500 flex items-center gap-1">
-                      <Users style={{ width: "12px", height: "12px" }} />
-                      {m.audience}
-                    </span>
-                    <span className="text-[0.775rem] text-edu-ink-500 flex items-center gap-1">
-                      <Clock style={{ width: "12px", height: "12px" }} />
-                      {m.datetime}
-                    </span>
-                  </div>
-                </div>
-                <Pill bg={meta.bg} fg={meta.fg}>{meta.label}</Pill>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Planificaciones por revisar */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Planificaciones por revisar" link="Ver todo →" />
-        <div>
-          <div className="grid grid-cols-[1.4fr_1.2fr_0.9fr_0.9fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-            {["Docente", "Materia", "Fecha envío", "Estado", "Acción"].map((h) => (
-              <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-            ))}
-          </div>
-          {PLANS.map((p, i) => {
-            const meta = PLAN_META[p.status];
-            return (
-              <div
-                key={p.teacher}
-                className={`transition-colors hover:bg-edu-subtle ${i < PLANS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-              >
-                <div className="grid grid-cols-[1.4fr_1.2fr_0.9fr_0.9fr_0.8fr] px-5 py-[13px] items-center">
-                  <span className="text-[0.875rem] text-edu-ink font-medium">{p.teacher}</span>
-                  <span className="text-[0.875rem] text-edu-ink-700">{p.subject}</span>
-                  <div className="flex items-center gap-1">
-                    <Clock style={{ width: "12px", height: "12px", color: color.ink400, flexShrink: 0 }} />
-                    <span className="text-[0.8125rem] text-edu-ink-500">{p.sent}</span>
-                  </div>
-                  <Pill bg={meta.bg} fg={meta.fg}>{meta.label}</Pill>
-                  <span className="text-[0.8125rem] text-edu-primary font-semibold cursor-pointer">Revisar</span>
-                </div>
-                {p.note && (
-                  <div className="mx-5 mb-[13px] px-3 py-2 bg-edu-danger-bg rounded-edu-chip flex items-start gap-2">
-                    <AlertTriangle style={{ width: "13px", height: "13px", color: color.danger, flexShrink: 0, marginTop: "2px" }} />
-                    <span className="text-[0.8rem] text-edu-ink-700 leading-[1.5]">{p.note}</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Actividades académicas y culturales */}
-      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-        <SectionHeader title="Actividades académicas y culturales" link="Ver todo →" />
-        <div className="px-5 py-4 grid grid-cols-2 gap-3.5">
-          {ACTIVITIES.map((act) => {
-            const meta = ACTIVITY_META[act.type];
-            const Icon = act.icon;
-            const pct = Math.round((act.taken / act.cap) * 100);
-            const barColor = pct >= 100 ? color.danger : pct >= 80 ? color.warningStrong : color.primary;
-            return (
-              <div key={act.name} className="border border-edu-border-soft rounded-xl p-4 flex flex-col gap-3 bg-edu-tint">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: meta.bg }}
-                  >
-                    <Icon style={{ width: "19px", height: "19px", color: meta.fg }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[0.9rem] font-semibold text-edu-ink">{act.name}</span>
-                      <Pill bg={meta.bg} fg={meta.fg}>{act.type}</Pill>
-                    </div>
-                    <div className="text-[0.775rem] text-edu-ink-500 mt-[3px]">{act.teacher}</div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-[5px]">
-                    <span className="text-[0.75rem] text-edu-ink-500 font-medium">Cupos</span>
-                    <span className="text-[0.8rem] text-edu-ink-700 font-bold">{act.taken}/{act.cap}</span>
-                  </div>
-                  <div className="h-1.5 bg-edu-border-soft rounded-edu-pill overflow-hidden">
-                    <div
-                      className="h-full rounded-edu-pill"
-                      style={{ width: `${pct}%`, backgroundColor: barColor }}
-                    />
-                  </div>
-                </div>
-                <Pill bg={act.statusOk ? color.successBg : color.warningBg} fg={act.statusOk ? color.success : color.warning}>{act.status}</Pill>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Fila inferior: incidencias tabla + gráfico */}
-      <div className="grid grid-cols-[1.5fr_1fr] gap-5 items-start">
         {/* Incidencias recientes */}
-        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+        <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <SectionHeader title="Incidencias recientes" link="Ver todo →" />
           <div>
             <div className="grid grid-cols-[1.4fr_1.3fr_0.9fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
@@ -333,9 +192,8 @@ export function CoordinadorDashboard() {
               return (
                 <div
                   key={inc.person + inc.date}
-                  className={`grid grid-cols-[1.4fr_1.3fr_0.9fr_0.8fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${
-                    i < INCIDENTS.length - 1 ? "border-b border-edu-border-soft" : ""
-                  }`}
+                  className={`grid grid-cols-[1.4fr_1.3fr_0.9fr_0.8fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < INCIDENTS.length - 1 ? "border-b border-edu-border-soft" : ""
+                    }`}
                 >
                   <div className="flex flex-col gap-1 min-w-0">
                     <span className="text-[0.875rem] text-edu-ink font-medium">{inc.person}</span>
@@ -350,26 +208,53 @@ export function CoordinadorDashboard() {
           </div>
         </div>
 
-        {/* Gráfico incidencias por mes */}
-        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-          <SectionHeader title="Incidencias por mes" link="2026" />
-          <div className="px-3 pt-4 pb-2">
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={INCIDENTS_BY_MONTH} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={color.borderSoft} vertical={false} />
-                <XAxis dataKey="mes" tick={{ fontSize: 12, fill: color.ink500 }} axisLine={{ stroke: color.border }} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: color.ink500 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip
-                  cursor={{ fill: color.subtle }}
-                  contentStyle={{ borderRadius: radius.control, border: `1px solid ${color.border}`, fontSize: "0.8rem", boxShadow: shadow.menu }}
-                  labelStyle={{ color: color.ink, fontWeight: 600 }}
-                />
-                <Bar dataKey="incidencias" name="Incidencias" fill={color.primary} radius={[6, 6, 0, 0]} maxBarSize={38} />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Actividades académicas y culturales */}
+        <div className=" bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+          <SectionHeader title="Actividades académicas y culturales en curso" link="Ver todo →" />
+          <div className="px-5 py-4 grid  gap-3.5">
+            {ACTIVITIES.map((act) => {
+              const meta = ACTIVITY_META[act.type];
+              const Icon = act.icon;
+              const pct = Math.round((act.taken / act.cap) * 100);
+              const barColor = pct >= 100 ? color.danger : pct >= 80 ? color.warningStrong : color.primary;
+              return (
+                <div key={act.name} className="border border-edu-border-soft rounded-xl p-4 flex flex-col gap-3 bg-edu-tint">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: meta.bg }}
+                    >
+                      <Icon style={{ width: "19px", height: "19px", color: meta.fg }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[0.9rem] font-semibold text-edu-ink">{act.name}</span>
+                        <Pill bg={meta.bg} fg={meta.fg}>{act.type}</Pill>
+                      </div>
+                      <div className="text-[0.775rem] text-edu-ink-500 mt-[3px]">{act.teacher}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-[5px]">
+                      <span className="text-[0.75rem] text-edu-ink-500 font-medium">Cupos</span>
+                      <span className="text-[0.8rem] text-edu-ink-700 font-bold">{act.taken}/{act.cap}</span>
+                    </div>
+                    <div className="h-1.5 bg-edu-border-soft rounded-edu-pill overflow-hidden">
+                      <div
+                        className="h-full rounded-edu-pill"
+                        style={{ width: `${pct}%`, backgroundColor: barColor }}
+                      />
+                    </div>
+                  </div>
+                  <Pill bg={act.statusOk ? color.successBg : color.warningBg} fg={act.statusOk ? color.success : color.warning}>{act.status}</Pill>
+                </div>
+              );
+            })}
           </div>
         </div>
+
       </div>
+
     </div>
   );
 }

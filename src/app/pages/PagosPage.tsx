@@ -21,6 +21,7 @@ import {
     BILLING_DAY,
     FEE_CURRENCY,
 } from "../data/solvency";
+import { BaucheModal } from "../components/BaucheModal";
 
 type PayType = "efectivo" | "manual";
 type PayStatus = "confirmed" | "review" | "rejected";
@@ -107,6 +108,7 @@ const PAY_HEADERS = ["Monto", "Moneda", "Fecha", "Tipo", "Estado", "Bauche"];
 export function PagosPage() {
     const [payments, setPayments] = useState<Payment[]>(PAYMENTS);
     const [showModal, setShowModal] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
     const [form, setForm] = useState({ currency: "USD", voucher: "" });
     const [modalTab, setModalTab] = useState<"cuenta" | "prueba">("cuenta");
@@ -258,7 +260,8 @@ export function PagosPage() {
                         return (
                             <div
                                 key={p.id}
-                                className={`grid ${PAY_COLS} px-5 py-[13px] items-center ${i < payments.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                onClick={() => setSelectedPayment(p)}
+                                className={`grid ${PAY_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < payments.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <span className="text-[0.875rem] text-edu-ink font-semibold">{money(p.amount)}</span>
                                 <span className="text-[0.875rem] text-edu-ink-700">{p.currency}</span>
@@ -294,6 +297,22 @@ export function PagosPage() {
                     })}
                 </div>
             </div>
+
+            {/* Modal bauche de historial */}
+            {selectedPayment && (
+                <BaucheModal
+                    rep="—"
+                    showOptions={false}
+                    student="—"
+                    amount={`${money(selectedPayment.amount)} ${selectedPayment.currency}`}
+                    method={selectedPayment.type === "efectivo" ? "Efectivo" : "Transferencia / Manual"}
+                    reference={selectedPayment.voucher && selectedPayment.voucher !== "—" ? selectedPayment.voucher : "—"}
+                    date={selectedPayment.date}
+                    onClose={() => setSelectedPayment(null)}
+                    onAccept={() => setSelectedPayment(null)}
+                    onReject={() => setSelectedPayment(null)}
+                />
+            )}
 
             {/* Modal de pago por internet */}
             {showModal && (
@@ -333,11 +352,10 @@ export function PagosPage() {
                                         key={t.key}
                                         type="button"
                                         onClick={() => setModalTab(t.key as "cuenta" | "prueba")}
-                                        className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${
-                                            modalTab === t.key
+                                        className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${modalTab === t.key
                                                 ? "border-edu-primary text-edu-primary"
                                                 : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
-                                        }`}
+                                            }`}
                                     >
                                         {t.label}
                                     </button>

@@ -1,0 +1,60 @@
+/**
+ * Animaciones y utilidades exclusivas de la landing page pública.
+ * Todo va prefijado con `lp-` para no chocar con el sistema `edu-*` del panel.
+ * Los colores NO se definen aquí: se inyectan por tema con variables inline.
+ */
+
+@keyframes lp-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+@keyframes lp-float-x {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(12px, -12px); }
+}
+@keyframes lp-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+@keyframes lp-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes lp-glow {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.9; }
+}
+@keyframes lp-fade-up {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lp-anim-float        { animation: lp-float 6s ease-in-out infinite; }
+.lp-anim-float-slow   { animation: lp-float 9s ease-in-out infinite; }
+.lp-anim-float-x      { animation: lp-float-x 8s ease-in-out infinite; }
+.lp-anim-twinkle      { animation: lp-twinkle 3.2s ease-in-out infinite; }
+.lp-anim-spin-slow    { animation: lp-spin 42s linear infinite; }
+.lp-anim-spin-slower  { animation: lp-spin 90s linear infinite; }
+.lp-anim-glow         { animation: lp-glow 4.5s ease-in-out infinite; }
+.lp-fade-up           { animation: lp-fade-up 0.7s ease-out both; }
+
+/* Contenedor raíz de la landing: scroll suave para el nav de anclas. */
+.lp-scope { scroll-behavior: smooth; }
+
+/* Oculta la barra de scroll en el lienzo de previsualización del editor. */
+.lp-noscrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.lp-noscrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 99px; }
+.lp-noscrollbar::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-anim-float,
+  .lp-anim-float-slow,
+  .lp-anim-float-x,
+  .lp-anim-twinkle,
+  .lp-anim-spin-slow,
+  .lp-anim-spin-slower,
+  .lp-anim-glow,
+  .lp-fade-up {
+    animation: none !important;
+  }
+  .lp-scope { scroll-behavior: auto; }
+}

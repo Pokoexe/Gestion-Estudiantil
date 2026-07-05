@@ -31,6 +31,10 @@ export interface ExtraCourse {
     schedule: string;
     room: string;
     term: string;
+    topic: string;
+    price: number; // USD
+    totalSpots: number;
+    enrolledCount: number;
     /** Definido solo si el estudiante está inscrito o ya participó. */
     enrollment?: EnrollmentStatus;
     evaluations: CourseEvaluation[];
@@ -42,6 +46,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Robótica y automatización",
         teacher: "Prof. Daniel Ríos",
         date: "8 jul 2026",
+        topic: "robotica",
+        price: 25,
+        totalSpots: 20,
+        enrolledCount: 18,
         description:
             "Diseña y programa robots con sensores y motores. Aprende los fundamentos de la automatización mediante proyectos prácticos por equipos.",
         image: "https://picsum.photos/seed/robotica/640/360",
@@ -61,6 +69,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Oratoria y debate",
         teacher: "Prof. Lucía Fernández",
         date: "9 jul 2026",
+        topic: "comunicacion",
+        price: 15,
+        totalSpots: 25,
+        enrolledCount: 10,
         description:
             "Desarrolla habilidades de comunicación, argumentación y expresión en público a través de debates y ejercicios de improvisación.",
         image: "https://picsum.photos/seed/oratoria/640/360",
@@ -79,6 +91,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Ajedrez estratégico",
         teacher: "Prof. Marco Salcedo",
         date: "7 jul 2026",
+        topic: "juegos",
+        price: 10,
+        totalSpots: 15,
+        enrolledCount: 12,
         description:
             "Aprende aperturas, tácticas y finales. Mejora tu pensamiento estratégico participando en torneos internos.",
         image: "https://picsum.photos/seed/ajedrez/640/360",
@@ -97,6 +113,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Fotografía digital",
         teacher: "Prof. Andrea Gómez",
         date: "10 jul 2026",
+        topic: "arte",
+        price: 20,
+        totalSpots: 20,
+        enrolledCount: 8,
         description:
             "Domina la composición, la luz y la edición. Construye un portafolio fotográfico con salidas de campo guiadas.",
         image: "https://picsum.photos/seed/fotografia/640/360",
@@ -115,6 +135,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Guitarra y ensamble musical",
         teacher: "Prof. Sofía Herrera",
         date: "8 jul 2026",
+        topic: "musica",
+        price: 20,
+        totalSpots: 20,
+        enrolledCount: 15,
         description:
             "Desde los primeros acordes hasta tocar en conjunto. Un curso práctico para iniciarte en la guitarra y la música de ensamble.",
         image: "https://picsum.photos/seed/guitarra/640/360",
@@ -132,6 +156,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Programación web",
         teacher: "Prof. Javier Núñez",
         date: "9 jul 2026",
+        topic: "programacion",
+        price: 25,
+        totalSpots: 25,
+        enrolledCount: 22,
         description:
             "Crea tus primeras páginas web con HTML, CSS y JavaScript. Publica un proyecto propio al finalizar el curso.",
         image: "https://picsum.photos/seed/programacion/640/360",
@@ -151,6 +179,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Teatro y expresión escénica",
         teacher: "Prof. Camila Ortiz",
         date: "11 jul 2026",
+        topic: "arte",
+        price: 15,
+        totalSpots: 30,
+        enrolledCount: 12,
         description:
             "Explora la actuación, la voz y el movimiento. Cierra el curso con una obra montada por todo el grupo.",
         image: "https://picsum.photos/seed/teatro/640/360",
@@ -168,6 +200,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Ecología y huerto escolar",
         teacher: "Prof. Roberto Díaz",
         date: "7 jul 2026",
+        topic: "ecologia",
+        price: 12,
+        totalSpots: 20,
+        enrolledCount: 16,
         description:
             "Aprende sobre sostenibilidad cultivando un huerto. Un curso vivencial sobre el cuidado del ambiente.",
         image: "https://picsum.photos/seed/ecologia/640/360",
@@ -186,6 +222,10 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         title: "Baloncesto",
         teacher: "Prof. Nieves Cabrera",
         date: "8 jul 2026",
+        topic: "deportes",
+        price: 10,
+        totalSpots: 25,
+        enrolledCount: 10,
         description:
             "Fundamentos técnicos, táctica de equipo y acondicionamiento físico, con partidos amistosos cada semana.",
         image: "https://picsum.photos/seed/baloncesto/640/360",
@@ -196,6 +236,28 @@ export const EXTRA_COURSES: ExtraCourse[] = [
         evaluations: [
             { id: 1, title: "Prueba de fundamentos", type: "exam", dueDate: "24 jul 2026", weight: "50%", status: "pending" },
             { id: 2, title: "Torneo interno", type: "presentation", dueDate: "18 ago 2026", weight: "50%", status: "pending" },
+        ],
+    },
+    {
+        id: 10,
+        title: "Cocina y nutrición",
+        teacher: "Prof. Carmen Vargas",
+        date: "10 jul 2026",
+        topic: "cocina",
+        price: 18,
+        totalSpots: 20,
+        enrolledCount: 7,
+        description:
+            "Aprende a preparar recetas saludables y equilibradas. Descubre técnicas culinarias básicas con ingredientes naturales y de temporada.",
+        image: "https://picsum.photos/seed/cocina/640/360",
+        code: "EXT-COC",
+        schedule: "Sáb · 09:00 – 11:00",
+        room: "Aula de cocina",
+        term: "2026-I",
+        enrollment: "active",
+        evaluations: [
+            { id: 1, title: "Receta práctica individual", type: "lab", dueDate: "24 jul 2026", weight: "50%", status: "pending" },
+            { id: 2, title: "Menú temático grupal", type: "presentation", dueDate: "14 ago 2026", weight: "50%", status: "pending" },
         ],
     },
 ];

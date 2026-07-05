@@ -1,44 +1,15 @@
 import { useState } from "react";
-import {
-    PlusCircle,
-    Pencil,
-    X,
-    Trash2,
-    Upload,
-    FileText,
-    Info,
-    CheckCircle2,
-    AlertTriangle,
-} from "lucide-react";
+import { useNavigate, useLocation } from "react-router";
+import { PlusCircle, Pencil, X, CheckCircle2, AlertTriangle, Search } from "lucide-react";
 import { color } from "../theme/tokens";
+import { PlanStats } from "../components/PlanStats";
+import { PLANS, LAPSO, type Plan, type PlanEstado } from "../data/plans";
+import { Pagination } from "../components/Pagination";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import { CURRENT_LAPSO_ID } from "../data/lapsos";
 
-/* ------------------------------------------------------------------ */
-/* Tipos e interfaces locales                                          */
-/* ------------------------------------------------------------------ */
-
-type PlanEstado = "approved" | "review" | "draft" | "changes";
-
-interface Plan {
-    id: number;
-    subject: string;
-    section: string;
-    count: number;
-    status: PlanEstado;
-    note?: string;
-    examUploaded?: boolean;
-}
-
-interface EvalRow {
-    id: number;
-    content: string;
-    description: string;
-    weight: string;
-    date: string;
-}
-
-/* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
-/* ------------------------------------------------------------------ */
+const PER_PAGE = 5;
 
 const STATUS_META: Record<PlanEstado, { label: string; bg: string; fg: string }> = {
     approved: { label: "Aprobado", bg: color.successBg, fg: color.success },
@@ -47,134 +18,132 @@ const STATUS_META: Record<PlanEstado, { label: string; bg: string; fg: string }>
     changes: { label: "Cambios solicitados", bg: color.dangerBg, fg: color.danger },
 };
 
-const INITIAL_PLANS: Plan[] = [
-    { id: 1, subject: "Biología", section: "5.º Año A", count: 5, status: "approved", examUploaded: true },
-    {
-        id: 2,
-        subject: "Ciencias Naturales",
-        section: "4.º Año B",
-        count: 5,
-        status: "review",
-        note: "Prueba enviada al evaluador · en espera de aprobación",
-        examUploaded: true,
-    },
-    {
-        id: 3,
-        subject: "Química",
-        section: "5.º Año B",
-        count: 4,
-        status: "changes",
-        note: "El evaluador solicitó ajustar la ponderación de la Unidad 2",
-    },
-    { id: 4, subject: "Ciencias de la Tierra", section: "3.º Año C", count: 4, status: "draft" },
-];
+function PlanReviewModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
+    const rows = plan.evaluations ?? [];
+    const totalWeight = rows.reduce((a, r) => a + (parseFloat(r.weight) || 0), 0);
+    const seleccionOk = !!plan.subject && !!plan.section;
+    const evalsComplete = rows.every((r) => r.content.trim() && r.weight && r.date);
+    const weightOk = totalWeight === 100;
+    const datesInRange = rows.every((r) => !r.date || (r.date >= LAPSO.start && r.date <= LAPSO.end));
+    const sortedDates = rows.map((r) => r.date).filter(Boolean).sort();
+    let spacingOk = true;
+    for (let i = 1; i < sortedDates.length; i++) {
+        const diff = (new Date(sortedDates[i]).getTime() - new Date(sortedDates[i - 1]).getTime()) / 86_400_000;
+        if (diff < LAPSO.minDays || diff > LAPSO.maxDays) spacingOk = false;
+    }
 
-const emptyRow = (id: number): EvalRow => ({
-    id,
-    content: "",
-    description: "",
-    weight: "",
-    date: "",
-});
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            onClick={onClose}
+        >
+            <div
+                className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-4 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-xl mx-4"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between">
+                    <h3 className="text-edu-ink font-bold text-base m-0">Datos del plan</h3>
+                    <button
+                        onClick={onClose}
+                        className="text-edu-ink-400 hover:text-edu-ink bg-transparent border-none cursor-pointer p-0 flex items-center"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
 
-/* ------------------------------------------------------------------ */
-/* Página                                                              */
-/* ------------------------------------------------------------------ */
+                <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-3">
+                    <div>
+                        <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Materia</div>
+                        <div className="text-[0.875rem] text-edu-ink font-medium">{plan.subject || "—"}</div>
+                    </div>
+                    <div>
+                        <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Sección</div>
+                        <div className="text-[0.875rem] text-edu-ink font-medium">{plan.section || "—"}</div>
+                    </div>
+                </div>
+
+                {rows.length > 0 ? (
+                    <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
+                        <div className="grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
+                            {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h, idx) => (
+                                <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
+                                    {h}
+                                </span>
+                            ))}
+                        </div>
+                        {rows.map((r, i) => (
+                            <div
+                                key={r.id}
+                                className={`grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 items-center ${i < rows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                            >
+                                <span className="text-[0.8rem] text-edu-ink-500 font-semibold">{i + 1}</span>
+                                <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
+                                    {r.content || <span className="text-edu-danger">Sin nombre</span>}
+                                </span>
+                                <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.weight || "—"} %</span>
+                                <span className="text-[0.78rem] text-edu-ink-500">{r.date || "—"}</span>
+                                <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
+                            </div>
+                        ))}
+                        <div className="px-3 py-2 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
+                            <span className="text-edu-ink-500">Ponderación total</span>
+                            <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight} %</span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center text-edu-ink-400 text-sm py-4 border border-edu-border-soft rounded-edu-control">
+                        Sin evaluaciones registradas
+                    </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                    {[
+                        { ok: seleccionOk, text: "Materia y sección seleccionadas" },
+                        { ok: evalsComplete, text: "Todas las evaluaciones tienen nombre, ponderación y fecha" },
+                        { ok: weightOk, text: `La ponderación total es 100 % (actual: ${totalWeight} %)` },
+                        { ok: datesInRange, text: "Las fechas están dentro del lapso" },
+                        { ok: spacingOk, text: `Entre evaluaciones hay entre ${LAPSO.minDays} y ${LAPSO.maxDays} días` },
+                    ].map((c, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[0.8125rem]">
+                            {c.ok ? (
+                                <CheckCircle2 className="w-4 h-4 text-edu-success shrink-0" />
+                            ) : (
+                                <AlertTriangle className="w-4 h-4 text-edu-warning shrink-0" />
+                            )}
+                            <span className={c.ok ? "text-edu-ink-700" : "text-edu-warning"}>{c.text}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export function DocentePlanesPage() {
-    const [plans, setPlans] = useState<Plan[]>(INITIAL_PLANS);
-    const [showModal, setShowModal] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [form, setForm] = useState({ subject: "", section: "" });
-    const [rows, setRows] = useState<EvalRow[]>([
-        emptyRow(1),
-        emptyRow(2),
-        emptyRow(3),
-        emptyRow(4),
-    ]);
-    const [examFile, setExamFile] = useState<string | null>(null);
-    const [feedback, setFeedback] = useState<string | null>(null);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [feedback, setFeedback] = useState<string | null>(
+        (location.state as { feedback?: string } | null)?.feedback ?? null,
+    );
 
-    const totalWeight = rows.reduce((a, r) => a + (parseFloat(r.weight) || 0), 0);
+    const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+    const [query, setQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"todos" | PlanEstado>("todos");
+    const [page, setPage] = useState(1);
 
-    const openCreate = () => {
-        setEditingId(null);
-        setForm({ subject: "", section: "" });
-        setRows([emptyRow(1), emptyRow(2), emptyRow(3), emptyRow(4)]);
-        setExamFile(null);
-        setShowModal(true);
-    };
+    const { selectedId } = useLapso();
+    const lapsoPlans = PLANS.filter((p) => (p.lapso ?? CURRENT_LAPSO_ID) === selectedId);
 
-    const openEdit = (plan: Plan) => {
-        setEditingId(plan.id);
-        setForm({ subject: plan.subject, section: plan.section });
-        setRows(
-            Array.from({ length: plan.count }, (_, i) => ({
-                ...emptyRow(i + 1),
-                content: `Evaluación ${i + 1}`,
-            })),
-        );
-        setExamFile(plan.examUploaded ? "examen_actual.pdf" : null);
-        setShowModal(true);
-    };
+    const subidos = lapsoPlans.filter((p) => p.status !== "draft").length;
+    const porRevisar = lapsoPlans.filter((p) => p.status === "review").length;
+    const aprobados = lapsoPlans.filter((p) => p.status === "approved").length;
 
-    const updateRow = (id: number, field: keyof EvalRow, value: string) => {
-        setRows((rs) => rs.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
-    };
-
-    const addRow = () => {
-        const nextId = Math.max(0, ...rows.map((r) => r.id)) + 1;
-        setRows([...rows, emptyRow(nextId)]);
-    };
-
-    const removeRow = (id: number) => {
-        if (rows.length <= 4) return; // mínimo 4 evaluaciones
-        setRows(rows.filter((r) => r.id !== id));
-    };
-
-    const handleExam = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) setExamFile(file.name);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingId !== null) {
-            setPlans((ps) =>
-                ps.map((p) =>
-                    p.id === editingId
-                        ? {
-                              ...p,
-                              subject: form.subject || p.subject,
-                              section: form.section || p.section,
-                              count: rows.length,
-                              status: "review",
-                              examUploaded: !!examFile,
-                              note: "Plan actualizado · enviado al evaluador",
-                          }
-                        : p,
-                ),
-            );
-            setFeedback("El plan de evaluación fue actualizado y enviado al evaluador.");
-        } else {
-            const newPlan: Plan = {
-                id: Date.now(),
-                subject: form.subject || "Nueva materia",
-                section: form.section || "Sin sección",
-                count: rows.length,
-                status: examFile ? "review" : "draft",
-                examUploaded: !!examFile,
-                note: examFile ? "Prueba en revisión por el evaluador" : undefined,
-            };
-            setPlans([newPlan, ...plans]);
-            setFeedback(
-                examFile
-                    ? "Plan creado. La prueba quedó «En revisión por el evaluador»."
-                    : "Plan guardado como borrador.",
-            );
-        }
-        setShowModal(false);
-    };
+    const filteredPlans = lapsoPlans
+        .filter((p) => statusFilter === "todos" || p.status === statusFilter)
+        .filter((p) => !query.trim() || `${p.subject} ${p.section}`.toLowerCase().includes(query.trim().toLowerCase()));
+    const totalPages = Math.max(1, Math.ceil(filteredPlans.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const paged = filteredPlans.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     return (
         <div className="flex flex-col gap-5">
@@ -202,7 +171,7 @@ export function DocentePlanesPage() {
                     </p>
                 </div>
                 <button
-                    onClick={openCreate}
+                    onClick={() => navigate("/docente/planes/nuevo")}
                     className="inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
                 >
                     <PlusCircle className="w-4 h-4" />
@@ -210,8 +179,39 @@ export function DocentePlanesPage() {
                 </button>
             </div>
 
+            {/* Bloques de resumen */}
+            <PlanStats subidos={subidos} porRevisar={porRevisar} aprobados={aprobados} />
+
             {/* Tabla de planes */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+                    <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Planes de evaluación</h3>
+                    <span className="text-[0.8rem] text-edu-ink-400 font-medium">{filteredPlans.length} plan{filteredPlans.length === 1 ? "" : "es"}</span>
+                </div>
+                <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
+                    <LapsoFilter />
+                    <div className="relative flex-1 min-w-[180px]">
+                        <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                            placeholder="Buscar por materia o sección…"
+                            className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
+                        />
+                    </div>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => { setStatusFilter(e.target.value as "todos" | PlanEstado); setPage(1); }}
+                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                    >
+                        <option value="todos">Todos los estados</option>
+                        <option value="approved">Aprobados</option>
+                        <option value="review">En revisión</option>
+                        <option value="draft">Borradores</option>
+                        <option value="changes">Cambios solicitados</option>
+                    </select>
+                </div>
                 <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                     {["Materia", "Sección", "Evaluaciones", "Estado", "Acción"].map((h) => (
                         <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
@@ -219,12 +219,16 @@ export function DocentePlanesPage() {
                         </span>
                     ))}
                 </div>
-                {plans.map((plan, i) => {
+                {filteredPlans.length === 0 && (
+                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay planes que coincidan con el filtro.</div>
+                )}
+                {paged.map((plan, i) => {
                     const st = STATUS_META[plan.status];
                     return (
                         <div
                             key={plan.id}
-                            className={`px-5 py-[13px] transition-colors hover:bg-edu-subtle ${i < plans.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                            onClick={() => setSelectedPlan(plan)}
+                            className={`px-5 py-[13px] transition-colors hover:bg-edu-subtle cursor-pointer ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                         >
                             <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] items-center">
                                 <span className="text-sm text-edu-ink font-medium">{plan.subject}</span>
@@ -237,7 +241,7 @@ export function DocentePlanesPage() {
                                     {st.label}
                                 </span>
                                 <button
-                                    onClick={() => openEdit(plan)}
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/docente/planes/${plan.id}/editar`); }}
                                     className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold cursor-pointer w-fit bg-transparent border-none p-0"
                                 >
                                     <Pencil style={{ width: "13px", height: "13px" }} />
@@ -253,193 +257,15 @@ export function DocentePlanesPage() {
                         </div>
                     );
                 })}
+                {totalPages > 1 && (
+                    <div className="px-5 py-4 border-t border-edu-border-soft">
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+                    </div>
+                )}
             </div>
 
-            {/* Modal crear / modificar */}
-            {showModal && (
-                <div
-                    className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-                    onClick={() => setShowModal(false)}
-                >
-                    <div
-                        className="bg-edu-surface rounded-edu-card w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Encabezado del modal */}
-                        <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center sticky top-0 bg-edu-surface z-10">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-edu-control bg-edu-primary-50 flex items-center justify-center">
-                                    <PlusCircle className="w-4 h-4 text-edu-primary" />
-                                </div>
-                                <h3 className="m-0 text-edu-ink font-semibold text-[0.95rem]">
-                                    {editingId !== null ? "Modificar plan de evaluación" : "Crear plan de evaluación"}
-                                </h3>
-                            </div>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                aria-label="Cerrar"
-                                className="text-edu-ink-400 bg-transparent border-none cursor-pointer p-1 flex items-center hover:text-edu-ink-700"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
-                            {/* Materia + sección */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-edu-ink-700 text-sm font-medium">Materia</label>
-                                    <input
-                                        type="text"
-                                        value={form.subject}
-                                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                                        placeholder="Ej. Ciencias Naturales"
-                                        className="border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full focus:border-edu-primary"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-edu-ink-700 text-sm font-medium">Sección</label>
-                                    <input
-                                        type="text"
-                                        value={form.section}
-                                        onChange={(e) => setForm({ ...form, section: e.target.value })}
-                                        placeholder="Ej. 4.º Año B"
-                                        className="border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full focus:border-edu-primary"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Evaluaciones (mínimo 4) */}
-                            <div className="flex flex-col gap-2">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-edu-ink-700 text-sm font-medium">
-                                        Evaluaciones <span className="text-edu-ink-400">(mínimo 4)</span>
-                                    </label>
-                                    <span className={`text-[0.8rem] font-semibold ${totalWeight === 100 ? "text-edu-success" : "text-edu-warning"}`}>
-                                        Total: {totalWeight} %
-                                    </span>
-                                </div>
-
-                                <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
-                                    <div className="grid grid-cols-[1.2fr_1.6fr_0.7fr_1fr_0.3fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
-                                        {["Contenido", "Descripción", "%", "Fecha", ""].map((h, idx) => (
-                                            <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
-                                                {h}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    {rows.map((r, i) => (
-                                        <div
-                                            key={r.id}
-                                            className={`grid grid-cols-[1.2fr_1.6fr_0.7fr_1fr_0.3fr] gap-1.5 px-3 py-2 items-center ${i < rows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                        >
-                                            <input
-                                                type="text"
-                                                value={r.content}
-                                                onChange={(e) => updateRow(r.id, "content", e.target.value)}
-                                                placeholder="Unidad 1"
-                                                className="border border-edu-border rounded-edu-chip px-2 py-1.5 text-[0.8rem] text-edu-ink outline-none bg-edu-surface focus:border-edu-primary min-w-0"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={r.description}
-                                                onChange={(e) => updateRow(r.id, "description", e.target.value)}
-                                                placeholder="Prueba escrita"
-                                                className="border border-edu-border rounded-edu-chip px-2 py-1.5 text-[0.8rem] text-edu-ink outline-none bg-edu-surface focus:border-edu-primary min-w-0"
-                                            />
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                max={100}
-                                                value={r.weight}
-                                                onChange={(e) => updateRow(r.id, "weight", e.target.value)}
-                                                placeholder="20"
-                                                className="border border-edu-border rounded-edu-chip px-2 py-1.5 text-[0.8rem] text-edu-ink outline-none bg-edu-surface focus:border-edu-primary min-w-0"
-                                            />
-                                            <input
-                                                type="date"
-                                                value={r.date}
-                                                onChange={(e) => updateRow(r.id, "date", e.target.value)}
-                                                className="border border-edu-border rounded-edu-chip px-2 py-1.5 text-[0.75rem] text-edu-ink outline-none bg-edu-surface focus:border-edu-primary min-w-0"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeRow(r.id)}
-                                                disabled={rows.length <= 4}
-                                                aria-label="Eliminar evaluación"
-                                                className="flex items-center justify-center text-edu-ink-400 hover:text-edu-danger disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent border-none p-0"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={addRow}
-                                    className="inline-flex items-center gap-1.5 text-[0.8rem] text-edu-primary font-semibold cursor-pointer w-fit bg-transparent border-none p-0"
-                                >
-                                    <PlusCircle className="w-3.5 h-3.5" />
-                                    Añadir evaluación
-                                </button>
-                            </div>
-
-                            {/* Subir prueba del examen */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-edu-ink-700 text-sm font-medium">Subir prueba del examen</label>
-                                <label className="border-[1.5px] border-dashed border-edu-border rounded-edu-control px-3.5 py-4 bg-edu-subtle cursor-pointer flex items-center gap-3 transition-colors hover:border-edu-primary-200">
-                                    <input type="file" accept=".pdf,.doc,.docx,image/*" onChange={handleExam} className="sr-only" />
-                                    {examFile ? (
-                                        <>
-                                            <div className="w-10 h-10 rounded-edu-chip bg-edu-primary-50 flex items-center justify-center shrink-0">
-                                                <FileText className="w-5 h-5 text-edu-primary" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-[0.8125rem] text-edu-ink font-medium truncate">{examFile}</div>
-                                                <div className="text-[0.72rem] text-edu-primary">Toca para cambiar el archivo</div>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-1 w-full text-center">
-                                            <Upload className="w-5 h-5 text-edu-ink-400" />
-                                            <span className="text-[0.8125rem] font-medium text-edu-ink-500">
-                                                Toca para subir la prueba (PDF o Word)
-                                            </span>
-                                        </div>
-                                    )}
-                                </label>
-                            </div>
-
-                            {/* Aviso de revisión */}
-                            <div className="flex items-start gap-2 px-3.5 py-3 rounded-edu-control bg-edu-primary-50 text-edu-primary text-[0.8125rem] leading-[1.5]">
-                                <Info className="w-4 h-4 shrink-0 mt-px" />
-                                <span>
-                                    Al enviar la prueba, el plan quedará <strong>«En revisión por el evaluador»</strong>. Recibirás una
-                                    notificación cuando sea aprobado o si se solicitan cambios.
-                                </span>
-                            </div>
-
-                            {/* Acciones */}
-                            <div className="flex gap-2 justify-end pt-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-4 py-2.5 rounded-edu-control border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-subtle"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-edu-control bg-edu-primary text-white text-sm font-semibold border-none cursor-pointer transition-colors hover:bg-edu-primary-hover"
-                                >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    {editingId !== null ? "Guardar cambios" : "Guardar plan"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            {selectedPlan && (
+                <PlanReviewModal plan={selectedPlan} onClose={() => setSelectedPlan(null)} />
             )}
         </div>
     );

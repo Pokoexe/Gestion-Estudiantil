@@ -14,6 +14,12 @@ import {
     PenLine,
 } from "lucide-react";
 import { color } from "../theme/tokens";
+import { Pagination } from "../components/Pagination";
+import { LapsoFilter } from "../components/LapsoFilter";
+import { useLapso } from "../context/LapsoContext";
+import type { LapsoId } from "../data/lapsos";
+
+const PER_PAGE = 5;
 
 type EvalType = "presentation" | "exam" | "lab" | "essay";
 
@@ -24,6 +30,7 @@ interface Topic {
 
 interface Evaluation {
     id: number;
+    lapso: LapsoId;
     subjectId: number;
     subject: string;
     teacher: string;
@@ -49,17 +56,23 @@ const TYPE_META: Record<EvalType, { icon: React.FC<{ style?: React.CSSProperties
 };
 
 const EVALUATIONS: Evaluation[] = [
-    { id: 1, subjectId: 3, subject: "Matemática", teacher: "Prof. Ramírez", title: "Examen parcial · Derivadas", type: "exam", date: "5 jul 2026", daysUntil: 3, weight: "30%", currentAverage: 11, description: "Examen escrito sobre reglas de derivación y aplicaciones.", topics: [{ id: 1, text: "Reglas de derivación" }, { id: 2, text: "Recta tangente" }, { id: 3, text: "Optimización" }], guide: "Guia_Derivadas.pdf" },
-    { id: 2, subjectId: 8, subject: "Inglés", teacher: "Prof. Collins", title: "Examen · Present Perfect", type: "exam", date: "6 jul 2026", daysUntil: 4, weight: "30%", currentAverage: 8, description: "Examen sobre el uso del present perfect y vocabulario de la unidad.", topics: [{ id: 1, text: "Present perfect vs past simple" }, { id: 2, text: "Vocabulario de viajes" }], guide: "Study_Guide_Unit4.pdf" },
-    { id: 3, subjectId: 5, subject: "Química", teacher: "Prof. Méndez", title: "Informe de laboratorio · Gases", type: "lab", date: "7 jul 2026", daysUntil: 5, weight: "15%", currentAverage: 13, description: "Informe del experimento sobre las leyes de los gases." },
-    { id: 4, subjectId: 1, subject: "Física", teacher: "Prof. Torres", title: "Prueba corta · Dinámica", type: "exam", date: "9 jul 2026", daysUntil: 7, weight: "15%", currentAverage: 19, description: "Prueba corta sobre las leyes de Newton." },
-    { id: 5, subjectId: 4, subject: "Literatura", teacher: "Prof. García", title: "Entrega de ensayo", type: "essay", date: "10 jul 2026", daysUntil: 8, weight: "20%", currentAverage: 15, description: "Ensayo de 600 palabras sobre una obra del realismo.", guide: "Rubrica_Ensayo.pdf" },
-    { id: 6, subjectId: 7, subject: "Historia", teacher: "Prof. Flores", title: "Exposición oral · Independencia", type: "presentation", date: "12 jul 2026", daysUntil: 10, weight: "25%", currentAverage: 10, description: "Exposición grupal sobre el proceso de independencia.", topics: [{ id: 1, text: "Antecedentes" }, { id: 2, text: "Protagonistas" }] },
-    { id: 7, subjectId: 2, subject: "Biología", teacher: "Prof. Ruiz", title: "Laboratorio · Genética", type: "lab", date: "14 jul 2026", daysUntil: 12, weight: "20%", currentAverage: 17, description: "Práctica sobre cruces genéticos y leyes de Mendel." },
-    { id: 8, subjectId: 6, subject: "Arte", teacher: "Prof. Vega", title: "Proyecto · Mural colectivo", type: "presentation", date: "16 jul 2026", daysUntil: 14, weight: "35%", currentAverage: 13, description: "Presentación del mural colectivo con técnica libre." },
+    // Lapso II (en curso) — evaluaciones próximas de julio 2026
+    { id: 1, lapso: 2, subjectId: 3, subject: "Matemática", teacher: "Prof. Ramírez", title: "Examen parcial · Derivadas", type: "exam", date: "5 jul 2026", daysUntil: 3, weight: "30%", currentAverage: 11, description: "Examen escrito sobre reglas de derivación y aplicaciones.", topics: [{ id: 1, text: "Reglas de derivación" }, { id: 2, text: "Recta tangente" }, { id: 3, text: "Optimización" }], guide: "Guia_Derivadas.pdf" },
+    { id: 2, lapso: 2, subjectId: 8, subject: "Inglés", teacher: "Prof. Collins", title: "Examen · Present Perfect", type: "exam", date: "6 jul 2026", daysUntil: 4, weight: "30%", currentAverage: 8, description: "Examen sobre el uso del present perfect y vocabulario de la unidad.", topics: [{ id: 1, text: "Present perfect vs past simple" }, { id: 2, text: "Vocabulario de viajes" }], guide: "Study_Guide_Unit4.pdf" },
+    { id: 3, lapso: 2, subjectId: 5, subject: "Química", teacher: "Prof. Méndez", title: "Informe de laboratorio · Gases", type: "lab", date: "7 jul 2026", daysUntil: 5, weight: "15%", currentAverage: 13, description: "Informe del experimento sobre las leyes de los gases." },
+    { id: 4, lapso: 2, subjectId: 1, subject: "Física", teacher: "Prof. Torres", title: "Prueba corta · Dinámica", type: "exam", date: "9 jul 2026", daysUntil: 7, weight: "15%", currentAverage: 19, description: "Prueba corta sobre las leyes de Newton." },
+    { id: 5, lapso: 2, subjectId: 4, subject: "Literatura", teacher: "Prof. García", title: "Entrega de ensayo", type: "essay", date: "10 jul 2026", daysUntil: 8, weight: "20%", currentAverage: 15, description: "Ensayo de 600 palabras sobre una obra del realismo.", guide: "Rubrica_Ensayo.pdf" },
+    { id: 6, lapso: 2, subjectId: 7, subject: "Historia", teacher: "Prof. Flores", title: "Exposición oral · Independencia", type: "presentation", date: "12 jul 2026", daysUntil: 10, weight: "25%", currentAverage: 10, description: "Exposición grupal sobre el proceso de independencia.", topics: [{ id: 1, text: "Antecedentes" }, { id: 2, text: "Protagonistas" }] },
+    { id: 7, lapso: 2, subjectId: 2, subject: "Biología", teacher: "Prof. Ruiz", title: "Laboratorio · Genética", type: "lab", date: "14 jul 2026", daysUntil: 12, weight: "20%", currentAverage: 17, description: "Práctica sobre cruces genéticos y leyes de Mendel." },
+    { id: 8, lapso: 2, subjectId: 6, subject: "Arte", teacher: "Prof. Vega", title: "Proyecto · Mural colectivo", type: "presentation", date: "16 jul 2026", daysUntil: 14, weight: "35%", currentAverage: 13, description: "Presentación del mural colectivo con técnica libre." },
+    // Lapso III (próximo) — evaluaciones planificadas de agosto 2026
+    { id: 9, lapso: 3, subjectId: 3, subject: "Matemática", teacher: "Prof. Ramírez", title: "Examen diagnóstico · Integrales", type: "exam", date: "5 ago 2026", daysUntil: 31, weight: "20%", currentAverage: 12, description: "Examen inicial sobre integrales indefinidas y definidas." },
+    { id: 10, lapso: 3, subjectId: 5, subject: "Química", teacher: "Prof. Méndez", title: "Proyecto · Química orgánica", type: "presentation", date: "18 ago 2026", daysUntil: 44, weight: "30%", currentAverage: 13, description: "Presentación del proyecto de introducción a la química orgánica." },
+    { id: 11, lapso: 3, subjectId: 2, subject: "Biología", teacher: "Prof. Ruiz", title: "Informe · Ecosistemas", type: "essay", date: "25 ago 2026", daysUntil: 51, weight: "25%", currentAverage: 17, description: "Informe de investigación sobre ecosistemas y biodiversidad." },
 ];
 
 const daysLabel = (d: number) => (d <= 0 ? "Hoy" : d === 1 ? "Mañana" : `en ${d} días`);
+const WEEK_LABEL = "3 al 10 de julio";
 const avgClass = (a: number) => (a < PASS_MARK ? "text-edu-danger" : a < RISK_MARK ? "text-edu-warning" : "text-edu-ink");
 
 const EVAL_COLS = "grid-cols-[1.2fr_1.8fr_1.1fr_0.7fr_1fr]";
@@ -70,17 +83,21 @@ export function MisEvaluacionesPage() {
     const [query, setQuery] = useState("");
     const [subjectFilter, setSubjectFilter] = useState("todas");
     const [order, setOrder] = useState<"fecha" | "riesgo">("fecha");
+    const [page, setPage] = useState(1);
 
-    const thisWeek = EVALUATIONS.filter((e) => e.daysUntil <= 7).length;
-    const nearest = [...EVALUATIONS].sort((a, b) => a.daysUntil - b.daysUntil)[0];
-    const atRiskEvals = EVALUATIONS.filter((e) => e.currentAverage < RISK_MARK);
-    const mostImportant = (atRiskEvals.length ? atRiskEvals : EVALUATIONS)
+    const { selectedId } = useLapso();
+    const lapsoEvals = EVALUATIONS.filter((e) => e.lapso === selectedId);
+
+    const thisWeek = lapsoEvals.filter((e) => e.daysUntil <= 7).length;
+    const nearest = [...lapsoEvals].sort((a, b) => a.daysUntil - b.daysUntil)[0];
+    const atRiskEvals = lapsoEvals.filter((e) => e.currentAverage < RISK_MARK);
+    const mostImportant = (atRiskEvals.length ? atRiskEvals : lapsoEvals)
         .slice()
         .sort((a, b) => a.currentAverage - b.currentAverage || a.daysUntil - b.daysUntil)[0];
 
-    const subjects = Array.from(new Set(EVALUATIONS.map((e) => e.subject)));
+    const subjects = Array.from(new Set(lapsoEvals.map((e) => e.subject)));
 
-    const filtered = EVALUATIONS.filter((e) => {
+    const filtered = lapsoEvals.filter((e) => {
         if (subjectFilter !== "todas" && e.subject !== subjectFilter) return false;
         if (query.trim() && !`${e.title} ${e.subject}`.toLowerCase().includes(query.trim().toLowerCase())) return false;
         return true;
@@ -90,9 +107,19 @@ export function MisEvaluacionesPage() {
             : a.daysUntil - b.daysUntil,
     );
 
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const paged = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
     return (
         <>
-            {/* Bloques resumen */}
+            {/* Bloques resumen — por lapso; vacío cuando el lapso no tiene evaluaciones pendientes */}
+            {lapsoEvals.length === 0 ? (
+                <div className="bg-edu-surface rounded-edu-card p-8 border border-edu-border-soft text-center">
+                    <p className="text-edu-ink-500 text-sm m-0">No tienes evaluaciones pendientes en este lapso.</p>
+                    <p className="text-edu-ink-400 text-xs mt-1 m-0">Cambia de lapso para consultar otras evaluaciones.</p>
+                </div>
+            ) : (
             <div className="grid grid-cols-3 gap-4">
                 {/* Cantidad esta semana */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
@@ -108,6 +135,12 @@ export function MisEvaluacionesPage() {
                         </div>
                     </div>
                     <p className="text-edu-ink-400 text-xs m-0">En los próximos 7 días</p>
+                    <div className="flex items-center justify-between gap-2 mt-auto">
+                        <span className="inline-flex items-center gap-1.5 bg-edu-primary-50 text-edu-primary text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
+                            <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                            {WEEK_LABEL}
+                        </span>
+                    </div>
                 </div>
 
                 {/* La más cercana */}
@@ -160,6 +193,7 @@ export function MisEvaluacionesPage() {
                     </div>
                 </button>
             </div>
+            )}
 
             {/* Tabla de evaluaciones */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
@@ -170,19 +204,20 @@ export function MisEvaluacionesPage() {
 
                 {/* Buscador y filtros */}
                 <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <div className="relative flex-1 min-w-[180px] max-w-xs">
+                    <LapsoFilter />
+                    <div className="relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
                             placeholder="Buscar evaluación o materia…"
                             className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
                         />
                     </div>
                     <select
                         value={subjectFilter}
-                        onChange={(e) => setSubjectFilter(e.target.value)}
+                        onChange={(e) => { setSubjectFilter(e.target.value); setPage(1); }}
                         className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="todas">Todas las materias</option>
@@ -192,7 +227,7 @@ export function MisEvaluacionesPage() {
                     </select>
                     <select
                         value={order}
-                        onChange={(e) => setOrder(e.target.value as "fecha" | "riesgo")}
+                        onChange={(e) => { setOrder(e.target.value as "fecha" | "riesgo"); setPage(1); }}
                         className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="fecha">Por fecha (más cercana)</option>
@@ -217,14 +252,14 @@ export function MisEvaluacionesPage() {
                             No hay evaluaciones que coincidan con el filtro.
                         </div>
                     )}
-                    {filtered.map((e, i) => {
+                    {paged.map((e, i) => {
                         const t = TYPE_META[e.type];
                         const atRisk = e.currentAverage < RISK_MARK;
                         return (
                             <div
                                 key={e.id}
                                 onClick={() => setSelected(e)}
-                                className={`grid ${EVAL_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < filtered.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                className={`grid ${EVAL_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <span className="text-[0.875rem] text-edu-ink font-medium truncate pr-2">{e.subject}</span>
                                 <div className="min-w-0 pr-2">
@@ -256,6 +291,11 @@ export function MisEvaluacionesPage() {
                             </div>
                         );
                     })}
+                    {totalPages > 1 && (
+                        <div className="px-5 py-4 border-t border-edu-border-soft">
+                            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+                        </div>
+                    )}
                 </div>
             </div>
 

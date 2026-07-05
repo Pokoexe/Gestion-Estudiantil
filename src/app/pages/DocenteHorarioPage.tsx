@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { useNavigate } from "react-router";
 
 /* ------------------------------------------------------------------ */
 /* Tipos e interfaces locales                                          */
@@ -86,11 +87,16 @@ const materiaMap: Record<string, Materia> = Object.fromEntries(
     MATERIAS.map((m) => [m.key, m]),
 );
 
+/** Cada materia del horario corresponde a una sección en docente/secciones. */
+const SUBJECT_TO_SECTION: Record<string, number> = { cn: 1, bio: 2, tierra: 3, quim: 4 };
+
 /* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
 
 export function DocenteHorarioPage() {
+    const navigate = useNavigate();
+
     return (
         <div className="flex flex-col gap-5">
             <div>
@@ -144,8 +150,9 @@ export function DocenteHorarioPage() {
                                 {HORARIO[bi].map((clase, di) => (
                                     <div key={di} className="p-2 border-l border-edu-border-soft min-h-[74px]">
                                         {clase ? (
-                                            <div
-                                                className="h-full rounded-edu-chip px-2.5 py-2 flex flex-col gap-1"
+                                            <button
+                                                onClick={() => navigate("/docente/secciones", { state: { seccionId: SUBJECT_TO_SECTION[clase.subject] } })}
+                                                className="w-full h-full text-left rounded-edu-chip px-2.5 py-2 flex flex-col gap-1 cursor-pointer border-none transition-[filter] hover:brightness-95"
                                                 style={{ backgroundColor: materiaMap[clase.subject].bg }}
                                             >
                                                 <span
@@ -159,7 +166,7 @@ export function DocenteHorarioPage() {
                                                     <MapPin style={{ width: "11px", height: "11px" }} />
                                                     {clase.room}
                                                 </span>
-                                            </div>
+                                            </button>
                                         ) : (
                                             <div className="h-full rounded-edu-chip flex items-center justify-center">
                                                 <span className="text-[0.7rem] text-edu-ink-300">Libre</span>

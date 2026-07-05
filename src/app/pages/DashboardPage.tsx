@@ -1,183 +1,59 @@
 import { Clock, CheckCircle2, AlertCircle, ClipboardCheck } from "lucide-react";
+import { useNavigate } from "react-router";
 import { color } from "../theme/tokens";
 
 const SCHEDULE: {
   day: string;
-  classes: { time: string; subject: string; teacher: string; color: string }[];
+  classes: { id: string; time: string; subject: string; teacher: string; color: string }[];
 }[] = [
     {
       day: "Lun",
       classes: [
-        {
-          time: "07:00",
-          subject: "Matemática",
-          teacher: "Prof. Ramírez",
-          color: "#dbeafe",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
+        { id: "matematica", time: "07:00", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
       ],
     },
     {
       day: "Mar",
       classes: [
-        {
-          time: "07:00",
-          subject: "Literatura",
-          teacher: "Prof. García",
-          color: "#dcfce7",
-        },
-        {
-          time: "10:00",
-          subject: "Historia",
-          teacher: "Prof. Flores",
-          color: "#fce7f3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
+        { id: "literatura", time: "07:00", subject: "Literatura", teacher: "Prof. García", color: "#dcfce7" },
+        { id: "historia", time: "10:00", subject: "Historia", teacher: "Prof. Flores", color: "#fce7f3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
       ],
     },
     {
       day: "Mié",
       classes: [
-        {
-          time: "08:00",
-          subject: "Química",
-          teacher: "Prof. Méndez",
-          color: "#ede9fe",
-        },
-        {
-          time: "11:00",
-          subject: "Matemática",
-          teacher: "Prof. Ramírez",
-          color: "#dbeafe",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
+        { id: "quimica", time: "08:00", subject: "Química", teacher: "Prof. Méndez", color: "#ede9fe" },
+        { id: "matematica", time: "11:00", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
       ],
     },
     {
       day: "Jue",
       classes: [
-        {
-          time: "07:00",
-          subject: "Inglés",
-          teacher: "Prof. Collins",
-          color: "#ffedd5",
-        },
-        {
-          time: "09:00",
-          subject: "Biología",
-          teacher: "Prof. Ruiz",
-          color: "#dcfce7",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
+        { id: "ingles", time: "07:00", subject: "Inglés", teacher: "Prof. Collins", color: "#ffedd5" },
+        { id: "biologia", time: "09:00", subject: "Biología", teacher: "Prof. Ruiz", color: "#dcfce7" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
       ],
     },
     {
       day: "Vie",
       classes: [
-        {
-          time: "08:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "10:00",
-          subject: "Arte",
-          teacher: "Prof. Vega",
-          color: "#fce7f3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
-        {
-          time: "09:00",
-          subject: "Física",
-          teacher: "Prof. Torres",
-          color: "#fef9c3",
-        },
+        { id: "fisica", time: "08:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "arte", time: "10:00", subject: "Arte", teacher: "Prof. Vega", color: "#fce7f3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+        { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
       ],
     },
   ];
@@ -222,6 +98,7 @@ const PENDING_EVALS = [
 ];
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const today = new Date();
   const dayIndex = today.getDay();
   const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie"];
@@ -265,8 +142,9 @@ export function DashboardPage() {
                     {classes.map((cls, i) => (
                       <div
                         key={i}
-                        className="rounded-edu-chip px-2.5 py-2"
+                        className="rounded-edu-chip px-2.5 py-2 cursor-pointer hover:brightness-95 transition-[filter]"
                         style={{ backgroundColor: cls.color }}
+                        onClick={() => navigate(`/estudiante/materias/${cls.id}`)}
                       >
                         <div className="text-[0.7rem] text-edu-ink-500 font-medium">
                           {cls.time}
@@ -317,7 +195,7 @@ export function DashboardPage() {
           </div>
 
           {/* Próxima clase */}
-          <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+          <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer hover:bg-edu-subtle transition-colors" onClick={() => navigate("/estudiante/materias/1")}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
@@ -342,7 +220,7 @@ export function DashboardPage() {
           </div>
 
           {/* Próxima evaluación */}
-          <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+          <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer hover:bg-edu-subtle transition-colors" onClick={() => navigate("/estudiante/materias/2")}>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">

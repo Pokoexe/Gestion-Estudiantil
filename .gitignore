@@ -1,3 +1,6 @@
+.claude
+ANOTACIONES/
+
 # Dependencias (NUNCA SUBIR)
 node_modules/
 .pnpm-store/
