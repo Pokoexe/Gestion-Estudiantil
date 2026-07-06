@@ -40,6 +40,7 @@ import {
   BookOpen,
   CalendarDays,
   GraduationCap,
+  UserPlus,
 } from "lucide-react";
 import { LandingView } from "../landing/LandingView";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -63,13 +64,13 @@ import {
   type GalleryImage,
 } from "../landing/types";
 
-type Tab = "contenido" | "galeria" | "contacto" | "orden";
+type Tab = "plantillas" | "galeria" | "contacto" | "orden";
 type Device = "desktop" | "mobile";
 type Flash = { tone: "ok" | "warn"; msg: string } | null;
 type Confirm = { title: string; tone?: "success" | "danger" | "warning"; icon?: React.FC<{ className?: string }>; confirmLabel?: string; onConfirm: () => void } | null;
 
 const TABS: { key: Tab; label: string; icon: typeof Type }[] = [
-  { key: "contenido", label: "Contenido", icon: Type },
+  { key: "plantillas", label: "Plantillas", icon: Type },
   { key: "galeria", label: "Galería", icon: Images },
   { key: "contacto", label: "Contacto", icon: PhoneIcon },
   { key: "orden", label: "Orden", icon: ListOrdered },
@@ -85,12 +86,13 @@ export function DirectorPresentacionPage() {
   const [config, setConfig] = useState<LandingConfig>(
     () => loadDraft() ?? loadPublished() ?? makeDefaultConfig(DEFAULT_TEMPLATE),
   );
-  const [tab, setTab] = useState<Tab>("contenido");
+  const [tab, setTab] = useState<Tab>("plantillas");
   const [device, setDevice] = useState<Device>("desktop");
   const [fullscreen, setFullscreen] = useState(false);
   const [flash, setFlash] = useState<Flash>(null);
   const [published, setPublished] = useState(hasPublished());
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [galleryDragIdx, setGalleryDragIdx] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<Confirm>(null);
   const firstRender = useRef(true);
 
@@ -115,6 +117,7 @@ export function DirectorPresentacionPage() {
   /* ---- Actualizadores ---- */
   const patch = (p: Partial<LandingConfig>) => setConfig((c) => ({ ...c, ...p }));
   const patchHero = (p: Partial<LandingConfig["hero"]>) => setConfig((c) => ({ ...c, hero: { ...c.hero, ...p } }));
+  const patchInscripciones = (p: Partial<LandingConfig["inscripciones"]>) => setConfig((c) => ({ ...c, inscripciones: { ...c.inscripciones, ...p } }));
   const patchAbout = (p: Partial<LandingConfig["about"]>) => setConfig((c) => ({ ...c, about: { ...c.about, ...p } }));
   const patchCourses = (p: Partial<LandingConfig["courses"]>) => setConfig((c) => ({ ...c, courses: { ...c.courses, ...p } }));
   const patchActs = (p: Partial<LandingConfig["activities"]>) => setConfig((c) => ({ ...c, activities: { ...c.activities, ...p } }));
@@ -193,6 +196,14 @@ export function DirectorPresentacionPage() {
       [arr[i], arr[j]] = [arr[j], arr[i]];
       return { ...c, gallery: { ...c.gallery, images: arr } };
     });
+  /* Reordenar imágenes por arrastre (mueve el elemento `from` a la posición `to`). */
+  const moveImageToIndex = (from: number, to: number) =>
+    setConfig((c) => {
+      const arr = [...c.gallery.images];
+      const [item] = arr.splice(from, 1);
+      arr.splice(to, 0, item);
+      return { ...c, gallery: { ...c.gallery, images: arr } };
+    });
 
   /* Orden de secciones */
   const moveSection = (i: number, dir: -1 | 1) =>
@@ -230,16 +241,17 @@ export function DirectorPresentacionPage() {
     setFlash({ tone: "ok", msg: "Cambios descartados. Se restauró la última versión publicada." });
   };
   const previewLogin = () => setFlash({ tone: "ok", msg: "En la página real, este botón lleva al inicio de sesión." });
+  const previewEnroll = () => setFlash({ tone: "ok", msg: "En la página real, este botón lleva al formulario de inscripción." });
 
   return (
     <div className="flex flex-1 min-h-0 flex-col">
       {/* ── Editor: preview (izq 2fr) + opciones (der 1.5fr) ── */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0">
         {/* Panel de previsualización — 2fr (izquierda) */}
         <div className="flex flex-[2] flex-col overflow-hidden border-r border-edu-border bg-[#0e1424]" style={{ height: "calc(100vh - 60px)" }}>
           <div className="flex-1 overflow-y-auto bg-[#0b1020] p-3">
             <PreviewSurface device={device}>
-              <LandingView config={config} onLogin={previewLogin} />
+              <LandingView config={config} onLogin={previewLogin} onEnroll={previewEnroll} />
             </PreviewSurface>
           </div>
         </div>
@@ -247,7 +259,7 @@ export function DirectorPresentacionPage() {
         {/* Panel de opciones — 1.5fr (derecha) */}
         <div className="flex flex-[1.5] flex-col overflow-hidden bg-edu-surface" style={{ height: "calc(100vh - 60px)" }}>
           {/* ── Header ── */}
-          <div className="flex shrink-0 items-center justify-between border-b border-edu-border bg-edu-surface px-4 py-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-edu-border bg-edu-surface px-4 py-2">
             <div className="flex items-center gap-2.5">
               <DeviceToggle device={device} onChange={setDevice} />
             </div>
@@ -296,14 +308,14 @@ export function DirectorPresentacionPage() {
             })}
           </div>
 
-          {/* Contenido scrollable */}
+          {/* Plantillas scrollable */}
           <div className="flex-1 overflow-y-auto p-4">
-            {tab === "contenido" && (
+            {tab === "plantillas" && (
               <div className="flex flex-col gap-3">
                 {/* Plantilla */}
                 <Group title="Plantilla y fondo" icon={Palette} defaultOpen>
                   <label className="text-[0.75rem] font-semibold text-edu-ink-500">Plantilla base</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {(Object.values(THEMES)).map((th) => {
                       const Icon = th.icon;
                       const active = config.template === th.id;
@@ -340,95 +352,6 @@ export function DirectorPresentacionPage() {
                     })}
                   </div>
                 </Group>
-
-                {/* Marca */}
-                <Group title="Marca" icon={Building2}
-                  sectionEnabled={config.showBrand ?? true}
-                  onToggle={() => patch({ showBrand: !(config.showBrand ?? true) })}>
-                  <TextField label="Nombre de la institución" value={config.institutionName} onChange={(v) => patch({ institutionName: v })} />
-                  <TextField label="Lema / eslogan" value={config.tagline} onChange={(v) => patch({ tagline: v })} />
-                </Group>
-
-                {/* Portada / Hero */}
-                <Group title="Portada (hero)" icon={Sparkles}
-                  sectionEnabled={config.showHero ?? true}
-                  onToggle={() => patch({ showHero: !(config.showHero ?? true) })}>
-                  <TextField label="Etiqueta" value={config.hero.badge} onChange={(v) => patchHero({ badge: v })} />
-                  <TextField label="Título principal" value={config.hero.title} onChange={(v) => patchHero({ title: v })} />
-                  <TextArea label="Descripción" value={config.hero.subtitle} onChange={(v) => patchHero({ subtitle: v })} />
-                  <TextField label="Texto del botón" value={config.hero.ctaText} onChange={(v) => patchHero({ ctaText: v })} />
-                </Group>
-
-                {/* Sobre la institución */}
-                <Group title="Sobre la institución" icon={Building2}
-                  sectionEnabled={isSectionEnabled("about")}
-                  onToggle={() => toggleSectionById("about")}>
-                  <TextField label="Título" value={config.about.heading} onChange={(v) => patchAbout({ heading: v })} />
-                  <TextArea label="Texto" value={config.about.body} onChange={(v) => patchAbout({ body: v })} rows={4} />
-                </Group>
-
-                {/* Cursos */}
-                <Group title="Cursos" icon={BookOpen}
-                  sectionEnabled={isSectionEnabled("courses")}
-                  onToggle={() => toggleSectionById("courses")}>
-                  <p className="text-[0.72rem] text-edu-ink-400">Los cursos se toman automáticamente del sistema. Personaliza los textos:</p>
-                  <TextField label="Título" value={config.courses.heading} onChange={(v) => patchCourses({ heading: v })} />
-                  <TextField label="Subtítulo" value={config.courses.subtitle} onChange={(v) => patchCourses({ subtitle: v })} />
-                </Group>
-
-                {/* Actividades */}
-                <Group title="Actividades" icon={CalendarDays}
-                  sectionEnabled={isSectionEnabled("activities")}
-                  onToggle={() => toggleSectionById("activities")}>
-                  <TextField label="Título" value={config.activities.heading} onChange={(v) => patchActs({ heading: v })} />
-                  <TextField label="Subtítulo" value={config.activities.subtitle} onChange={(v) => patchActs({ subtitle: v })} />
-                </Group>
-
-                {/* Ubicación */}
-                <Group title="Ubicación" icon={MapPin}
-                  sectionEnabled={isSectionEnabled("location")}
-                  onToggle={() => toggleSectionById("location")}>
-                  <TextField label="Título" value={config.location.heading} onChange={(v) => patchLoc({ heading: v })} />
-                  <TextField label="Dirección" value={config.location.address} onChange={(v) => patchLoc({ address: v })} />
-                  <TextField label="Ciudad" value={config.location.city} onChange={(v) => patchLoc({ city: v })} />
-                  <TextField label="Horario de atención" value={config.location.hours} onChange={(v) => patchLoc({ hours: v })} />
-                </Group>
-
-                {/* Profesores */}
-                <Group title="Profesores" icon={Users}
-                  sectionEnabled={isSectionEnabled("teachers")}
-                  onToggle={() => toggleSectionById("teachers")}>
-                  <TextField label="Título" value={config.teachers.heading} onChange={(v) => patchTeachers({ heading: v })} />
-                  <TextField label="Subtítulo" value={config.teachers.subtitle} onChange={(v) => patchTeachers({ subtitle: v })} />
-                  <div className="flex flex-col gap-2">
-                    {config.teachers.list.map((t) => (
-                      <div key={t.id} className="flex gap-2 rounded-edu-control border border-edu-border-soft bg-edu-subtle p-2">
-                        <img src={t.photo} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover border border-edu-border" />
-                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                          <input className={INPUT} value={t.name} onChange={(e) => updateTeacher(t.id, { name: e.target.value })} placeholder="Nombre" />
-                          <input className={INPUT} value={t.role} onChange={(e) => updateTeacher(t.id, { role: e.target.value })} placeholder="Materia / cargo" />
-                          <input className={INPUT} value={t.photo} onChange={(e) => updateTeacher(t.id, { photo: e.target.value })} placeholder="URL de la foto" />
-                        </div>
-                        <button onClick={() => removeTeacher(t.id)} aria-label="Eliminar" className="h-8 w-8 shrink-0 rounded-edu-chip border border-edu-border bg-edu-surface flex items-center justify-center text-edu-ink-400 cursor-pointer hover:text-edu-danger hover:border-edu-danger">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                    <AddButton disabled={config.teachers.list.length >= 8} onClick={addTeacher} label={config.teachers.list.length >= 8 ? "Máximo 8 profesores" : "Agregar profesor"} />
-                  </div>
-                </Group>
-
-                {/* Cifras */}
-                <Group title="Cifras (alumnos y experiencia)" icon={GraduationCap}
-                  sectionEnabled={cifrasEnabled}
-                  onToggle={toggleCifras}>
-                  <div className="grid grid-cols-2 gap-2">
-                    <NumberField label="Nº de alumnos" value={config.students.number} onChange={(v) => patchStudents({ number: v })} />
-                    <NumberField label="Años de exp." value={config.experience.number} onChange={(v) => patchExp({ number: v })} />
-                  </div>
-                  <TextField label="Etiqueta alumnos" value={config.students.label} onChange={(v) => patchStudents({ label: v })} />
-                  <TextField label="Etiqueta experiencia" value={config.experience.label} onChange={(v) => patchExp({ label: v })} />
-                </Group>
               </div>
             )}
 
@@ -437,11 +360,36 @@ export function DirectorPresentacionPage() {
                 <TextField label="Título de la galería" value={config.gallery.heading} onChange={(v) => patchGallery({ heading: v })} />
                 <div className="flex items-center justify-between">
                   <span className="text-[0.75rem] font-semibold text-edu-ink-500">Imágenes ({config.gallery.images.length}/12)</span>
+                  <span className="text-[0.68rem] text-edu-ink-400">Arrastra para reordenar · se ven de 6 en 6</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  {config.gallery.images.map((img, i) => (
-                    <div key={img.id} className="flex gap-2 rounded-edu-control border border-edu-border-soft bg-edu-subtle p-2">
-                      <img src={img.url} alt="" className="h-16 w-16 shrink-0 rounded-edu-chip object-cover border border-edu-border" />
+                  {config.gallery.images.map((img, i) => {
+                    const isDragging = galleryDragIdx === i;
+                    return (
+                    <div
+                      key={img.id}
+                      onDragEnter={() => {
+                        if (galleryDragIdx !== null && galleryDragIdx !== i) {
+                          moveImageToIndex(galleryDragIdx, i);
+                          setGalleryDragIdx(i);
+                        }
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDragEnd={() => setGalleryDragIdx(null)}
+                      className={`flex gap-2 rounded-edu-control border p-2 transition-colors ${isDragging ? "border-edu-primary-200 bg-edu-primary-50 opacity-50" : "border-edu-border-soft bg-edu-subtle"}`}
+                    >
+                      <button
+                        type="button"
+                        draggable
+                        onDragStart={() => setGalleryDragIdx(i)}
+                        onDragEnd={() => setGalleryDragIdx(null)}
+                        aria-label="Arrastrar para reordenar"
+                        title="Arrastrar para reordenar"
+                        className="flex w-5 shrink-0 cursor-grab items-center justify-center border-none bg-transparent text-edu-ink-300 hover:text-edu-ink-500 active:cursor-grabbing"
+                      >
+                        <GripVertical className="h-4 w-4" />
+                      </button>
+                      <img src={img.url} alt="" draggable={false} className="h-16 w-16 shrink-0 rounded-edu-chip object-cover border border-edu-border" />
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                         <input className={INPUT} value={img.url} onChange={(e) => updateImage(img.id, { url: e.target.value })} placeholder="URL de la imagen" />
                         <input className={INPUT} value={img.caption} onChange={(e) => updateImage(img.id, { caption: e.target.value })} placeholder="Descripción (opcional)" />
@@ -452,7 +400,8 @@ export function DirectorPresentacionPage() {
                         <IconBtn onClick={() => removeImage(img.id)} label="Eliminar" danger><Trash2 className="h-3.5 w-3.5" /></IconBtn>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                   <AddButton disabled={config.gallery.images.length >= 12} onClick={addImage} label={config.gallery.images.length >= 12 ? "Máximo 12 imágenes" : "Agregar imagen"} />
                 </div>
               </div>
@@ -533,7 +482,7 @@ export function DirectorPresentacionPage() {
       {/* ── Vista previa a pantalla completa ── */}
       {fullscreen && (
         <div className="fixed inset-0 z-[80] flex flex-col bg-slate-950">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-slate-900 px-4 py-3">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-slate-900 px-4 py-3">
             <div className="flex items-center gap-2 text-white">
               <Eye className="h-4 w-4" />
               <span className="text-[0.9rem] font-semibold">Vista previa</span>
@@ -551,7 +500,7 @@ export function DirectorPresentacionPage() {
           </div>
           <div className="min-h-0 flex-1 overflow-hidden bg-[#0b1020] p-4">
             <PreviewSurface device={device}>
-              <LandingView config={config} onLogin={previewLogin} />
+              <LandingView config={config} onLogin={previewLogin} onEnroll={previewEnroll} />
             </PreviewSurface>
           </div>
         </div>

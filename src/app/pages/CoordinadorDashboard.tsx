@@ -24,8 +24,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { color, radius, shadow, accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import {
+  getDashboardIncidencias,
+  getDashboardActividades,
+  type DashActivityType,
+} from "../datos_maquetados/actions/coordinador";
 
-/* ---------- Datos ficticios ---------- */
+/* ---------- Presentación ---------- */
 
 const KPIS = [
   { label: "Próxima reunión", value: "3 jul 2026, 10:00", ac: accent.blue, icon: CalendarClock, note: "Docentes · Ajuste de plan de evaluación" },
@@ -41,87 +47,18 @@ const QUICK_ACTIONS = [
   { label: "Agregar sección/materia", icon: BookPlus, primary: false },
 ];
 
-type MeetingStatus = "programada" | "realizada" | "cancelada";
-const MEETING_META: Record<MeetingStatus, { bg: string; fg: string; label: string }> = {
-  programada: { bg: color.primary100, fg: color.primary, label: "Programada" },
-  realizada: { bg: color.successBg, fg: color.success, label: "Realizada" },
-  cancelada: { bg: color.dangerBg, fg: color.danger, label: "Cancelada" },
-};
-
-const MEETINGS: { topic: string; audience: string; datetime: string; status: MeetingStatus }[] = [
-  { topic: "Ajuste de plan de evaluación", audience: "Docentes", datetime: "3 jul 2026, 10:00", status: "programada" },
-  { topic: "Seguimiento de convivencia escolar", audience: "Representantes", datetime: "5 jul 2026, 08:30", status: "programada" },
-  { topic: "Organización de la Feria de ciencias", audience: "Docentes", datetime: "7 jul 2026, 14:00", status: "programada" },
-  { topic: "Revisión de indicadores del segundo lapso", audience: "Docentes", datetime: "28 jun 2026, 09:00", status: "realizada" },
-  { topic: "Coordinación de acto cultural de fin de mes", audience: "Representantes", datetime: "26 jun 2026, 11:00", status: "cancelada" },
-];
-
-type PlanStatus = "pendiente" | "aprobada" | "rechazada";
-const PLAN_META: Record<PlanStatus, { bg: string; fg: string; label: string }> = {
-  pendiente: { bg: color.primary100, fg: color.primary, label: "Pendiente" },
-  aprobada: { bg: color.successBg, fg: color.success, label: "Aprobada" },
-  rechazada: { bg: color.dangerBg, fg: color.danger, label: "Rechazada" },
-};
-
-const PLANS: { teacher: string; subject: string; sent: string; status: PlanStatus; note?: string }[] = [
-  { teacher: "Prof. Alejandro Morales", subject: "Ciencias Naturales", sent: "1 jul 2026", status: "pendiente" },
-  { teacher: "Prof. Daniela Fuentes", subject: "Matemática", sent: "30 jun 2026", status: "pendiente" },
-  { teacher: "Prof. Ricardo Villalba", subject: "Historia Universal", sent: "29 jun 2026", status: "aprobada" },
-  {
-    teacher: "Prof. Marisol Cabrera",
-    subject: "Lengua y Literatura",
-    sent: "27 jun 2026",
-    status: "rechazada",
-    note: "Observación: los porcentajes de evaluación no suman 100%. Ajustar ponderación del proyecto final.",
-  },
-  { teacher: "Prof. Óscar Delgado", subject: "Educación Física", sent: "26 jun 2026", status: "pendiente" },
-];
-
-type ActivityType = "Deportiva" | "Cultural" | "Académica";
-const ACTIVITY_META: Record<ActivityType, { bg: string; fg: string; icon: React.FC<{ style?: React.CSSProperties }> }> = {
+const ACTIVITY_META: Record<DashActivityType, { bg: string; fg: string; icon: React.FC<{ style?: React.CSSProperties }> }> = {
   Deportiva: { bg: accent.blue.bg, fg: accent.blue.fg, icon: Trophy },
   Cultural: { bg: accent.purple.bg, fg: accent.purple.fg, icon: Music },
   Académica: { bg: accent.green.bg, fg: accent.green.fg, icon: Brain },
 };
 
-const ACTIVITIES: {
-  name: string;
-  type: ActivityType;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-  teacher: string;
-  taken: number;
-  cap: number;
-  status: string;
-  statusOk: boolean;
-}[] = [
-    { name: "Torneo de fútbol", type: "Deportiva", icon: Trophy, teacher: "Prof. Óscar Delgado", taken: 18, cap: 25, status: "En curso", statusOk: true },
-    { name: "Festival de danzas", type: "Cultural", icon: Music, teacher: "Prof. Marisol Cabrera", taken: 22, cap: 30, status: "Inscripciones abiertas", statusOk: true },
-  ];
-
-type PersonRole = "Estudiante" | "Docente";
 type Severity = "Leve" | "Moderada" | "Grave";
 const SEVERITY_META: Record<Severity, { bg: string; fg: string }> = {
   Leve: { bg: color.successBg, fg: color.success },
   Moderada: { bg: color.warningBg, fg: color.warning },
   Grave: { bg: color.dangerBg, fg: color.danger },
 };
-
-const INCIDENTS: { person: string; role: PersonRole; type: string; date: string; severity: Severity }[] = [
-  { person: "Carlos Jiménez", role: "Estudiante", type: "Ausencia injustificada", date: "30 jun 2026", severity: "Leve" },
-  { person: "Valentina Rojas", role: "Estudiante", type: "Conducta disruptiva en aula", date: "28 jun 2026", severity: "Moderada" },
-  { person: "Prof. Ricardo Villalba", role: "Docente", type: "Retraso en entrega de notas", date: "26 jun 2026", severity: "Leve" },
-  { person: "Andrés Peralta", role: "Estudiante", type: "Agresión física en recreo", date: "24 jun 2026", severity: "Grave" },
-  { person: "Lucía Mendoza", role: "Estudiante", type: "Uso indebido de dispositivos", date: "22 jun 2026", severity: "Moderada" },
-];
-
-const INCIDENTS_BY_MONTH = [
-  { mes: "Feb", incidencias: 5 },
-  { mes: "Mar", incidencias: 8 },
-  { mes: "Abr", incidencias: 6 },
-  { mes: "May", incidencias: 11 },
-  { mes: "Jun", incidencias: 7 },
-  { mes: "Jul", incidencias: 9 },
-];
 
 /* ---------- Helpers ---------- */
 
@@ -148,11 +85,14 @@ function Pill({ bg, fg, children }: { bg: string; fg: string; children: React.Re
 /* ---------- Página ---------- */
 
 export function CoordinadorDashboard() {
+  const { data: INCIDENTS } = useFetch(getDashboardIncidencias, []);
+  const { data: ACTIVITIES } = useFetch(getDashboardActividades, []);
+
   return (
     <div className="flex flex-col gap-5">
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {KPIS.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -175,12 +115,13 @@ export function CoordinadorDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Incidencias recientes */}
-        <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+        <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <SectionHeader title="Incidencias recientes" link="Ver todo →" />
-          <div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[600px]">
             <div className="grid grid-cols-[1.4fr_1.3fr_0.9fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
               {["Persona", "Tipo", "Fecha", "Gravedad"].map((h) => (
                 <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -205,6 +146,7 @@ export function CoordinadorDashboard() {
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
 
@@ -214,7 +156,7 @@ export function CoordinadorDashboard() {
           <div className="px-5 py-4 grid  gap-3.5">
             {ACTIVITIES.map((act) => {
               const meta = ACTIVITY_META[act.type];
-              const Icon = act.icon;
+              const Icon = meta.icon;
               const pct = Math.round((act.taken / act.cap) * 100);
               const barColor = pct >= 100 ? color.danger : pct >= 80 ? color.warningStrong : color.primary;
               return (

@@ -57,6 +57,9 @@ export let PLANS: Plan[] = [
     { id: 2, lapso: 2, subject: "Ciencias Naturales", section: "4.º Año B", count: 5, status: "review", note: "En espera de aprobación del evaluador", evaluations: STATIC_EVALS },
     { id: 3, lapso: 2, subject: "Química", section: "5.º Año B", count: 4, status: "changes", note: "El evaluador solicitó ajustar la ponderación de la Unidad 2", evaluations: STATIC_EVALS },
     { id: 4, lapso: 2, subject: "Ciencias de la Tierra", section: "3.º Año C", count: 4, status: "draft", evaluations: STATIC_EVALS },
+    { id: 8, lapso: 2, subject: "Química", section: "4.º Año A", count: 4, status: "approved", evaluations: STATIC_EVALS },
+    { id: 9, lapso: 2, subject: "Biología", section: "5.º Año B", count: 5, status: "review", note: "En espera de aprobación del evaluador", evaluations: STATIC_EVALS },
+    { id: 10, lapso: 2, subject: "Ciencias de la Tierra", section: "4.º Año B", count: 4, status: "draft", evaluations: STATIC_EVALS },
     // Lapso I (finalizado) — planes ya aprobados
     { id: 5, lapso: 1, subject: "Biología", section: "5.º Año A", count: 4, status: "approved", evaluations: STATIC_EVALS },
     { id: 6, lapso: 1, subject: "Ciencias Naturales", section: "4.º Año B", count: 4, status: "approved", evaluations: STATIC_EVALS },

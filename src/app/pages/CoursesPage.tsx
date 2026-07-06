@@ -16,107 +16,13 @@ import {
 } from "lucide-react";
 import { color } from "../theme/tokens";
 import { Link } from "react-router";
-
-interface Topic {
-  id: number;
-  text: string;
-}
-
-interface Assignment {
-  id: number;
-  title: string;
-  type: "presentation" | "exam" | "lab" | "essay";
-  dueDate: string;
-  weight: string;
-  status: "pending" | "submitted" | "graded";
-  grade?: string;
-  description?: string;
-  duration?: string;
-  topics?: Topic[];
-  hasAttachment?: boolean;
-  attachmentName?: string;
-}
-
-const COURSE = {
-  name: "Ciencias Naturales",
-  code: "CNA-401",
-  section: "Sección B",
-  room: "Lab 102",
-  schedule: "Lun / Mié · 07:00 – 08:30",
-  term: "2026-I",
-};
-
-const TEACHER = {
-  name: "Prof. Alejandro Morales",
-  title: "Docente titular de Ciencias",
-  phone: "+58 412-555-0193",
-  email: "a.morales@edugestion.edu",
-  initials: "AM",
-};
-
-const ASSIGNMENTS: Assignment[] = [
-  {
-    id: 1,
-    title: "Exposición sobre el Petróleo",
-    type: "presentation",
-    dueDate: "10 jul 2026",
-    weight: "20%",
-    status: "pending",
-    description:
-      "Prepara y presenta una exposición oral sobre el petróleo como recurso natural. La exposición debe ser clara, bien estructurada y con apoyo visual.",
-    duration: "5 minutos",
-    topics: [
-      { id: 1, text: "¿Qué es el petróleo? (origen, composición y tipos)" },
-      { id: 2, text: "¿Dónde se encuentra? (principales reservas y regiones de extracción)" },
-      { id: 3, text: "¿Por qué es importante? (relevancia económica, energética y social)" },
-    ],
-    hasAttachment: true,
-    attachmentName: "Guia_Exposicion_Petroleo.pdf",
-  },
-  {
-    id: 2,
-    title: "Examen escrito · Unidad 3",
-    type: "exam",
-    dueDate: "17 jul 2026",
-    weight: "30%",
-    status: "pending",
-    description: "Examen escrito a libro cerrado sobre todos los temas de la Unidad 3: Recursos de la Tierra.",
-    duration: "90 minutos",
-    hasAttachment: false,
-  },
-  {
-    id: 3,
-    title: "Informe de laboratorio · Ciclo del agua",
-    type: "lab",
-    dueDate: "28 jun 2026",
-    weight: "15%",
-    status: "graded",
-    grade: "88",
-    description: "Informe de laboratorio que documenta el experimento del ciclo del agua realizado en la Semana 6.",
-    hasAttachment: false,
-  },
-  {
-    id: 4,
-    title: "Ensayo sobre energías renovables",
-    type: "essay",
-    dueDate: "24 jul 2026",
-    weight: "20%",
-    status: "pending",
-    description: "Redacta un ensayo de 600 a 800 palabras comparando dos fuentes de energía renovable.",
-    hasAttachment: true,
-    attachmentName: "Rubrica_Ensayo.pdf",
-  },
-  {
-    id: 5,
-    title: "Prueba corta de biodiversidad",
-    type: "exam",
-    dueDate: "20 jun 2026",
-    weight: "15%",
-    status: "graded",
-    grade: "95",
-    hasAttachment: false,
-  },
-];
+import { useFetch } from "../datos_maquetados";
+import {
+  getMateriaActual,
+  getMateriaActualDocente,
+  getMateriaActualEvaluaciones,
+  type Assignment,
+} from "../datos_maquetados/actions/estudiante";
 
 const TYPE_META: Record<Assignment["type"], { icon: React.FC<{ style?: React.CSSProperties }>, bg: string, color: string, label: string }> = {
   presentation: { icon: Presentation, bg: color.primary50, color: color.primary, label: "Exposición" },
@@ -248,30 +154,42 @@ function AssignmentCard({ assignment }: { assignment: Assignment }) {
 
 export function CoursesPage() {
   const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
-  const pendingCount = ASSIGNMENTS.filter((a) => a.status === "pending").length;
-  const gradedCount = ASSIGNMENTS.filter((a) => a.status === "graded").length;
-  const filteredAssignments = ASSIGNMENTS.filter((a) =>
+  const { data: course, loading: loadingCourse } = useFetch(getMateriaActual, null);
+  const { data: teacher, loading: loadingTeacher } = useFetch(getMateriaActualDocente, null);
+  const { data: assignments, loading: loadingAssignments } = useFetch(getMateriaActualEvaluaciones, []);
+
+  const pendingCount = assignments.filter((a) => a.status === "pending").length;
+  const gradedCount = assignments.filter((a) => a.status === "graded").length;
+  const filteredAssignments = assignments.filter((a) =>
     filter === "Todas" ? true : filter === "Calificadas" ? a.status === "graded" : a.status !== "graded",
   );
+
+  if (loadingCourse || loadingTeacher || loadingAssignments) {
+    return (
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+        Cargando…
+      </div>
+    );
+  }
 
   return (
     <>
       {/* Banner de la materia */}
 
-      <div className="grid grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-        <div className="col-span-2 space-y-2">
+        <div className="lg:col-span-2 space-y-2">
           <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
                 <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
-                  {COURSE.code} · {COURSE.section}
+                  {course!.code} · {course!.section}
                 </span>
               </div>
-              <h2 className="text-white mb-1.5 text-xl font-bold m-0">{COURSE.name}</h2>
+              <h2 className="text-white mb-1.5 text-xl font-bold m-0">{course!.name}</h2>
               <div className="flex gap-4 flex-wrap">
-                {[COURSE.schedule, COURSE.room, `Período ${COURSE.term}`].map((item) => (
+                {[course!.schedule, course!.room, `Período ${course!.term}`].map((item) => (
                   <span key={item} className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{item}</span>
                 ))}
 
@@ -298,7 +216,7 @@ export function CoursesPage() {
           {/* Resumen de notas */}
           <div className="grid grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
             {[
-              { label: "Completadas", value: `${gradedCount}/${ASSIGNMENTS.length}`, color: color.success },
+              { label: "Completadas", value: `${gradedCount}/${assignments.length}`, color: color.success },
               { label: "Promedio ponderado", value: "91,5", color: color.primary },
               { label: "Peso restante", value: "65%", color: color.warning },
               { label: "Proyección final", value: "En buen camino", color: color.purple },
@@ -319,46 +237,46 @@ export function CoursesPage() {
           {/* Datos del docente */}
           <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-[18px] flex items-center gap-4 flex-wrap">
             <div className="w-[52px] h-[52px] rounded-full bg-edu-primary-50 border-2 border-edu-primary-100 flex items-center justify-center text-base font-bold text-edu-primary shrink-0">
-              {TEACHER.initials}
+              {teacher!.initials}
             </div>
 
             <div className="flex-1 min-w-[160px]">
-              <div className="text-[0.9375rem] font-bold text-edu-ink">{TEACHER.name}</div>
-              <div className="text-[0.8rem] text-edu-ink-500 mt-0.5">{TEACHER.title}</div>
+              <div className="text-[0.9375rem] font-bold text-edu-ink">{teacher!.name}</div>
+              <div className="text-[0.8rem] text-edu-ink-500 mt-0.5">{teacher!.title}</div>
             </div>
 
             <div className="w-px h-10 bg-edu-border-soft shrink-0" />
 
             <div className="flex flex-col gap-1.5">
               <a
-                href={`tel:${TEACHER.phone}`}
+                href={`tel:${teacher!.phone}`}
                 className="flex items-center gap-2 text-edu-ink-700 no-underline text-sm"
               >
                 <div className="w-7 h-7 rounded-[7px] bg-edu-success-bg flex items-center justify-center">
                   <Phone style={{ width: "13px", height: "13px" }} className="text-edu-success" />
                 </div>
-                <span className="font-medium">{TEACHER.phone}</span>
+                <span className="font-medium">{teacher!.phone}</span>
               </a>
               <a
-                href={`mailto:${TEACHER.email}`}
+                href={`mailto:${teacher!.email}`}
                 className="flex items-center gap-2 text-edu-ink-700 no-underline text-sm"
               >
                 <div className="w-7 h-7 rounded-[7px] bg-edu-primary-50 flex items-center justify-center">
                   <Mail style={{ width: "13px", height: "13px" }} className="text-edu-primary" />
                 </div>
-                <span className="font-medium">{TEACHER.email}</span>
+                <span className="font-medium">{teacher!.email}</span>
               </a>
             </div>
           </div>
         </div>
 
         {/* Plan de evaluación */}
-        <div className="col-span-3">
-          <div className="flex justify-between items-center mb-3">
+        <div className="lg:col-span-3">
+          <div className="flex justify-between items-center mb-3 flex-wrap gap-3">
             <div>
               <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación</h3>
               <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.8rem]">
-                {filteredAssignments.length} de {ASSIGNMENTS.length} evaluaciones · Peso total: 100%
+                {filteredAssignments.length} de {assignments.length} evaluaciones · Peso total: 100%
               </p>
             </div>
             <div className="flex gap-1.5">

@@ -7,13 +7,14 @@ import {
     ChevronRight,
 } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { POSTULACIONES } from "../data/discusiones";
+import { useFetch } from "../datos_maquetados";
+import { getPostulaciones } from "../datos_maquetados/actions/discusiones";
 
 /* ------------------------------------------------------------------ */
 /* Constantes                                                          */
 /* ------------------------------------------------------------------ */
 
-const PER_PAGE = 8;
+const PER_PAGE = 5;
 const COLS = "grid-cols-[1.6fr_1.2fr_1fr_0.7fr]";
 const HEADERS = ["Estudiante", "Materia", "Año", "Nota"];
 
@@ -25,6 +26,8 @@ export function DocenteConcejoPage() {
     const navigate = useNavigate();
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(1);
+
+    const { data: POSTULACIONES, loading } = useFetch(getPostulaciones, []);
 
     // Solo hay una discusión de notas en curso a la vez.
     const activa = POSTULACIONES.find((p) => p.estado === "Pendiente");
@@ -39,6 +42,8 @@ export function DocenteConcejoPage() {
     const totalPages = Math.max(1, Math.ceil(filtrado.length / PER_PAGE));
     const currentPage = Math.min(page, totalPages);
     const paged = filtrado.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+    if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
 
     return (
         <div className="flex flex-col gap-5">
@@ -96,6 +101,8 @@ export function DocenteConcejoPage() {
                 </div>
 
                 {/* Cabecera de tabla */}
+                <div className="overflow-x-auto">
+                <div className="min-w-[600px]">
                 <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                     {HEADERS.map((h) => (
                         <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -121,6 +128,8 @@ export function DocenteConcejoPage() {
                         </div>
                     ))
                 )}
+                </div>
+                </div>
 
                 {totalPages > 1 && (
                     <div className="px-5 py-4 border-t border-edu-border-soft">

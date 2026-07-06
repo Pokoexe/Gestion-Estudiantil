@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   FilePlus2,
@@ -10,33 +10,17 @@ import {
 } from "lucide-react";
 import { color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
-
-/* ------------------------------------------------------------------ */
-/* Tipos                                                               */
-/* ------------------------------------------------------------------ */
-
-type ReportType = "Ausencia de clases" | "Falla de servicios" | "Suspensión" | "Incidente" | "Mantenimiento";
-type ReportStatus = "abierto" | "en_proceso" | "cerrado";
-
-interface Report {
-  id: number;
-  title: string;
-  type: ReportType;
-  date: string;
-  author: string;
-  status: ReportStatus;
-}
+import { useFetch } from "../datos_maquetados";
+import {
+  getReportes,
+  type ReportType,
+  type ReportStatus,
+  type Report,
+} from "../datos_maquetados/actions/tesoreria";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
 /* ------------------------------------------------------------------ */
-
-const INITIAL_REPORTS: Report[] = [
-  { id: 1, title: "Suspensión de clases por falla eléctrica", type: "Ausencia de clases", date: "1 jul 2026", author: "Prof. Marisela Ríos", status: "cerrado" },
-  { id: 2, title: "Corte de agua en sede principal", type: "Falla de servicios", date: "28 jun 2026", author: "Coord. Luis Aponte", status: "en_proceso" },
-  { id: 3, title: "Ausencia docente 5.º B (reposo médico)", type: "Ausencia de clases", date: "26 jun 2026", author: "Prof. Marisela Ríos", status: "abierto" },
-  { id: 4, title: "Reparación de filtraciones en Aula 204", type: "Mantenimiento", date: "20 jun 2026", author: "Coord. Luis Aponte", status: "en_proceso" },
-];
 
 const REPORT_TYPES: ReportType[] = ["Ausencia de clases", "Falla de servicios", "Suspensión", "Incidente", "Mantenimiento"];
 
@@ -58,7 +42,9 @@ const PER_PAGE = 6;
 /* ------------------------------------------------------------------ */
 
 export function TesoreriaReportesPage() {
-  const [reports, setReports] = useState<Report[]>(INITIAL_REPORTS);
+  const { data: fetchedReports } = useFetch(getReportes, []);
+
+  const [reports, setReports] = useState<Report[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ type: REPORT_TYPES[0], date: "3 jul 2026", desc: "" });
   const [responsable, setResponsable] = useState(RESPONSABLES[0]);
@@ -71,6 +57,8 @@ export function TesoreriaReportesPage() {
   const [typeFilter, setTypeFilter] = useState<"todos" | ReportType>("todos");
   const [statusFilter, setStatusFilter] = useState<"todos" | ReportStatus>("todos");
   const [page, setPage] = useState(1);
+
+  useEffect(() => setReports(fetchedReports), [fetchedReports]);
 
   // Métricas de los 3 bloques
   const total = reports.length;
@@ -122,7 +110,7 @@ export function TesoreriaReportesPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* Bloques de resumen */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
           <div className="flex justify-between items-start">
             <div>
@@ -215,6 +203,8 @@ export function TesoreriaReportesPage() {
           </select>
         </div>
 
+        <div className="overflow-x-auto">
+          <div className="min-w-[680px]">
         <div className={`grid ${REP_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {REP_HEADERS.map((h) => (
             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -252,6 +242,8 @@ export function TesoreriaReportesPage() {
             </div>
           );
         })}
+          </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -263,7 +255,7 @@ export function TesoreriaReportesPage() {
       {/* Modal: generar reporte */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-success-bg flex items-center justify-center">
@@ -288,7 +280,7 @@ export function TesoreriaReportesPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Fecha</label>
                   <input
@@ -340,7 +332,7 @@ export function TesoreriaReportesPage() {
       {/* Modal: modificar reporte */}
       {editReport && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditReport(null)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-primary-50 flex items-center justify-center">
@@ -365,7 +357,7 @@ export function TesoreriaReportesPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Fecha</label>
                   <input

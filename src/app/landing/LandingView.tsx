@@ -10,12 +10,14 @@
  * sin depender del viewport. El header trae el botón "Iniciar sesión".
  */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Menu,
   X,
   LogIn,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   GraduationCap,
   MapPin,
   Clock,
@@ -29,8 +31,8 @@ import {
   BookOpen,
 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { EXTRA_COURSES } from "../data/courses";
-import { THEMES, ThemeBackground } from "./themes";
+import { EXTRA_COURSES } from "../datos_maquetados/data/courses";
+import { THEMES, ThemeBackground, CosmicSectionDecor } from "./themes";
 import { SECTION_META, type LandingConfig, type SectionId } from "./types";
 
 /* Actividades destacadas mostradas en la landing (muestra del sistema). */
@@ -44,9 +46,11 @@ const FEATURED_ACTIVITIES = [
 export function LandingView({
   config,
   onLogin,
+  onEnroll,
 }: {
   config: LandingConfig;
   onLogin?: () => void;
+  onEnroll?: () => void;
 }) {
   const theme = THEMES[config.template];
   const rootRef = useRef<HTMLDivElement>(null);
@@ -101,7 +105,7 @@ export function LandingView({
           borderBottom: `1px solid ${theme.border}`,
         }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 @2xl:px-6">
+        <div className="mx-auto flex items-center justify-between gap-4 px-4 py-3 @2xl:px-6">
           {/* Marca */}
           <button
             onClick={() => scrollTo("top")}
@@ -241,6 +245,7 @@ export function LandingView({
           theme={theme}
           glass={glass}
           gradText={gradText}
+          onEnroll={onEnroll}
         />
       ))}
 
@@ -249,7 +254,7 @@ export function LandingView({
         className="relative"
         style={{ background: theme.surfaceSolid, borderTop: `1px solid ${theme.border}` }}
       >
-        <div className="mx-auto max-w-6xl px-4 py-10 @2xl:px-6">
+        <div className="mx-auto px-4 py-10 @2xl:px-6">
           <div className="grid grid-cols-1 gap-8 @2xl:grid-cols-3">
             <div>
               <div className="flex items-center gap-2.5">
@@ -345,32 +350,38 @@ function Section({
   theme,
   glass,
   gradText,
+  onEnroll,
 }: {
   id: SectionId;
   config: LandingConfig;
   theme: (typeof THEMES)[keyof typeof THEMES];
   glass: React.CSSProperties;
   gradText: React.CSSProperties;
+  onEnroll?: () => void;
 }) {
   return (
     <section
       data-sec={id}
-      className="relative mx-auto w-full max-w-6xl px-4 py-16 @2xl:px-6 @2xl:py-20"
+      className="relative mx-auto w-full px-4 py-4 @2xl:px-6"
       style={{ scrollMarginTop: 76 }}
     >
-      {id === "about" && <AboutSection config={config} theme={theme} glass={glass} gradText={gradText} />}
-      {id === "courses" && <CoursesSection config={config} theme={theme} glass={glass} gradText={gradText} />}
-      {id === "activities" && <ActivitiesSection config={config} theme={theme} glass={glass} gradText={gradText} />}
-      {id === "location" && <LocationSection config={config} theme={theme} glass={glass} gradText={gradText} />}
-      {id === "gallery" && <GallerySection config={config} theme={theme} gradText={gradText} />}
-      {id === "teachers" && <TeachersSection config={config} theme={theme} glass={glass} gradText={gradText} />}
-      {id === "students" && (
-        <StatBand icon={GraduationCap} value={config.students.number} label={config.students.label} theme={theme} glass={glass} suffix="+" />
-      )}
-      {id === "experience" && (
-        <StatBand icon={Award} value={config.experience.number} label={config.experience.label} theme={theme} glass={glass} suffix="" />
-      )}
-      {id === "contact" && <ContactSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+      {theme.id === "cosmico" && <CosmicSectionDecor id={id} />}
+      <div className="relative z-10">
+        {id === "inscripciones" && <InscripcionesSection config={config} theme={theme} glass={glass} gradText={gradText} onEnroll={onEnroll} />}
+        {id === "about" && <AboutSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+        {id === "courses" && <CoursesSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+        {id === "activities" && <ActivitiesSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+        {id === "location" && <LocationSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+        {id === "gallery" && <GallerySection config={config} theme={theme} gradText={gradText} />}
+        {id === "teachers" && <TeachersSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+        {id === "students" && (
+          <StatBand icon={GraduationCap} value={config.students.number} label={config.students.label} theme={theme} glass={glass} suffix="+" />
+        )}
+        {id === "experience" && (
+          <StatBand icon={Award} value={config.experience.number} label={config.experience.label} theme={theme} glass={glass} suffix="" />
+        )}
+        {id === "contact" && <ContactSection config={config} theme={theme} glass={glass} gradText={gradText} />}
+      </div>
     </section>
   );
 }
@@ -385,6 +396,74 @@ type SecProps = {
   glass: React.CSSProperties;
   gradText: React.CSSProperties;
 };
+
+function InscripcionesSection({
+  config,
+  theme,
+  glass,
+  gradText,
+  onEnroll,
+}: SecProps & { onEnroll?: () => void }) {
+  const i = config.inscripciones;
+  const cta: React.CSSProperties = {
+    backgroundImage: theme.ctaGradient,
+    boxShadow: theme.ctaGlow,
+    color: "#fff",
+  };
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl px-6 py-11 text-center @2xl:px-12 @2xl:py-14"
+      style={glass}
+    >
+      {/* Resplandor con el gradiente del tema. */}
+      <div className="absolute inset-0" style={{ backgroundImage: theme.ctaGradient, opacity: 0.16 }} aria-hidden />
+      <div
+        className="absolute -right-16 -top-16 h-56 w-56 rounded-full"
+        style={{ background: `radial-gradient(circle, ${theme.accent}44, transparent 70%)` }}
+        aria-hidden
+      />
+      <div className="relative flex flex-col items-center">
+        {/* Estado: "Inscripciones abiertas" con punto pulsante. */}
+        <span
+          className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[0.72rem] font-bold uppercase tracking-[0.12em]"
+          style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }}
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full opacity-70 lp-anim-glow" style={{ background: theme.accent }} />
+            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: theme.accent }} />
+          </span>
+          {i.status}
+        </span>
+
+        <h2 className="mt-4 max-w-2xl text-[1.8rem] font-extrabold leading-tight @2xl:text-[2.3rem]">
+          <span style={gradText}>{i.heading}</span>
+        </h2>
+
+        {/* Fecha / período de inscripción. */}
+        <div
+          className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[0.9rem] font-semibold"
+          style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }}
+        >
+          <CalendarDays className="h-4 w-4 shrink-0" style={{ color: theme.accent }} />
+          {i.period}
+        </div>
+
+        <p className="mx-auto mt-4 max-w-xl text-[0.95rem] leading-relaxed" style={{ color: theme.textMuted }}>
+          {i.subtitle}
+        </p>
+
+        <button
+          onClick={() => onEnroll?.()}
+          className="mt-7 inline-flex items-center gap-2 rounded-full border-none px-7 py-3.5 text-[0.95rem] font-semibold cursor-pointer transition-transform hover:-translate-y-0.5"
+          style={cta}
+        >
+          {i.ctaText}
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function AboutSection({ config, theme, glass, gradText }: SecProps) {
   return (
@@ -517,6 +596,11 @@ function LocationSection({ config, theme, glass, gradText }: SecProps) {
   );
 }
 
+/** Máximo de imágenes visibles por "página" del carrusel de la galería. */
+const GALLERY_PER_PAGE = 6;
+/** Intervalo del avance automático del carrusel (ms). */
+const GALLERY_AUTOPLAY_MS = 5000;
+
 function GallerySection({
   config,
   theme,
@@ -526,28 +610,103 @@ function GallerySection({
   theme: (typeof THEMES)[keyof typeof THEMES];
   gradText: React.CSSProperties;
 }) {
+  const images = config.gallery.images;
+  const pageCount = Math.max(1, Math.ceil(images.length / GALLERY_PER_PAGE));
+  const [page, setPage] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Si se eliminan imágenes en el editor y la página actual queda fuera de
+  // rango, la reajustamos a la última disponible.
+  useEffect(() => {
+    if (page > pageCount - 1) setPage(pageCount - 1);
+  }, [page, pageCount]);
+
+  // Avance automático cada 5 s. Se reinicia el temporizador en cada cambio de
+  // página (también al navegar manualmente) y se pausa al pasar el cursor.
+  // Respeta la preferencia de "reducir movimiento" del sistema.
+  useEffect(() => {
+    if (pageCount <= 1 || paused) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setTimeout(() => setPage((p) => (p + 1) % pageCount), GALLERY_AUTOPLAY_MS);
+    return () => clearTimeout(t);
+  }, [page, pageCount, paused]);
+
+  const go = (dir: -1 | 1) => setPage((p) => (p + dir + pageCount) % pageCount);
+  const pageImages = images.slice(page * GALLERY_PER_PAGE, page * GALLERY_PER_PAGE + GALLERY_PER_PAGE);
+
+  const arrowStyle: React.CSSProperties = {
+    background: theme.surfaceSolid,
+    border: `1px solid ${theme.border}`,
+    color: theme.text,
+    boxShadow: "0 6px 16px rgba(0,0,0,0.28)",
+  };
+
   return (
     <>
       <SectionHeading eyebrow={SECTION_META.gallery.label} title={config.gallery.heading} theme={theme} gradText={gradText} />
-      <div className="mt-10 grid grid-cols-2 gap-3 @2xl:grid-cols-3 @4xl:grid-cols-4">
-        {config.gallery.images.map((img, i) => (
-          <div
-            key={img.id}
-            className={`group relative overflow-hidden rounded-2xl ${i === 0 ? "@2xl:col-span-2 @2xl:row-span-2" : ""}`}
-            style={{ border: `1px solid ${theme.border}` }}
-          >
-            <ImageWithFallback
-              src={img.url}
-              alt={img.caption}
-              className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${i === 0 ? "h-full min-h-[160px] @2xl:min-h-[336px]" : "h-40"}`}
-            />
-            {img.caption && (
-              <div className="absolute inset-x-0 bottom-0 p-3" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.7))" }}>
-                <span className="text-[0.78rem] font-medium text-white">{img.caption}</span>
+      <div
+        className="mt-10"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div className="relative">
+          <div key={page} className="lp-anim-fade grid grid-cols-2 gap-3 @2xl:grid-cols-3">
+            {pageImages.map((img, i) => (
+              <div
+                key={img.id}
+                className={`group relative overflow-hidden rounded-2xl ${i === 0 ? "@2xl:col-span-2 @2xl:row-span-2" : ""}`}
+                style={{ border: `1px solid ${theme.border}` }}
+              >
+                <ImageWithFallback
+                  src={img.url}
+                  alt={img.caption}
+                  className={`w-full object-cover transition-transform duration-500 group-hover:scale-105 ${i === 0 ? "h-full min-h-[160px] @2xl:min-h-[336px]" : "h-40"}`}
+                />
+                {img.caption && (
+                  <div className="absolute inset-x-0 bottom-0 p-3" style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.7))" }}>
+                    <span className="text-[0.78rem] font-medium text-white">{img.caption}</span>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
+
+          {pageCount > 1 && (
+            <>
+              <button
+                onClick={() => go(-1)}
+                aria-label="Página anterior"
+                className="absolute left-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full cursor-pointer transition-transform hover:scale-110 @2xl:-left-3"
+                style={arrowStyle}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => go(1)}
+                aria-label="Página siguiente"
+                className="absolute right-1 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full cursor-pointer transition-transform hover:scale-110 @2xl:-right-3"
+                style={arrowStyle}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {pageCount > 1 && (
+          <div className="mt-5 flex items-center justify-center gap-2">
+            {Array.from({ length: pageCount }).map((_, p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                aria-label={`Ir a la página ${p + 1}`}
+                aria-current={p === page}
+                className="h-2 rounded-full transition-all cursor-pointer"
+                style={{ width: p === page ? 22 : 8, background: p === page ? theme.accent : theme.border }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

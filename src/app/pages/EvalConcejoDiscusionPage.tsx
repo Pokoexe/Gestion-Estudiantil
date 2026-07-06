@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Gavel, ArrowLeft, ChevronRight, Search, Users } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { POSTULACIONES } from "../data/discusiones";
-import { BOLETINES, ANIOS, promedio, notaColor, type Boletin } from "../data/boletines";
+import { useFetch } from "../datos_maquetados";
+import { getPostulaciones } from "../datos_maquetados/actions/discusiones";
+import { getBoletines, getAnios, type Boletin } from "../datos_maquetados/actions/boletines";
+import { promedio, notaColor } from "../datos_maquetados/data/boletines";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
@@ -18,6 +20,10 @@ export function EvalConcejoDiscusionPage() {
   const [selAnio, setSelAnio] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+
+  const { data: POSTULACIONES } = useFetch(getPostulaciones, []);
+  const { data: BOLETINES } = useFetch(getBoletines, []);
+  const { data: ANIOS } = useFetch(getAnios, []);
 
   // Basta con elegir el año para mostrar la lista de estudiantes.
   const listo = selAnio !== "";
@@ -118,40 +124,44 @@ export function EvalConcejoDiscusionPage() {
           </div>
 
           {/* Cabecera de tabla */}
-          <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-            {HEADERS.map((h, i) => (
-              <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-            ))}
-          </div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[680px]">
+              <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                {HEADERS.map((h, i) => (
+                  <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                ))}
+              </div>
 
-          {paged.length === 0 ? (
-            <div className="px-5 py-10 text-center text-sm text-edu-ink-400">
-              No hay estudiantes que coincidan con la búsqueda.
-            </div>
-          ) : (
-            paged.map((b, i) => {
-              const prom = promedio(b.notas);
-              const postulado = estaPostulado(b);
-              return (
-                <div
-                  key={b.id}
-                  onClick={() => abrirEstudiante(b)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && abrirEstudiante(b)}
-                  className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle focus:outline-none focus-visible:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                >
-                  <span className="text-sm text-edu-ink font-medium">{b.student}</span>
-                  <span className="text-[0.8125rem] text-edu-ink-500">{b.seccion}</span>
-                  <span className={`text-[0.9rem] font-bold ${notaColor(prom)}`}>{prom.toFixed(2)}</span>
-                  <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${postulado ? "bg-edu-success-bg text-edu-success" : "bg-edu-subtle text-edu-ink-500"}`}>
-                    {postulado ? "Postulado" : "Sin postular"}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-edu-ink-300 justify-self-end" />
+              {paged.length === 0 ? (
+                <div className="px-5 py-10 text-center text-sm text-edu-ink-400">
+                  No hay estudiantes que coincidan con la búsqueda.
                 </div>
-              );
-            })
-          )}
+              ) : (
+                paged.map((b, i) => {
+                  const prom = promedio(b.notas);
+                  const postulado = estaPostulado(b);
+                  return (
+                    <div
+                      key={b.id}
+                      onClick={() => abrirEstudiante(b)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && abrirEstudiante(b)}
+                      className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle focus:outline-none focus-visible:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                    >
+                      <span className="text-sm text-edu-ink font-medium">{b.student}</span>
+                      <span className="text-[0.8125rem] text-edu-ink-500">{b.seccion}</span>
+                      <span className={`text-[0.9rem] font-bold ${notaColor(prom)}`}>{prom.toFixed(2)}</span>
+                      <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${postulado ? "bg-edu-success-bg text-edu-success" : "bg-edu-subtle text-edu-ink-500"}`}>
+                        {postulado ? "Postulado" : "Sin postular"}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-edu-ink-300 justify-self-end" />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
 
           {totalPages > 1 && (
             <div className="px-5 py-4 border-t border-edu-border-soft">

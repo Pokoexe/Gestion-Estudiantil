@@ -1,5 +1,7 @@
 import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useFetch } from "../datos_maquetados";
+import { getHorario, getMateriaSeccion } from "../datos_maquetados/actions/docente";
 
 /* ------------------------------------------------------------------ */
 /* Tipos e interfaces locales                                          */
@@ -12,14 +14,8 @@ interface Materia {
     fg: string;
 }
 
-interface Clase {
-    subject: string; // key de Materia
-    room: string;
-    grade: string;
-}
-
 /* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
+/* Mapas presentacionales                                             */
 /* ------------------------------------------------------------------ */
 
 const MATERIAS: Materia[] = [
@@ -39,56 +35,9 @@ const BLOQUES = [
     "14:00 - 15:30",
 ] as const;
 
-// Matriz [bloque][día] → clase u null
-const HORARIO: (Clase | null)[][] = [
-    // 07:00
-    [
-        { subject: "cn", room: "Lab 102", grade: "4.º B" },
-        { subject: "bio", room: "Aula 204", grade: "5.º A" },
-        { subject: "cn", room: "Lab 102", grade: "4.º B" },
-        { subject: "quim", room: "Lab 101", grade: "5.º B" },
-        { subject: "bio", room: "Aula 204", grade: "5.º A" },
-    ],
-    // 08:30
-    [
-        { subject: "tierra", room: "Aula 108", grade: "3.º C" },
-        null,
-        { subject: "bio", room: "Aula 204", grade: "5.º A" },
-        { subject: "tierra", room: "Aula 108", grade: "3.º C" },
-        { subject: "quim", room: "Lab 101", grade: "5.º B" },
-    ],
-    // 10:15
-    [
-        { subject: "quim", room: "Lab 101", grade: "5.º B" },
-        { subject: "cn", room: "Lab 102", grade: "4.º B" },
-        null,
-        { subject: "cn", room: "Lab 102", grade: "4.º B" },
-        { subject: "tierra", room: "Aula 108", grade: "3.º C" },
-    ],
-    // 11:45
-    [
-        null,
-        { subject: "tierra", room: "Aula 108", grade: "3.º C" },
-        { subject: "quim", room: "Lab 101", grade: "5.º B" },
-        null,
-        { subject: "cn", room: "Lab 102", grade: "4.º B" },
-    ],
-    // 14:00
-    [
-        { subject: "bio", room: "Aula 204", grade: "5.º A" },
-        null,
-        { subject: "tierra", room: "Aula 108", grade: "3.º C" },
-        { subject: "bio", room: "Aula 204", grade: "5.º A" },
-        null,
-    ],
-];
-
 const materiaMap: Record<string, Materia> = Object.fromEntries(
     MATERIAS.map((m) => [m.key, m]),
 );
-
-/** Cada materia del horario corresponde a una sección en docente/secciones. */
-const SUBJECT_TO_SECTION: Record<string, number> = { cn: 1, bio: 2, tierra: 3, quim: 4 };
 
 /* ------------------------------------------------------------------ */
 /* Página                                                              */
@@ -96,6 +45,8 @@ const SUBJECT_TO_SECTION: Record<string, number> = { cn: 1, bio: 2, tierra: 3, q
 
 export function DocenteHorarioPage() {
     const navigate = useNavigate();
+    const { data: HORARIO } = useFetch(getHorario, []);
+    const { data: SUBJECT_TO_SECTION } = useFetch(getMateriaSeccion, {});
 
     return (
         <div className="flex flex-col gap-5">
@@ -147,7 +98,7 @@ export function DocenteHorarioPage() {
                                 <div className="px-4 py-3 flex items-center bg-edu-subtle/50">
                                     <span className="text-[0.75rem] font-semibold text-edu-ink-700">{bloque}</span>
                                 </div>
-                                {HORARIO[bi].map((clase, di) => (
+                                {(HORARIO[bi] ?? []).map((clase, di) => (
                                     <div key={di} className="p-2 border-l border-edu-border-soft min-h-[74px]">
                                         {clase ? (
                                             <button

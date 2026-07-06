@@ -3,28 +3,10 @@ import { useNavigate } from "react-router";
 import { User, CalendarDays, CheckCircle2, Clock, ListChecks, Search, Users } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Pagination } from "../components/Pagination";
-import { EXTRA_COURSES, type ExtraCourse, type EnrollmentStatus } from "../data/courses";
+import { useFetch } from "../datos_maquetados";
+import { getCursosExtra, type ExtraCourse, type EnrollmentStatus } from "../datos_maquetados/actions/courses";
+import { getActividades, type Activity, type ActivityStatus } from "../datos_maquetados/actions/estudiante";
 import { color } from "../theme/tokens";
-
-type ActivityStatus = "completed" | "upcoming";
-
-interface Activity {
-    id: number;
-    name: string;
-    date: string;
-    teacher: string;
-    status: ActivityStatus;
-}
-
-const ACTIVITIES: Activity[] = [
-    { id: 1, name: "Feria de ciencias", date: "12 may 2026", teacher: "Prof. Alejandro Morales", status: "completed" },
-    { id: 2, name: "Jornada de reforestación", date: "24 may 2026", teacher: "Prof. Roberto Díaz", status: "completed" },
-    { id: 3, name: "Olimpiada de matemática", date: "3 jun 2026", teacher: "Prof. Ana Ramírez", status: "completed" },
-    { id: 4, name: "Visita al museo de historia", date: "18 jun 2026", teacher: "Prof. Flores", status: "completed" },
-    { id: 5, name: "Torneo interescolar de ajedrez", date: "9 jul 2026", teacher: "Prof. Marco Salcedo", status: "upcoming" },
-    { id: 6, name: "Festival cultural de fin de lapso", date: "26 jul 2026", teacher: "Prof. Camila Ortiz", status: "upcoming" },
-    { id: 7, name: "Campaña de donación de libros", date: "2 ago 2026", teacher: "Prof. Lucía Fernández", status: "upcoming" },
-];
 
 const ACTIVITY_META: Record<ActivityStatus, { label: string; cls: string; dot: string }> = {
     completed: { label: "Realizada", cls: "bg-edu-success-bg text-edu-success", dot: color.success },
@@ -158,7 +140,7 @@ function CoursesGrid({
 
     return (
         <div className="p-5 flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {paged.map((c) => (
                     <CourseCard key={c.id} course={c} onClick={() => onOpen(c.id)} showSpots={showSpots} />
                 ))}
@@ -170,6 +152,9 @@ function CoursesGrid({
 
 export function CoursesActivitiesPage() {
     const navigate = useNavigate();
+
+    const { data: extraCourses } = useFetch(getCursosExtra, []);
+    const { data: activities } = useFetch(getActividades, []);
 
     const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("cursos");
 
@@ -191,11 +176,11 @@ export function CoursesActivitiesPage() {
     const [activityStatusFilter, setActivityStatusFilter] = useState<"todas" | ActivityStatus>("todas");
     const [activityPage, setActivityPage] = useState(1);
 
-    const myCourses = EXTRA_COURSES.filter((c) => c.enrollment);
-    const newCourses = EXTRA_COURSES.filter((c) => !c.enrollment);
+    const myCourses = extraCourses.filter((c) => c.enrollment);
+    const newCourses = extraCourses.filter((c) => !c.enrollment);
 
-    const doneCount = ACTIVITIES.filter((a) => a.status === "completed").length;
-    const upcomingCount = ACTIVITIES.filter((a) => a.status === "upcoming").length;
+    const doneCount = activities.filter((a) => a.status === "completed").length;
+    const upcomingCount = activities.filter((a) => a.status === "upcoming").length;
 
     // Cursos tab — filter + sort
     const myTopics = Array.from(new Set(myCourses.map((c) => c.topic)));
@@ -224,7 +209,7 @@ export function CoursesActivitiesPage() {
         });
 
     // Actividades tab
-    const filteredActivities = ACTIVITIES.filter((a) => {
+    const filteredActivities = activities.filter((a) => {
         if (activityStatusFilter !== "todas" && a.status !== activityStatusFilter) return false;
         if (activityQuery.trim() && !`${a.name} ${a.teacher}`.toLowerCase().includes(activityQuery.trim().toLowerCase())) return false;
         return true;
@@ -359,7 +344,7 @@ export function CoursesActivitiesPage() {
             {tab === "actividades" && (
                 <>
                     {/* Bloques resumen */}
-                    <div className="p-5 grid grid-cols-2 gap-4">
+                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-edu-subtle rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                             <div className="flex justify-between items-start">
                                 <div>
@@ -433,7 +418,8 @@ export function CoursesActivitiesPage() {
                             </select>
                         </div>
 
-                        <div>
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[600px]">
                             <div className={`grid ${ACTIVITY_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                                 {ACTIVITY_HEADERS.map((h) => (
                                     <span
@@ -480,6 +466,7 @@ export function CoursesActivitiesPage() {
                                     </div>
                                 );
                             })}
+                            </div>
 
                             {activityTotalPages > 1 && (
                                 <div className="px-5 py-4 border-t border-edu-border-soft">

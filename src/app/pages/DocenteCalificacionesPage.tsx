@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Search,
     Upload,
@@ -17,98 +17,16 @@ import {
 import { color } from "../theme/tokens";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import type { LapsoId } from "../data/lapsos";
+import { useFetch } from "../datos_maquetados";
+import {
+    getCalificaciones,
+    type EvalTipo,
+    type Estudiante,
+    type EvaluacionPlan,
+} from "../datos_maquetados/actions/docente-eval";
+import { Pagination } from "../components/Pagination";
 
-/* ------------------------------------------------------------------ */
-/* Tipos                                                               */
-/* ------------------------------------------------------------------ */
-type EvalTipo = "exam" | "lab" | "presentation" | "essay";
-
-interface Estudiante {
-    id: number;
-    name: string;
-    cedula: string;
-    average: number;
-    grades: (number | null)[];
-}
-
-interface EvaluacionPlan {
-    id: number;
-    name: string;
-    type: EvalTipo;
-    weight: number;
-    date: string;
-}
-
-interface LapsoData {
-    plan: EvaluacionPlan[];
-    estudiantes: Estudiante[];
-}
-
-/* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
-/* ------------------------------------------------------------------ */
-const ANIOS = ["3.º Año C", "4.º Año B", "5.º Año A", "5.º Año B"];
-const MATERIAS = ["Ciencias Naturales", "Biología", "Ciencias de la Tierra", "Química"];
-
-const NOMBRES: { id: number; name: string; cedula: string }[] = [
-    { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678" },
-    { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321" },
-    { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109" },
-    { id: 4, name: "Luis Alberto Contreras", cedula: "V-30.442.870" },
-    { id: 5, name: "Andrea Carolina Suárez", cedula: "V-31.778.542" },
-    { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233" },
-];
-
-const PLAN_I: EvaluacionPlan[] = [
-    { id: 1, name: "Diagnóstico · Unidad 1", type: "exam", weight: 20, date: "16 abr 2026" },
-    { id: 2, name: "Exposición: Ecosistemas", type: "presentation", weight: 20, date: "30 abr 2026" },
-    { id: 3, name: "Laboratorio · Suelos", type: "lab", weight: 25, date: "14 may 2026" },
-    { id: 4, name: "Examen del lapso", type: "exam", weight: 35, date: "28 may 2026" },
-];
-const ESTUDIANTES_I: Estudiante[] = [
-    { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678", average: 17.8, grades: [18, 17, 18, 18] },
-    { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321", average: 13.2, grades: [14, 13, 12, 14] },
-    { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109", average: 10.5, grades: [11, 10, 10, 11] },
-    { id: 4, name: "Luis Alberto Contreras", cedula: "V-30.442.870", average: 16.0, grades: [16, 15, 17, 16] },
-    { id: 5, name: "Andrea Carolina Suárez", cedula: "V-31.778.542", average: 9.2, grades: [10, 9, 8, 10] },
-    { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233", average: 17.2, grades: [17, 18, 17, 17] },
-];
-
-const PLAN_II: EvaluacionPlan[] = [
-    { id: 1, name: "Prueba escrita · Unidad 1", type: "exam", weight: 20, date: "12 jun 2026" },
-    { id: 2, name: "Exposición: El Petróleo", type: "presentation", weight: 15, date: "22 jun 2026" },
-    { id: 3, name: "Taller práctico de laboratorio", type: "lab", weight: 20, date: "3 jul 2026" },
-    { id: 4, name: "Informe de investigación", type: "essay", weight: 25, date: "17 jul 2026" },
-    { id: 5, name: "Examen final · Unidad 3", type: "exam", weight: 20, date: "29 jul 2026" },
-];
-const ESTUDIANTES_II: Estudiante[] = [
-    { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678", average: 18.2, grades: [18, 19, 18, null, null] },
-    { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321", average: 14.5, grades: [15, null, 14, null, null] },
-    { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109", average: 9.4, grades: [10, 9, null, null, null] },
-    { id: 4, name: "Luis Alberto Contreras", cedula: "V-30.442.870", average: 16.7, grades: [17, 16, 17, null, null] },
-    { id: 5, name: "Andrea Carolina Suárez", cedula: "V-31.778.542", average: 8.6, grades: [9, 8, null, null, null] },
-    { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233", average: 17.9, grades: [18, 18, 17, null, null] },
-];
-
-const PLAN_III: EvaluacionPlan[] = [
-    { id: 1, name: "Diagnóstico · Unidad 4", type: "exam", weight: 30, date: "7 ago 2026" },
-    { id: 2, name: "Proyecto de investigación", type: "essay", weight: 35, date: "28 ago 2026" },
-    { id: 3, name: "Examen final del lapso", type: "exam", weight: 35, date: "18 sep 2026" },
-];
-const ESTUDIANTES_III: Estudiante[] = NOMBRES.map((n) => ({
-    ...n,
-    average: 0,
-    grades: [null, null, null],
-}));
-
-const DATA_BY_LAPSO: Record<LapsoId, LapsoData> = {
-    1: { plan: PLAN_I, estudiantes: ESTUDIANTES_I },
-    2: { plan: PLAN_II, estudiantes: ESTUDIANTES_II },
-    3: { plan: PLAN_III, estudiantes: ESTUDIANTES_III },
-};
-
-const ATTENDANCE_BY_LAPSO: Record<LapsoId, number> = { 1: 93.2, 2: 87.4, 3: 0 };
+const PER_PAGE = 5;
 
 const TYPE_META: Record<EvalTipo, { icon: React.FC<{ style?: React.CSSProperties }>; bg: string; color: string; label: string }> = {
     exam: { icon: FileText, bg: color.warningBg, color: color.warning, label: "Examen" },
@@ -157,14 +75,27 @@ function DonutChart({ pct, size = 76, fillColor, trackColor = "#e9edf2" }: {
 /* ------------------------------------------------------------------ */
 export function DocenteCalificacionesPage() {
     const { selectedId } = useLapso();
-    const { plan: PLAN, estudiantes: ESTUDIANTES } = DATA_BY_LAPSO[selectedId];
-    const attendancePct = ATTENDANCE_BY_LAPSO[selectedId];
+    const { data: CALIFICACIONES, loading } = useFetch(getCalificaciones, null);
 
-    const [anio, setAnio] = useState(ANIOS[1]);
-    const [materia, setMateria] = useState(MATERIAS[0]);
+    const ANIOS = CALIFICACIONES?.anios ?? [];
+    const MATERIAS = CALIFICACIONES?.materias ?? [];
+    const lapsoData = CALIFICACIONES?.porLapso[selectedId];
+    const PLAN = lapsoData?.plan ?? [];
+    const ESTUDIANTES = lapsoData?.estudiantes ?? [];
+    const attendancePct = CALIFICACIONES?.asistenciaPorLapso[selectedId] ?? 0;
+
+    const [anio, setAnio] = useState("");
+    const [materia, setMateria] = useState("");
     const [query, setQuery] = useState("");
     const [filtro, setFiltro] = useState<FiltroNota>("todos");
     const [selectedStudent, setSelectedStudent] = useState<Estudiante | null>(null);
+    const [page, setPage] = useState(1);
+
+    // Sincroniza los valores iniciales de los selectores al cargar los datos.
+    useEffect(() => {
+        if (ANIOS.length && !anio) setAnio(ANIOS[1] ?? ANIOS[0]);
+        if (MATERIAS.length && !materia) setMateria(MATERIAS[0]);
+    }, [ANIOS, MATERIAS, anio, materia]);
 
     // Modal state
     const [gradeCtx, setGradeCtx] = useState<{ student: Estudiante; ev: EvaluacionPlan } | null>(null);
@@ -188,6 +119,10 @@ export function DocenteCalificacionesPage() {
         if (filtro === "por_entregar") return e.grades.some(g => g === null);
         return true;
     });
+
+    const totalPages = Math.max(1, Math.ceil(filteredStudents.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const pagedStudents = filteredStudents.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     // Modal helpers
     const gradeKey = gradeCtx ? `${gradeCtx.student.id}_${gradeCtx.ev.id}` : "";
@@ -219,6 +154,8 @@ export function DocenteCalificacionesPage() {
     const selectCls =
         "border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full cursor-pointer focus:border-edu-primary";
 
+    if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
     return (
         <div className="flex flex-col gap-5">
             {/* Header */}
@@ -249,7 +186,7 @@ export function DocenteCalificacionesPage() {
             </div>
 
             {/* KPI donuts */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Promedio de notas */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex items-center gap-5">
                     <div className="relative shrink-0 w-[76px] h-[76px]">
@@ -298,9 +235,9 @@ export function DocenteCalificacionesPage() {
 
             {/* Tabla + panel de notas */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-                <div className="grid grid-cols-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3">
                     {/* Izquierda: listado de estudiantes */}
-                    <div className="col-span-2 border-r border-edu-border-soft">
+                    <div className="lg:col-span-2 border-r border-edu-border-soft">
                         {/* Buscador y filtros */}
                         <div className="px-5 py-3 border-b border-edu-border-soft flex gap-2 items-center flex-wrap">
                             <div className="relative flex-1 min-w-[160px]">
@@ -308,7 +245,7 @@ export function DocenteCalificacionesPage() {
                                 <input
                                     type="text"
                                     value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
+                                    onChange={(e) => { setQuery(e.target.value); setPage(1); }}
                                     placeholder="Buscar estudiante…"
                                     className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
                                 />
@@ -321,7 +258,7 @@ export function DocenteCalificacionesPage() {
                             ] as const).map((f) => (
                                 <button
                                     key={f.key}
-                                    onClick={() => setFiltro(f.key)}
+                                    onClick={() => { setFiltro(f.key); setPage(1); }}
                                     className={`px-3 py-[7px] rounded-edu-control border-[1.5px] text-[0.775rem] font-medium cursor-pointer transition-colors ${filtro === f.key ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-transparent text-edu-ink-500 hover:text-edu-ink-700"}`}
                                 >
                                     {f.label}
@@ -330,6 +267,8 @@ export function DocenteCalificacionesPage() {
                         </div>
 
                         {/* Cabecera tabla */}
+                        <div className="overflow-x-auto">
+                        <div className="min-w-[680px]">
                         <div className="grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                             {["Estudiante", "Promedio", "Realizadas", "Estado", ""].map((h) => (
                                 <Th key={h}>{h}</Th>
@@ -342,7 +281,7 @@ export function DocenteCalificacionesPage() {
                             </div>
                         )}
 
-                        {filteredStudents.map((e, i) => {
+                        {pagedStudents.map((e, i) => {
                             const realizadas = e.grades.filter(g => g !== null).length;
                             const isApproved = e.average >= 10;
                             const isSelected = selectedStudent?.id === e.id;
@@ -353,7 +292,7 @@ export function DocenteCalificacionesPage() {
                                 <div
                                     key={e.id}
                                     onClick={() => setSelectedStudent(e)}
-                                    className={`grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-[11px] items-center cursor-pointer transition-colors ${isSelected ? "bg-edu-primary-50 border-l-[3px] border-edu-primary" : "hover:bg-edu-subtle border-l-[3px] border-transparent"} ${i < filteredStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    className={`grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-[11px] items-center cursor-pointer transition-colors ${isSelected ? "bg-edu-primary-50 border-l-[3px] border-edu-primary" : "hover:bg-edu-subtle border-l-[3px] border-transparent"} ${i < pagedStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                                 >
                                     <div className="min-w-0">
                                         <div className="text-sm text-edu-ink font-medium truncate">{e.name}</div>
@@ -395,6 +334,13 @@ export function DocenteCalificacionesPage() {
                                 </div>
                             );
                         })}
+                        </div>
+                        </div>
+                        {totalPages > 1 && (
+                            <div className="px-5 py-4 border-t border-edu-border-soft">
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+                            </div>
+                        )}
                     </div>
 
                     {/* Derecha: notas del estudiante seleccionado */}

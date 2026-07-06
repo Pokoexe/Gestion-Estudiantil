@@ -17,33 +17,10 @@ import { color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import type { LapsoId } from "../data/lapsos";
+import { useFetch } from "../datos_maquetados";
+import { getEvaluaciones, type Evaluation, type EvalType } from "../datos_maquetados/actions/estudiante";
 
 const PER_PAGE = 5;
-
-type EvalType = "presentation" | "exam" | "lab" | "essay";
-
-interface Topic {
-    id: number;
-    text: string;
-}
-
-interface Evaluation {
-    id: number;
-    lapso: LapsoId;
-    subjectId: number;
-    subject: string;
-    teacher: string;
-    title: string;
-    type: EvalType;
-    date: string;
-    daysUntil: number;
-    weight: string;
-    currentAverage: number; // promedio actual de la materia (sobre 20)
-    description: string;
-    topics?: Topic[];
-    guide?: string; // material adjunto
-}
 
 const PASS_MARK = 10;
 const RISK_MARK = 12;
@@ -54,22 +31,6 @@ const TYPE_META: Record<EvalType, { icon: React.FC<{ style?: React.CSSProperties
     lab: { icon: FlaskConical, bg: color.successBg, color: color.success, label: "Laboratorio" },
     essay: { icon: PenLine, bg: color.purpleBg, color: color.purple, label: "Ensayo" },
 };
-
-const EVALUATIONS: Evaluation[] = [
-    // Lapso II (en curso) — evaluaciones próximas de julio 2026
-    { id: 1, lapso: 2, subjectId: 3, subject: "Matemática", teacher: "Prof. Ramírez", title: "Examen parcial · Derivadas", type: "exam", date: "5 jul 2026", daysUntil: 3, weight: "30%", currentAverage: 11, description: "Examen escrito sobre reglas de derivación y aplicaciones.", topics: [{ id: 1, text: "Reglas de derivación" }, { id: 2, text: "Recta tangente" }, { id: 3, text: "Optimización" }], guide: "Guia_Derivadas.pdf" },
-    { id: 2, lapso: 2, subjectId: 8, subject: "Inglés", teacher: "Prof. Collins", title: "Examen · Present Perfect", type: "exam", date: "6 jul 2026", daysUntil: 4, weight: "30%", currentAverage: 8, description: "Examen sobre el uso del present perfect y vocabulario de la unidad.", topics: [{ id: 1, text: "Present perfect vs past simple" }, { id: 2, text: "Vocabulario de viajes" }], guide: "Study_Guide_Unit4.pdf" },
-    { id: 3, lapso: 2, subjectId: 5, subject: "Química", teacher: "Prof. Méndez", title: "Informe de laboratorio · Gases", type: "lab", date: "7 jul 2026", daysUntil: 5, weight: "15%", currentAverage: 13, description: "Informe del experimento sobre las leyes de los gases." },
-    { id: 4, lapso: 2, subjectId: 1, subject: "Física", teacher: "Prof. Torres", title: "Prueba corta · Dinámica", type: "exam", date: "9 jul 2026", daysUntil: 7, weight: "15%", currentAverage: 19, description: "Prueba corta sobre las leyes de Newton." },
-    { id: 5, lapso: 2, subjectId: 4, subject: "Literatura", teacher: "Prof. García", title: "Entrega de ensayo", type: "essay", date: "10 jul 2026", daysUntil: 8, weight: "20%", currentAverage: 15, description: "Ensayo de 600 palabras sobre una obra del realismo.", guide: "Rubrica_Ensayo.pdf" },
-    { id: 6, lapso: 2, subjectId: 7, subject: "Historia", teacher: "Prof. Flores", title: "Exposición oral · Independencia", type: "presentation", date: "12 jul 2026", daysUntil: 10, weight: "25%", currentAverage: 10, description: "Exposición grupal sobre el proceso de independencia.", topics: [{ id: 1, text: "Antecedentes" }, { id: 2, text: "Protagonistas" }] },
-    { id: 7, lapso: 2, subjectId: 2, subject: "Biología", teacher: "Prof. Ruiz", title: "Laboratorio · Genética", type: "lab", date: "14 jul 2026", daysUntil: 12, weight: "20%", currentAverage: 17, description: "Práctica sobre cruces genéticos y leyes de Mendel." },
-    { id: 8, lapso: 2, subjectId: 6, subject: "Arte", teacher: "Prof. Vega", title: "Proyecto · Mural colectivo", type: "presentation", date: "16 jul 2026", daysUntil: 14, weight: "35%", currentAverage: 13, description: "Presentación del mural colectivo con técnica libre." },
-    // Lapso III (próximo) — evaluaciones planificadas de agosto 2026
-    { id: 9, lapso: 3, subjectId: 3, subject: "Matemática", teacher: "Prof. Ramírez", title: "Examen diagnóstico · Integrales", type: "exam", date: "5 ago 2026", daysUntil: 31, weight: "20%", currentAverage: 12, description: "Examen inicial sobre integrales indefinidas y definidas." },
-    { id: 10, lapso: 3, subjectId: 5, subject: "Química", teacher: "Prof. Méndez", title: "Proyecto · Química orgánica", type: "presentation", date: "18 ago 2026", daysUntil: 44, weight: "30%", currentAverage: 13, description: "Presentación del proyecto de introducción a la química orgánica." },
-    { id: 11, lapso: 3, subjectId: 2, subject: "Biología", teacher: "Prof. Ruiz", title: "Informe · Ecosistemas", type: "essay", date: "25 ago 2026", daysUntil: 51, weight: "25%", currentAverage: 17, description: "Informe de investigación sobre ecosistemas y biodiversidad." },
-];
 
 const daysLabel = (d: number) => (d <= 0 ? "Hoy" : d === 1 ? "Mañana" : `en ${d} días`);
 const WEEK_LABEL = "3 al 10 de julio";
@@ -86,7 +47,8 @@ export function MisEvaluacionesPage() {
     const [page, setPage] = useState(1);
 
     const { selectedId } = useLapso();
-    const lapsoEvals = EVALUATIONS.filter((e) => e.lapso === selectedId);
+    const { data: evaluations } = useFetch(getEvaluaciones, []);
+    const lapsoEvals = evaluations.filter((e) => e.lapso === selectedId);
 
     const thisWeek = lapsoEvals.filter((e) => e.daysUntil <= 7).length;
     const nearest = [...lapsoEvals].sort((a, b) => a.daysUntil - b.daysUntil)[0];
@@ -120,7 +82,7 @@ export function MisEvaluacionesPage() {
                     <p className="text-edu-ink-400 text-xs mt-1 m-0">Cambia de lapso para consultar otras evaluaciones.</p>
                 </div>
             ) : (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Cantidad esta semana */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
@@ -236,7 +198,8 @@ export function MisEvaluacionesPage() {
                 </div>
 
                 {/* Tabla */}
-                <div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[680px]">
                     <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {EVAL_HEADERS.map((h) => (
                             <span
@@ -291,6 +254,7 @@ export function MisEvaluacionesPage() {
                             </div>
                         );
                     })}
+                    </div>
                     {totalPages > 1 && (
                         <div className="px-5 py-4 border-t border-edu-border-soft">
                             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />

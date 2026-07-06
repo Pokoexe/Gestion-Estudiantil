@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Gavel, ArrowRight, Search } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { POSTULACIONES, type PostEstado } from "../data/discusiones";
+import { useFetch } from "../datos_maquetados";
+import { getPostulaciones, type PostEstado } from "../datos_maquetados/actions/discusiones";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import { CURRENT_LAPSO_ID } from "../data/lapsos";
+import { CURRENT_LAPSO_ID } from "../datos_maquetados/data/lapsos";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
@@ -25,6 +26,7 @@ export function EvalDiscusionPage() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
+  const { data: POSTULACIONES } = useFetch(getPostulaciones, []);
   const { selectedId } = useLapso();
   const enLapso = POSTULACIONES.filter((p) => (p.lapso ?? CURRENT_LAPSO_ID) === selectedId);
 
@@ -85,6 +87,9 @@ export function EvalDiscusionPage() {
           </div>
         </div>
 
+        {/* Cabecera + filas (scroll horizontal en móvil) */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[680px]">
         {/* Cabecera de tabla */}
         <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {HEADERS.map((h) => (
@@ -114,6 +119,8 @@ export function EvalDiscusionPage() {
             </div>
           ))
         )}
+          </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">

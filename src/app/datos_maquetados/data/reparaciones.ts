@@ -50,6 +50,9 @@ export let REPARACIONES: Reparacion[] = [
     },
     { id: 2, subject: "Física", section: "5.º Año A", status: "por_crear", count: 0 },
     { id: 3, subject: "Inglés", section: "4.º Año B", status: "por_crear", count: 0 },
+    { id: 5, subject: "Biología", section: "4.º Año A", status: "por_crear", count: 0 },
+    { id: 6, subject: "Castellano", section: "3.º Año C", status: "por_crear", count: 0 },
+    { id: 7, subject: "Ciencias Naturales", section: "5.º Año A", status: "por_crear", count: 0 },
     {
         id: 4,
         subject: "Matemática",

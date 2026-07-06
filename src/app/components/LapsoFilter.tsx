@@ -7,7 +7,7 @@
  */
 
 import { CalendarRange } from "lucide-react";
-import { LAPSOS, CURRENT_LAPSO_ID, type LapsoId } from "../data/lapsos";
+import { LAPSOS, CURRENT_LAPSO_ID, type LapsoId } from "../datos_maquetados/data/lapsos";
 import { useLapso } from "../context/LapsoContext";
 
 interface LapsoFilterProps {

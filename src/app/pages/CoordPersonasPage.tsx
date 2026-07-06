@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router";
 import {
     Users,
@@ -19,63 +19,24 @@ import {
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { accent, color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import {
+    getPersonasEstudiantes,
+    getPersonasDocentes,
+    getPersonasPorSeccion,
+    type Estudiante,
+    type Docente,
+    type RepRelacion,
+} from "../datos_maquetados/actions/coordinador";
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Tipos y presentación                                                */
 /* ------------------------------------------------------------------ */
 
 type Tab = "estudiantes" | "docentes";
-type EstadoDocente = "Activo" | "Suspendido";
-type RepRelacion = "Madre" | "Padre" | "Tutor/a";
 
-interface Estudiante {
-    id: number;
-    nombre: string;
-    cedula: string;
-    grado: string;
-    fechaNac: string;
-    representante: string;
-    repCedula: string;
-    repTelefono: string;
-    repRelacion: RepRelacion;
-    repEmail: string;
-}
-
-interface Docente {
-    id: number;
-    nombre: string;
-    area: string;
-    secciones: string;
-    estado: EstadoDocente;
-}
-
-const ESTUDIANTES_INICIALES: Estudiante[] = [
-    { id: 1, nombre: "Valeria Contreras", cedula: "V-31.245.678", grado: "3.º Año A", fechaNac: "15 mar 2011", representante: "Josefina Contreras", repCedula: "V-12.345.678", repTelefono: "0414-5551234", repRelacion: "Madre", repEmail: "josefina.contreras@gmail.com" },
-    { id: 2, nombre: "Daniel Peña", cedula: "V-32.108.945", grado: "2.º Año B", fechaNac: "3 jun 2012", representante: "Ramón Peña", repCedula: "V-11.987.654", repTelefono: "0424-6667890", repRelacion: "Padre", repEmail: "ramon.pena@gmail.com" },
-    { id: 3, nombre: "Isabella Moreno", cedula: "V-30.987.221", grado: "4.º Año C", fechaNac: "22 sep 2010", representante: "Carmen Moreno", repCedula: "V-13.456.789", repTelefono: "0412-3334567", repRelacion: "Madre", repEmail: "carmen.moreno@hotmail.com" },
-    { id: 4, nombre: "Carlos Guédez", cedula: "V-29.845.117", grado: "5.º Año A", fechaNac: "8 ene 2009", representante: "Luisa Guédez", repCedula: "V-10.234.567", repTelefono: "0416-7778901", repRelacion: "Madre", repEmail: "luisa.guedez@gmail.com" },
-    { id: 5, nombre: "Andrea Villalba", cedula: "V-31.677.402", grado: "5.º Año B", fechaNac: "30 nov 2009", representante: "Óscar Villalba", repCedula: "V-12.876.543", repTelefono: "0426-2223456", repRelacion: "Padre", repEmail: "oscar.villalba@gmail.com" },
-    { id: 6, nombre: "Jesús Colmenares", cedula: "V-32.554.890", grado: "4.º Año A", fechaNac: "17 abr 2010", representante: "Yajaira Colmenares", repCedula: "V-14.567.890", repTelefono: "0414-9990123", repRelacion: "Madre", repEmail: "yajaira.colmenares@gmail.com" },
-    { id: 7, nombre: "Sofía Marcano", cedula: "V-33.012.456", grado: "1.º Año B", fechaNac: "5 feb 2013", representante: "Elena Marcano", repCedula: "V-15.678.901", repTelefono: "0424-1112345", repRelacion: "Madre", repEmail: "elena.marcano@gmail.com" },
-    { id: 8, nombre: "Gustavo Pedraza", cedula: "V-31.890.333", grado: "2.º Año A", fechaNac: "20 ago 2012", representante: "Jorge Pedraza", repCedula: "V-11.223.344", repTelefono: "0412-8889012", repRelacion: "Padre", repEmail: "jorge.pedraza@hotmail.com" },
-];
-
-const DOCENTES_INICIALES: Docente[] = [
-    { id: 1, nombre: "Prof. María Herrera", area: "Ciencias Naturales, Biología", secciones: "4.º B · 5.º A", estado: "Activo" },
-    { id: 2, nombre: "Prof. Luis Rondón", area: "Educación Física", secciones: "3.º A · 3.º B · 4.º C", estado: "Activo" },
-    { id: 3, nombre: "Prof. Carla Yépez", area: "Castellano, Literatura", secciones: "5.º A · 2.º A", estado: "Activo" },
-    { id: 4, nombre: "Prof. José Bracho", area: "Matemática", secciones: "4.º C · 2.º B", estado: "Suspendido" },
-    { id: 5, nombre: "Prof. Pedro Uzcátegui", area: "Química, Física", secciones: "5.º B", estado: "Activo" },
-];
-
-const SECCIONES_DATA = [
-    { seccion: "1.º Año", estudiantes: 132, fill: color.primary },
-    { seccion: "2.º Año", estudiantes: 128, fill: color.purple },
-    { seccion: "3.º Año", estudiantes: 124, fill: color.success },
-    { seccion: "4.º Año", estudiantes: 118, fill: color.warningStrong },
-    { seccion: "5.º Año", estudiantes: 110, fill: color.danger },
-];
-const TOTAL_SECCIONES = SECCIONES_DATA.reduce((n, s) => n + s.estudiantes, 0);
+/** Colores del donut de secciones (por posición). */
+const SECCIONES_FILLS = [color.primary, color.purple, color.success, color.warningStrong, color.danger];
 
 const PER_PAGE = 5;
 
@@ -119,9 +80,18 @@ function InfoField({ label, value }: { label: string; value: string }) {
 
 export function CoordPersonasPage() {
     const { pathname } = useLocation();
+    const { data: estudiantesFetched } = useFetch(getPersonasEstudiantes, []);
+    const { data: docentesFetched } = useFetch(getPersonasDocentes, []);
+    const { data: seccionesRaw } = useFetch(getPersonasPorSeccion, []);
     const [tab, setTab] = useState<Tab>(pathname.endsWith("docentes") ? "docentes" : "estudiantes");
-    const [estudiantes, setEstudiantes] = useState<Estudiante[]>(ESTUDIANTES_INICIALES);
-    const [docentes, setDocentes] = useState<Docente[]>(DOCENTES_INICIALES);
+    const [estudiantes, setEstudiantes] = useState<Estudiante[]>([]);
+    useEffect(() => setEstudiantes(estudiantesFetched), [estudiantesFetched]);
+    const [docentes, setDocentes] = useState<Docente[]>([]);
+    useEffect(() => setDocentes(docentesFetched), [docentesFetched]);
+
+    // Serie del donut: reatacha el color por posición.
+    const SECCIONES_DATA = seccionesRaw.map((s, i) => ({ ...s, fill: SECCIONES_FILLS[i % SECCIONES_FILLS.length] }));
+    const TOTAL_SECCIONES = SECCIONES_DATA.reduce((n, s) => n + s.estudiantes, 0);
 
     // Búsqueda y filtros
     const [query, setQuery] = useState("");
@@ -198,8 +168,8 @@ export function CoordPersonasPage() {
             </div>
 
             {/* Gráfico y tarjetas */}
-            <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                     <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
                         <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Estudiantes por sección</h3>
                         <span className="text-[0.8rem] text-edu-ink-400 font-medium">Distribución por año</span>
@@ -312,7 +282,8 @@ export function CoordPersonasPage() {
                     </select>
                 </div>
 
-                <div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[680px]">
                     <div className={`grid ${EST_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {EST_HEADERS.map((h) => (
                             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -339,6 +310,7 @@ export function CoordPersonasPage() {
                             </div>
                         </div>
                     ))}
+                    </div>
 
                     {totalPages > 1 && (
                         <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -384,7 +356,7 @@ export function CoordPersonasPage() {
                                 {/* Datos del estudiante */}
                                 <div>
                                     <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-semibold mb-2">Datos del estudiante</div>
-                                    <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                                    <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                                         <InfoField label="Cédula" value={estModal.data.cedula} />
                                         <InfoField label="Año / Sección" value={estModal.data.grado} />
                                         <InfoField label="Fecha de nacimiento" value={estModal.data.fechaNac} />
@@ -407,7 +379,7 @@ export function CoordPersonasPage() {
                                         </div>
 
                                         {/* Campos rep */}
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-edu-border-soft pt-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 border-t border-edu-border-soft pt-3">
                                             <InfoField label="Cédula" value={estModal.data.repCedula} />
                                             <div>
                                                 <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Teléfono</div>
@@ -417,7 +389,7 @@ export function CoordPersonasPage() {
                                                 </div>
                                             </div>
                                             {estModal.data.repEmail && (
-                                                <div className="col-span-2">
+                                                <div className="sm:col-span-2">
                                                     <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Correo electrónico</div>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
                                                         <Mail className="w-3.5 h-3.5 text-edu-ink-400 shrink-0" />

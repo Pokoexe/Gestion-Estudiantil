@@ -14,7 +14,7 @@ import {
   getLapso,
   type Lapso,
   type LapsoId,
-} from "../data/lapsos";
+} from "../datos_maquetados/data/lapsos";
 
 interface LapsoContextValue {
   /** Lapso elegido en el filtro (por defecto, el actual). */

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
     ClipboardList,
@@ -14,12 +14,13 @@ import {
     Search,
 } from "lucide-react";
 import { color } from "../theme/tokens";
-import { PLANIFICACIONES } from "../data/planificaciones";
-import { PLANS } from "../data/plans";
+import { useFetch } from "../datos_maquetados";
+import { getPlanificaciones, type Planificacion } from "../datos_maquetados/actions/planificaciones";
+import { getPlanes, type Plan } from "../datos_maquetados/actions/plans";
 import { Pagination } from "../components/Pagination";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import type { LapsoId } from "../data/lapsos";
+import type { LapsoId } from "../datos_maquetados/data/lapsos";
 
 const PER_PAGE = 5;
 
@@ -62,8 +63,8 @@ const TEMAS: Omit<Revision, "estado">[] = [
     { id: "tm-2", lapso: 2, type: "tema", title: "Temario de recuperación", materia: "Ciencias de la Tierra", seccion: "3.º Año C", fecha: "10 jul 2026", adjunto: "reparacion_ct_3C.pdf", detalle: "Incluir el cronograma de las evaluaciones de recuperación." },
 ];
 
-function buildRevisiones(): Revision[] {
-    const planif: Revision[] = PLANIFICACIONES.filter((p) => p.status === "review").map((p) => ({
+function buildRevisiones(planificaciones: Planificacion[], planes: Plan[]): Revision[] {
+    const planif: Revision[] = planificaciones.filter((p) => p.status === "review").map((p) => ({
         id: `planif-${p.id}`,
         lapso: 2,
         type: "planificacion",
@@ -75,7 +76,7 @@ function buildRevisiones(): Revision[] {
         estado: "Por revisar",
         detalle: "Planificación enviada al coordinador. Modifícala si se solicitan cambios.",
     }));
-    const planes: Revision[] = PLANS.filter((p) => p.status === "review").map((p) => ({
+    const planesRev: Revision[] = planes.filter((p) => p.status === "review").map((p) => ({
         id: `plan-${p.id}`,
         lapso: 2,
         type: "plan",
@@ -91,7 +92,7 @@ function buildRevisiones(): Revision[] {
         ...EXAMENES.map((e) => ({ ...e, estado: "Por revisar" as RevEstado })),
         ...TEMAS.map((t) => ({ ...t, estado: "Por revisar" as RevEstado })),
         ...planif,
-        ...planes,
+        ...planesRev,
     ];
 }
 
@@ -108,7 +109,12 @@ const HEADERS = ["Tipo", "Detalle", "Sección", "Fecha", "Estado", "Acción"];
 
 export function DocenteRevisionesPage() {
     const navigate = useNavigate();
-    const [items, setItems] = useState<Revision[]>(() => buildRevisiones());
+    const { data: planificaciones } = useFetch(getPlanificaciones, []);
+    const { data: planes } = useFetch(getPlanes, []);
+    const [items, setItems] = useState<Revision[]>([]);
+    useEffect(() => {
+        setItems(buildRevisiones(planificaciones, planes));
+    }, [planificaciones, planes]);
     const [tab, setTab] = useState<"todos" | RevType>("todos");
     const [query, setQuery] = useState("");
     const [estadoFilter, setEstadoFilter] = useState<"todos" | RevEstado>("todos");
@@ -152,6 +158,8 @@ export function DocenteRevisionesPage() {
         navigate(r.type === "planificacion" ? `/docente/planificacion/${numId}/editar` : `/docente/planes/${numId}/editar`);
     };
 
+    const KPIS: RevType[] = ["examen", "tema", "planificacion", "plan"];
+
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
@@ -163,12 +171,12 @@ export function DocenteRevisionesPage() {
             </div>
 
             {/* Bloques por categoría (cantidad que hay) */}
-            <div className="grid grid-cols-4 gap-4">
-                {(["examen", "tema", "planificacion", "plan"] as RevType[]).map((t) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {KPIS.map((t, index) => {
                     const m = TYPE_META[t];
                     const Icon = m.icon;
                     return (
-                        <div key={t} className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div key={t} className={`${index + 1 === KPIS.length && "hidden md:block"} bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5`}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">{m.block}</p>
@@ -229,49 +237,53 @@ export function DocenteRevisionesPage() {
                 </div>
 
                 {/* Cabecera de tabla */}
-                <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                    {HEADERS.map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                    ))}
-                </div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[760px]">
+                        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {HEADERS.map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                            ))}
+                        </div>
 
-                {/* Filas */}
-                {filtered.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-sm text-edu-ink-400">No hay revisiones que coincidan con el filtro.</div>
-                ) : (
-                    paged.map((r, i) => {
-                        const m = TYPE_META[r.type];
-                        const Icon = m.icon;
-                        const redirige = r.type === "planificacion" || r.type === "plan";
-                        return (
-                            <div
-                                key={r.id}
-                                onClick={() => openItem(r)}
-                                className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
-                                    style={{ backgroundColor: m.bg, color: m.fg }}
-                                >
-                                    <Icon style={{ width: "12px", height: "12px" }} />
-                                    {m.badge}
-                                </span>
-                                <div className="min-w-0 pr-2">
-                                    <div className="text-sm text-edu-ink font-medium truncate">{r.title}</div>
-                                    <div className="text-[0.72rem] text-edu-ink-400 truncate">{r.materia}</div>
-                                </div>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{r.seccion}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{r.fecha}</span>
-                                <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${r.estado === "Cambios enviados" ? "bg-edu-success-bg text-edu-success" : "bg-edu-warning-bg text-edu-warning"}`}>
-                                    {r.estado}
-                                </span>
-                                <span className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold">
-                                    {redirige ? "Modificar" : "Subir cambio"}
-                                </span>
-                            </div>
-                        );
-                    })
-                )}
+                        {/* Filas */}
+                        {filtered.length === 0 ? (
+                            <div className="px-5 py-10 text-center text-sm text-edu-ink-400">No hay revisiones que coincidan con el filtro.</div>
+                        ) : (
+                            paged.map((r, i) => {
+                                const m = TYPE_META[r.type];
+                                const Icon = m.icon;
+                                const redirige = r.type === "planificacion" || r.type === "plan";
+                                return (
+                                    <div
+                                        key={r.id}
+                                        onClick={() => openItem(r)}
+                                        className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <span
+                                            className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
+                                            style={{ backgroundColor: m.bg, color: m.fg }}
+                                        >
+                                            <Icon style={{ width: "12px", height: "12px" }} />
+                                            {m.badge}
+                                        </span>
+                                        <div className="min-w-0 pr-2">
+                                            <div className="text-sm text-edu-ink font-medium truncate">{r.title}</div>
+                                            <div className="text-[0.72rem] text-edu-ink-400 truncate">{r.materia}</div>
+                                        </div>
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{r.seccion}</span>
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{r.fecha}</span>
+                                        <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${r.estado === "Cambios enviados" ? "bg-edu-success-bg text-edu-success" : "bg-edu-warning-bg text-edu-warning"}`}>
+                                            {r.estado}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold">
+                                            {redirige ? "Modificar" : "Subir cambio"}
+                                        </span>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
                 {totalPages > 1 && (
                     <div className="px-5 py-4 border-t border-edu-border-soft">
                         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />

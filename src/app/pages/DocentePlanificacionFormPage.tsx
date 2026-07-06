@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
     PlusCircle,
@@ -13,16 +13,16 @@ import {
     ArrowLeft,
     BookOpen,
 } from "lucide-react";
+import { LAPSO, MIN_SESIONES } from "../datos_maquetados/data/planificaciones";
+import { useFetch } from "../datos_maquetados";
+import { getMateriaOptions, getSeccionOptions } from "../datos_maquetados/actions/plans";
 import {
-    MATERIA_OPTIONS,
-    SECCION_OPTIONS,
-    LAPSO,
-    MIN_SESIONES,
-    getPlanifById,
-    addPlanif,
-    updatePlanif,
+    getPlanificacionById,
+    crearPlanificacion,
+    actualizarPlanificacion,
     type PlanifSesion,
-} from "../data/planificaciones";
+    type Planificacion,
+} from "../datos_maquetados/actions/planificaciones";
 
 const emptyRow = (id: number): PlanifSesion => ({
     id,
@@ -36,23 +36,41 @@ export function DocentePlanificacionFormPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const editing = id != null;
-    const planif = editing ? getPlanifById(id) : undefined;
 
-    const [form, setForm] = useState(() => ({
-        subject: planif?.subject ?? "",
-        section: planif?.section ?? "",
-    }));
-    const [rows, setRows] = useState<PlanifSesion[]>(() => {
-        if (planif?.sessions && planif.sessions.length) return planif.sessions.map((s) => ({ ...s, files: [...s.files] }));
-        if (planif) {
-            return Array.from({ length: planif.count }, (_, i) => ({
+    const { data: MATERIA_OPTIONS } = useFetch(getMateriaOptions, []);
+    const { data: SECCION_OPTIONS } = useFetch(getSeccionOptions, []);
+
+    // Carga async de la planificación a editar (undefined mientras carga o si no existe).
+    const [planif, setPlanif] = useState<Planificacion | undefined>(undefined);
+    const [planifLoaded, setPlanifLoaded] = useState(!editing);
+    useEffect(() => {
+        if (!editing) return;
+        let alive = true;
+        getPlanificacionById(id!).then((p) => {
+            if (!alive) return;
+            setPlanif(p);
+            setPlanifLoaded(true);
+        });
+        return () => { alive = false; };
+    }, [editing, id]);
+
+    const [form, setForm] = useState({ subject: "", section: "" });
+    const [rows, setRows] = useState<PlanifSesion[]>([emptyRow(1), emptyRow(2), emptyRow(3)]);
+    const [activeTab, setActiveTab] = useState<number | "review">(0);
+
+    // Al llegar la planificación (modo edición), rellena el formulario con sus datos.
+    useEffect(() => {
+        if (!planif) return;
+        setForm({ subject: planif.subject ?? "", section: planif.section ?? "" });
+        if (planif.sessions && planif.sessions.length) {
+            setRows(planif.sessions.map((s) => ({ ...s, files: [...s.files] })));
+        } else {
+            setRows(Array.from({ length: planif.count }, (_, i) => ({
                 ...emptyRow(i + 1),
                 content: `Sesión ${i + 1}`,
-            }));
+            })));
         }
-        return [emptyRow(1), emptyRow(2), emptyRow(3)];
-    });
-    const [activeTab, setActiveTab] = useState<number | "review">(0);
+    }, [planif]);
 
     const updateRow = (rid: number, field: keyof PlanifSesion, value: string) => {
         setRows((rs) => rs.map((r) => (r.id === rid ? { ...r, [field]: value } : r)));
@@ -91,14 +109,14 @@ export function DocentePlanificacionFormPage() {
     }
     const allValid = seleccionOk && sesionesComplete && datesInRange && spacingOk;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const data = { subject: form.subject, section: form.section, sessions: rows };
         if (editing && planif) {
-            updatePlanif(planif.id, data);
+            await actualizarPlanificacion(planif.id, data);
             navigate("/docente/planificacion", { state: { feedback: "La planificación fue actualizada y enviada al coordinador." } });
         } else {
-            addPlanif(data);
+            await crearPlanificacion(data);
             navigate("/docente/planificacion", { state: { feedback: "Planificación creada y enviada al coordinador para su revisión." } });
         }
     };
@@ -108,7 +126,7 @@ export function DocentePlanificacionFormPage() {
     const labelCls = "text-edu-ink-700 text-sm font-medium";
 
     // Planificación a editar inexistente
-    if (editing && !planif) {
+    if (editing && planifLoaded && !planif) {
         return (
             <div className="flex flex-col gap-4">
                 <button
@@ -170,7 +188,7 @@ export function DocentePlanificacionFormPage() {
             <form onSubmit={handleSubmit} className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-4">
                 {/* Materia + sección: selects solo al crear (en modificar van en el banner) */}
                 {!editing && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className={labelCls}>Materia</label>
                             <select
@@ -337,7 +355,7 @@ export function DocentePlanificacionFormPage() {
                 {/* Pestaña "Datos colocados" (revisión) */}
                 {activeTab === "review" && (
                     <div className="flex flex-col gap-4">
-                        <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-3">
+                        <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Materia</div>
                                 <div className="text-[0.875rem] text-edu-ink font-medium">{form.subject || "—"}</div>
@@ -349,6 +367,8 @@ export function DocentePlanificacionFormPage() {
                         </div>
 
                         <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
+                            <div className="overflow-x-auto">
+                            <div className="min-w-[600px]">
                             <div className="grid grid-cols-[0.4fr_2fr_1fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
                                 {["#", "Tema", "Fecha", "Archivos"].map((h, idx) => (
                                     <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
@@ -369,6 +389,8 @@ export function DocentePlanificacionFormPage() {
                                     <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
                                 </div>
                             ))}
+                            </div>
+                            </div>
                         </div>
 
                         {/* Verificación */}

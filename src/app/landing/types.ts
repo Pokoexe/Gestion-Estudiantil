@@ -7,8 +7,8 @@
  *   - cookie "publicada"  → la que se muestra en la raíz "/" del sistema.
  *   - cookie "borrador"   → autoguardado mientras se edita (no se usa en "/").
  *
- * Regla de negocio: máximo 8 "temas de información" visibles a la vez para
- * evitar sobrecarga (hay 9 secciones disponibles).
+ * Regla de negocio: máximo 9 "temas de información" visibles a la vez para
+ * evitar sobrecarga (hay 10 secciones disponibles).
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -22,13 +22,15 @@ import {
   GraduationCap,
   Award,
   Phone,
+  UserPlus,
 } from "lucide-react";
 
-/** Las 2 plantillas base. */
-export type ThemeId = "tecnologico" | "espacial";
+/** Las 3 plantillas base. */
+export type ThemeId = "tecnologico" | "espacial" | "cosmico";
 
-/** Identificadores de las 9 secciones ("temas de información"). */
+/** Identificadores de las 10 secciones ("temas de información"). */
 export type SectionId =
+  | "inscripciones"
   | "about"
   | "courses"
   | "activities"
@@ -40,7 +42,7 @@ export type SectionId =
   | "contact";
 
 /** Máximo de secciones visibles simultáneamente. */
-export const MAX_ENABLED_SECTIONS = 8;
+export const MAX_ENABLED_SECTIONS = 9;
 
 export interface Teacher {
   id: string;
@@ -72,6 +74,13 @@ export interface LandingConfig {
   tagline: string;
 
   hero: { badge: string; title: string; subtitle: string; ctaText: string };
+  inscripciones: {
+    status: string;
+    heading: string;
+    period: string;
+    subtitle: string;
+    ctaText: string;
+  };
   about: { heading: string; body: string };
   courses: { heading: string; subtitle: string };
   activities: { heading: string; subtitle: string };
@@ -101,6 +110,7 @@ export const SECTION_META: Record<
   SectionId,
   { label: string; description: string; icon: LucideIcon; navLabel?: string }
 > = {
+  inscripciones: { label: "Inscripciones", description: "Aviso de inscripciones abiertas con enlace al formulario.", icon: UserPlus, navLabel: "Inscripciones" },
   about: { label: "Sobre la institución", description: "Texto de presentación del colegio.", icon: Info, navLabel: "Nosotros" },
   courses: { label: "Cursos y talleres", description: "Muestra los cursos activos del sistema.", icon: BookOpen, navLabel: "Cursos" },
   activities: { label: "Actividades y eventos", description: "Actividades destacadas de la institución.", icon: CalendarDays, navLabel: "Actividades" },
@@ -114,6 +124,7 @@ export const SECTION_META: Record<
 
 /** Orden canónico de las secciones (usado como referencia). */
 export const SECTION_ORDER: SectionId[] = [
+  "inscripciones",
   "about",
   "students",
   "experience",
@@ -141,8 +152,9 @@ const DEFAULT_GALLERY: GalleryImage[] = [
   { id: "g6", url: "https://picsum.photos/seed/evento6/640/480", caption: "Eventos institucionales" },
 ];
 
-/** Orden y visibilidad por defecto: 8 secciones activas (ubicación oculta). */
+/** Orden y visibilidad por defecto: 9 secciones activas (ubicación oculta). */
 const DEFAULT_SECTIONS: SectionEntry[] = [
+  { id: "inscripciones", enabled: true },
   { id: "about", enabled: true },
   { id: "students", enabled: true },
   { id: "experience", enabled: true },
@@ -170,16 +182,37 @@ const HERO_BY_TEMPLATE: Record<ThemeId, LandingConfig["hero"]> = {
       "Impulsamos a cada estudiante a explorar, cuestionar y alcanzar nuevas galaxias del conocimiento con acompañamiento cercano.",
     ctaText: "Explorar",
   },
+  cosmico: {
+    badge: "¡Despega hacia el aprendizaje!",
+    title: "Una aventura cósmica para crecer y aprender",
+    subtitle:
+      "Entre planetas, estrellas fugaces y astronautas, cada niño explora su curiosidad y descubre todo lo que es capaz de lograr en un ambiente lleno de imaginación.",
+    ctaText: "¡Despegar!",
+  },
+};
+
+/** Fondo por defecto de cada plantilla. */
+const DEFAULT_BG: Record<ThemeId, string> = {
+  tecnologico: "circuitos",
+  espacial: "estrellado",
+  cosmico: "galaxia",
 };
 
 /** Construye una configuración por defecto para la plantilla indicada. */
 export function makeDefaultConfig(template: ThemeId): LandingConfig {
   return {
     template,
-    background: template === "tecnologico" ? "circuitos" : "estrellado",
+    background: DEFAULT_BG[template],
     institutionName: "U.E. Colegio EduGestión",
     tagline: "Excelencia académica desde 2001",
     hero: HERO_BY_TEMPLATE[template],
+    inscripciones: {
+      status: "Inscripciones abiertas",
+      heading: "¡Inscripciones abiertas 2026-2027!",
+      period: "Del 1 de julio al 30 de agosto de 2026",
+      subtitle: "Asegura el cupo de tu hijo para el próximo año escolar. Los cupos son limitados: completa el formulario en línea en pocos minutos.",
+      ctaText: "Inscribirme ahora",
+    },
     about: {
       heading: "Sobre nuestra institución",
       body: "Somos una comunidad educativa comprometida con la formación integral de nuestros estudiantes. Combinamos rigor académico, valores humanos y herramientas modernas para preparar a los jóvenes ante los retos del futuro.",

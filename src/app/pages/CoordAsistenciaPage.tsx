@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     ClipboardCheck,
     Check,
@@ -16,49 +16,21 @@ import {
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { color, accent } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import {
+    getAsistenciaEstudiantes,
+    getAsistenciaDocentes,
+    type AsistenciaPersona as Persona,
+} from "../datos_maquetados/actions/coordinador";
 
 const PER_PAGE = 5;
 
 /* ------------------------------------------------------------------ */
-/* Tipos e interfaces locales                                          */
+/* Tipos locales                                                       */
 /* ------------------------------------------------------------------ */
 
 type Tab = "estudiantes" | "docentes";
 type Estado = "presente" | "ausente";
-
-interface Persona {
-    id: number;
-    name: string;
-    /** Sección (estudiantes) o materia (docentes) */
-    meta: string;
-    /** Días asistidos en el mes */
-    present: number;
-    /** Días hábiles transcurridos en el mes */
-    total: number;
-}
-
-/* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
-/* ------------------------------------------------------------------ */
-
-const ESTUDIANTES_INICIALES: Persona[] = [
-    { id: 1, name: "María Fernanda Rodríguez", meta: "4.º Año B", present: 21, total: 22 },
-    { id: 2, name: "José Gregorio Martínez", meta: "4.º Año B", present: 19, total: 22 },
-    { id: 3, name: "Carla Valentina Pérez", meta: "5.º Año A", present: 22, total: 22 },
-    { id: 4, name: "Luis Alberto Contreras", meta: "3.º Año C", present: 17, total: 22 },
-    { id: 5, name: "Andrea Carolina Suárez", meta: "5.º Año A", present: 20, total: 22 },
-    { id: 6, name: "Daniel Eduardo Blanco", meta: "3.º Año C", present: 22, total: 22 },
-    { id: 7, name: "Gabriela Alejandra Mora", meta: "4.º Año B", present: 18, total: 22 },
-    { id: 8, name: "Ricardo Antonio Salazar", meta: "5.º Año B", present: 21, total: 22 },
-];
-
-const DOCENTES_INICIALES: Persona[] = [
-    { id: 1, name: "Marisela Ríos", meta: "Matemática", present: 21, total: 22 },
-    { id: 2, name: "Luis Aponte", meta: "Castellano", present: 20, total: 22 },
-    { id: 3, name: "Yaneth Bravo", meta: "Biología", present: 22, total: 22 },
-    { id: 4, name: "Óscar Medina", meta: "Historia", present: 18, total: 22 },
-    { id: 5, name: "Karina Suárez", meta: "Inglés", present: 19, total: 22 },
-];
 
 const TABS: { key: Tab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { key: "estudiantes", label: "Estudiantes", icon: GraduationCap },
@@ -149,14 +121,14 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
     return (
         <div className="flex flex-col gap-5">
             {/* ---- Grid cols 3: donut (col-span-2) + KPIs (col-span-1) ---- */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Donut */}
-                <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
+                <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
                     <div className="px-5 py-4 border-b border-edu-border-soft">
                         <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Asistencia de este mes</h3>
                         <p className="mt-0.5 text-edu-ink-400 text-[0.78rem]">Distribución de registros · 22 días hábiles</p>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-4 flex-1">
+                    <div className="flex items-center gap-2 px-4 py-4 flex-1 max-sm:flex-col">
                         {/* Gráfica donut con % al centro */}
                         <div className="relative shrink-0" style={{ width: 200, height: 200 }}>
                             <ResponsiveContainer width="100%" height="100%">
@@ -211,7 +183,7 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
                 </div>
 
                 {/* KPIs */}
-                <div className="col-span-1 flex flex-col gap-4">
+                <div className="lg:col-span-1 flex flex-col gap-4">
                     <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex-1 flex flex-col justify-center">
                         <div className="flex items-start justify-between">
                             <div>
@@ -250,7 +222,7 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
                         <p className="mt-0.5 text-edu-ink-400 text-[0.78rem]">{tablaHint}</p>
                     </div>
                     {!registerOpen && (
-                        <div className="flex items-center gap-3">
+                        <div className="w-full md:w-auto  flex items-center gap-3">
                             {saved && (
                                 <span className="inline-flex items-center gap-1.5 text-edu-success text-[0.8125rem] font-semibold">
                                     <CheckCircle2 className="w-4 h-4" />
@@ -259,7 +231,7 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
                             )}
                             <button
                                 onClick={openRegister}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold cursor-pointer border-none text-white"
+                                className="w-full justify-center md:w-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold cursor-pointer border-none text-white"
                                 style={{ backgroundColor: accent.purple.fg }}
                             >
                                 <CalendarPlus className="w-4 h-4" />
@@ -303,22 +275,20 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
                                 <div className="flex gap-1.5 shrink-0">
                                     <button
                                         onClick={() => setTodayMarks((m) => ({ ...m, [p.id]: "presente" }))}
-                                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-edu-chip text-[0.75rem] font-semibold border-[1.5px] cursor-pointer transition-colors ${
-                                            todayMarks[p.id] === "presente"
-                                                ? "bg-edu-success text-white border-edu-success"
-                                                : "bg-edu-surface text-edu-ink-500 border-edu-border hover:border-edu-success"
-                                        }`}
+                                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-edu-chip text-[0.75rem] font-semibold border-[1.5px] cursor-pointer transition-colors ${todayMarks[p.id] === "presente"
+                                            ? "bg-edu-success text-white border-edu-success"
+                                            : "bg-edu-surface text-edu-ink-500 border-edu-border hover:border-edu-success"
+                                            }`}
                                     >
                                         <Check className="w-3 h-3" />
                                         Presente
                                     </button>
                                     <button
                                         onClick={() => setTodayMarks((m) => ({ ...m, [p.id]: "ausente" }))}
-                                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-edu-chip text-[0.75rem] font-semibold border-[1.5px] cursor-pointer transition-colors ${
-                                            todayMarks[p.id] === "ausente"
-                                                ? "bg-edu-danger text-white border-edu-danger"
-                                                : "bg-edu-surface text-edu-ink-500 border-edu-border hover:border-edu-danger"
-                                        }`}
+                                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-edu-chip text-[0.75rem] font-semibold border-[1.5px] cursor-pointer transition-colors ${todayMarks[p.id] === "ausente"
+                                            ? "bg-edu-danger text-white border-edu-danger"
+                                            : "bg-edu-surface text-edu-ink-500 border-edu-border hover:border-edu-danger"
+                                            }`}
                                     >
                                         <X className="w-3 h-3" />
                                         Ausente
@@ -364,48 +334,52 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
                 </div>
 
                 {/* Cabecera de la tabla */}
-                <div className={`grid ${ATT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                    {[entidad, metaLabel, "Asistencias", "% del mes"].map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
-                            {h}
-                        </span>
-                    ))}
-                </div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[600px]">
+                        <div className={`grid ${ATT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {[entidad, metaLabel, "Asistencias", "% del mes"].map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
+                                    {h}
+                                </span>
+                            ))}
+                        </div>
 
-                {/* Filas */}
-                {paged.length === 0 ? (
-                    <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">
-                        No hay registros que coincidan con la búsqueda.
-                    </p>
-                ) : (
-                    paged.map((p, i) => {
-                        const rowPct = Math.round((p.present / p.total) * 100);
-                        const good = rowPct >= 90;
-                        return (
-                            <div
-                                key={p.id}
-                                className={`grid ${ATT_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-[34px] h-[34px] rounded-full bg-edu-subtle border border-edu-border flex items-center justify-center text-xs font-bold text-edu-ink-500 shrink-0">
-                                        {p.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        {/* Filas */}
+                        {paged.length === 0 ? (
+                            <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">
+                                No hay registros que coincidan con la búsqueda.
+                            </p>
+                        ) : (
+                            paged.map((p, i) => {
+                                const rowPct = Math.round((p.present / p.total) * 100);
+                                const good = rowPct >= 90;
+                                return (
+                                    <div
+                                        key={p.id}
+                                        className={`grid ${ATT_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-[34px] h-[34px] rounded-full bg-edu-subtle border border-edu-border flex items-center justify-center text-xs font-bold text-edu-ink-500 shrink-0">
+                                                {p.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                                            </div>
+                                            <span className="text-sm text-edu-ink font-medium">{p.name}</span>
+                                        </div>
+                                        <span className="text-[0.8125rem] text-edu-ink-700">{p.meta}</span>
+                                        <span className="text-[0.8125rem] text-edu-ink-700 flex items-center gap-1.5">
+                                            <ClipboardList className="w-3.5 h-3.5 text-edu-ink-400" />
+                                            {p.present} / {p.total} días
+                                        </span>
+                                        <span
+                                            className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${good ? "bg-edu-success-bg text-edu-success" : "bg-edu-warning-bg text-edu-warning"}`}
+                                        >
+                                            {rowPct} %
+                                        </span>
                                     </div>
-                                    <span className="text-sm text-edu-ink font-medium">{p.name}</span>
-                                </div>
-                                <span className="text-[0.8125rem] text-edu-ink-700">{p.meta}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-700 flex items-center gap-1.5">
-                                    <ClipboardList className="w-3.5 h-3.5 text-edu-ink-400" />
-                                    {p.present} / {p.total} días
-                                </span>
-                                <span
-                                    className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${good ? "bg-edu-success-bg text-edu-success" : "bg-edu-warning-bg text-edu-warning"}`}
-                                >
-                                    {rowPct} %
-                                </span>
-                            </div>
-                        );
-                    })
-                )}
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
 
                 {/* Paginación */}
                 {totalPages > 1 && (
@@ -423,9 +397,13 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
 /* ------------------------------------------------------------------ */
 
 export function CoordAsistenciaPage() {
+    const { data: estudiantesFetched } = useFetch(getAsistenciaEstudiantes, []);
+    const { data: docentesFetched } = useFetch(getAsistenciaDocentes, []);
     const [tab, setTab] = useState<Tab>("estudiantes");
-    const [estudiantes, setEstudiantes] = useState<Persona[]>(ESTUDIANTES_INICIALES);
-    const [docentes, setDocentes] = useState<Persona[]>(DOCENTES_INICIALES);
+    const [estudiantes, setEstudiantes] = useState<Persona[]>([]);
+    useEffect(() => setEstudiantes(estudiantesFetched), [estudiantesFetched]);
+    const [docentes, setDocentes] = useState<Persona[]>([]);
+    useEffect(() => setDocentes(docentesFetched), [docentesFetched]);
 
     return (
         <div className="flex flex-col gap-5">

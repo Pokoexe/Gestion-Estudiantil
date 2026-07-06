@@ -1,12 +1,17 @@
 /**
- * Persistencia de la landing page en COOKIES.
+ * Persistencia de la landing page en localStorage.
  *
  *   - PUBLISHED_KEY → configuración publicada; es la única que lee la raíz "/".
  *   - DRAFT_KEY     → autoguardado del editor; NO se usa en "/", solo evita
  *                     perder cambios mientras el docente personaliza.
  *
- * Se normaliza siempre contra un default para tolerar cookies viejas o
- * incompletas (mezcla superficial + saneo de la lista de secciones).
+ * Antes se usaban cookies, pero la config completa (12 imágenes, docentes,
+ * textos) supera el límite de ~4 KB por cookie y el navegador la rechazaba en
+ * silencio (la publicación no se reflejaba en "/"). localStorage admite ~5 MB.
+ * Se conserva una lectura de compatibilidad desde la cookie anterior.
+ *
+ * Se normaliza siempre contra un default para tolerar datos viejos o
+ * incompletos (mezcla superficial + saneo de la lista de secciones).
  */
 
 import {
@@ -22,13 +27,13 @@ import {
 
 const PUBLISHED_KEY = "edu_landing_v1";
 const DRAFT_KEY = "edu_landing_draft_v1";
-const ONE_YEAR = 60 * 60 * 24 * 365;
 
 /* ---------------------------------------------------------------- */
-/* Cookies de bajo nivel                                            */
+/* Almacenamiento de bajo nivel (localStorage + migración de cookie) */
 /* ---------------------------------------------------------------- */
 
-function readCookie(name: string): string | null {
+/** Lee una cookie por nombre (solo para migrar datos publicados antiguos). */
+function readLegacyCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const prefix = `${name}=`;
   const found = document.cookie
@@ -37,14 +42,43 @@ function readCookie(name: string): string | null {
   return found ? decodeURIComponent(found.slice(prefix.length)) : null;
 }
 
-function writeCookie(name: string, value: string, maxAgeSec = ONE_YEAR) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSec}; SameSite=Lax`;
-}
-
-function removeCookie(name: string) {
+/** Borra la cookie anterior una vez migrada a localStorage. */
+function removeLegacyCookie(name: string) {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+}
+
+function readStore(name: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = window.localStorage.getItem(name);
+    if (v !== null) return v;
+  } catch {
+    /* localStorage no disponible (modo privado, etc.) */
+  }
+  // Compatibilidad: usa la cookie anterior si aún existe.
+  return readLegacyCookie(name);
+}
+
+function writeStore(name: string, value: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(name, value);
+  } catch {
+    /* cuota excedida u otro error */
+  }
+  // La cookie vieja quedó obsoleta (límite de 4 KB); se elimina.
+  removeLegacyCookie(name);
+}
+
+function removeStore(name: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(name);
+  } catch {
+    /* localStorage no disponible */
+  }
+  removeLegacyCookie(name);
 }
 
 /* ---------------------------------------------------------------- */
@@ -81,7 +115,9 @@ function normalizeSections(raw: unknown): SectionEntry[] {
 /** Mezcla una config parcial (de cookie) sobre el default de su plantilla. */
 export function normalizeConfig(partial: Partial<LandingConfig> | null): LandingConfig {
   const template: ThemeId =
-    partial?.template === "espacial" || partial?.template === "tecnologico"
+    partial?.template === "espacial" ||
+    partial?.template === "tecnologico" ||
+    partial?.template === "cosmico"
       ? partial.template
       : DEFAULT_TEMPLATE;
 
@@ -93,6 +129,7 @@ export function normalizeConfig(partial: Partial<LandingConfig> | null): Landing
     ...partial,
     template,
     hero: { ...base.hero, ...partial.hero },
+    inscripciones: { ...base.inscripciones, ...partial.inscripciones },
     about: { ...base.about, ...partial.about },
     courses: { ...base.courses, ...partial.courses },
     activities: { ...base.activities, ...partial.activities },
@@ -129,33 +166,33 @@ function parse(value: string | null): LandingConfig | null {
 
 /** Config publicada (la que muestra la raíz). null si no existe. */
 export function loadPublished(): LandingConfig | null {
-  return parse(readCookie(PUBLISHED_KEY));
+  return parse(readStore(PUBLISHED_KEY));
 }
 
-/** Publica la configuración: crea/actualiza la cookie que lee la raíz "/". */
+/** Publica la configuración: crea/actualiza el registro que lee la raíz "/". */
 export function savePublished(config: LandingConfig): void {
-  writeCookie(PUBLISHED_KEY, JSON.stringify(config));
+  writeStore(PUBLISHED_KEY, JSON.stringify(config));
 }
 
 /** Borrador de edición (autoguardado). null si no existe. */
 export function loadDraft(): LandingConfig | null {
-  return parse(readCookie(DRAFT_KEY));
+  return parse(readStore(DRAFT_KEY));
 }
 
 /** Guarda el borrador mientras se edita (no afecta la raíz). */
 export function saveDraft(config: LandingConfig): void {
-  writeCookie(DRAFT_KEY, JSON.stringify(config));
+  writeStore(DRAFT_KEY, JSON.stringify(config));
 }
 
 /** Elimina el borrador (al descartar cambios o tras publicar). */
 export function clearDraft(): void {
-  removeCookie(DRAFT_KEY);
+  removeStore(DRAFT_KEY);
 }
 
 export function hasPublished(): boolean {
-  return readCookie(PUBLISHED_KEY) !== null;
+  return readStore(PUBLISHED_KEY) !== null;
 }
 
 export function hasDraft(): boolean {
-  return readCookie(DRAFT_KEY) !== null;
+  return readStore(DRAFT_KEY) !== null;
 }

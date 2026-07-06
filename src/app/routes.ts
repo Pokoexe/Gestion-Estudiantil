@@ -35,7 +35,12 @@ import { DocenteConcejoPage } from "./pages/DocenteConcejoPage";
 import { DocenteConcejoDiscusionPage } from "./pages/DocenteConcejoDiscusionPage";
 import { DocentePostulacionesPage } from "./pages/DocentePostulacionesPage";
 import { DocenteCalificacionesPage } from "./pages/DocenteCalificacionesPage";
+import { DocenteCursosPage } from "./pages/DocenteCursosPage";
+import { DocenteCursosFormPage } from "./pages/DocenteCursosFormPage";
 // Coordinador
+import { CoordCursosPage } from "./pages/CoordCursosPage";
+import { CoordCursosFormPage } from "./pages/CoordCursosFormPage";
+import { InscripcionesPage } from "./pages/InscripcionesPage";
 import { CoordReunionesPage } from "./pages/CoordReunionesPage";
 import { CoordActividadesPage } from "./pages/CoordActividadesPage";
 import { CoordPlanificacionesPage } from "./pages/CoordPlanificacionesPage";
@@ -67,12 +72,15 @@ import { TesoreriaReportesPage } from "./pages/TesoreriaReportesPage";
 import { DirAcademicoPage } from "./pages/DirAcademicoPage";
 import { DirFinanzasPage } from "./pages/DirFinanzasPage";
 import { DirActividadesPage } from "./pages/DirActividadesPage";
-import { DirReportesPage } from "./pages/DirReportesPage";
+import { DirInscripcionesPage } from "./pages/DirInscripcionesPage";
+import { DirInscripcionDetallePage } from "./pages/DirInscripcionDetallePage";
 import { DirectorPresentacionPage } from "./pages/DirectorPresentacionPage";
+import { ConfiguracionPage } from "./pages/ConfiguracionPage";
 
 export const router = createBrowserRouter([
   { path: "/", Component: LandingPage },
   { path: "/login", Component: LoginPage },
+  { path: "/inscripcion", Component: InscripcionesPage },
 
 
   {
@@ -92,6 +100,7 @@ export const router = createBrowserRouter([
       { path: "cursos/:id", Component: CourseDetailPage },
       { path: "pagos", Component: PagosPage },
       { path: "mensajes", Component: MensajesPage },
+      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
@@ -112,9 +121,13 @@ export const router = createBrowserRouter([
       { path: "reparaciones/:id", Component: DocenteReparacionFormPage },
       { path: "concejo", Component: DocenteConcejoPage },
       { path: "concejo/:id", Component: DocenteConcejoDiscusionPage },
-      { path: "postulaciones", Component: DocentePostulacionesPage },
+      { path: "actividades", Component: DocentePostulacionesPage },
       { path: "calificaciones", Component: DocenteCalificacionesPage },
+      { path: "cursos", Component: DocenteCursosPage },
+      { path: "cursos/nuevo", Component: DocenteCursosFormPage },
+      { path: "cursos/:id", Component: CourseDetailPage },
       { path: "mensajes", Component: MensajesPage },
+      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
@@ -129,7 +142,10 @@ export const router = createBrowserRouter([
       { path: "secciones", Component: CoordSeccionesPage },
       { path: "asistencia", Component: CoordAsistenciaPage },
       { path: "personas", Component: CoordPersonasPage },
+      { path: "cursos", Component: CoordCursosPage },
+      { path: "cursos/nuevo", Component: CoordCursosFormPage },
       { path: "lapsos", Component: LapsosPage },
+      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
@@ -150,6 +166,7 @@ export const router = createBrowserRouter([
       { path: "plantillas/preview", Component: EvalPlantillaPreviewPage },
       { path: "reparaciones", Component: EvalReparacionesPage },
       { path: "lapsos", Component: LapsosPage },
+      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
@@ -162,6 +179,7 @@ export const router = createBrowserRouter([
       { path: "confirmar", Component: TesoreriaConfirmarPage },
       { path: "inventario", Component: TesoreriaInventarioPage },
       { path: "reportes", Component: TesoreriaReportesPage },
+      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
@@ -170,11 +188,12 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: DirectorDashboard },
       { path: "academico", Component: DirAcademicoPage },
+      { path: "inscripciones", Component: DirInscripcionesPage },
+      { path: "inscripciones/:id", Component: DirInscripcionDetallePage },
       { path: "finanzas", Component: DirFinanzasPage },
-      { path: "actividades", Component: DirActividadesPage },
-      { path: "reportes", Component: DirReportesPage },
+      { path: "cursos", Component: DirActividadesPage },
+      { path: "actividades", Component: CoordActividadesPage },
       { path: "presentacion", Component: DirectorPresentacionPage },
-      { path: "actividades-coord", Component: CoordActividadesPage },
       { path: "reuniones", Component: CoordReunionesPage },
       { path: "planificaciones", Component: CoordPlanificacionesPage },
       { path: "incidencias", Component: CoordIncidenciasPage },
@@ -183,11 +202,15 @@ export const router = createBrowserRouter([
       { path: "personas", Component: CoordPersonasPage },
       { path: "docentes", Component: CoordPersonasPage },
       { path: "lapsos", Component: LapsosPage },
+      { path: "configuracion", Component: ConfiguracionPage },
     ],
   },
   {
     path: "/programador",
     Component: AppLayout,
-    children: [{ index: true, Component: ProgramadorDashboard }],
+    children: [
+      { index: true, Component: ProgramadorDashboard },
+      { path: "configuracion", Component: ConfiguracionPage },
+    ],
   },
 ], { basename: '/Gestion-Estudiantil' });

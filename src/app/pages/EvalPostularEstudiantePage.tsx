@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ArrowLeft, Award, FileSpreadsheet, User, Gavel, Send, CalendarClock } from "lucide-react";
-import { postularEstudiante } from "../data/discusiones";
-import { BOLETINES, MATERIAS, promedio, notaColor, desglose, actividadesDe } from "../data/boletines";
+import { useFetch } from "../datos_maquetados";
+import { postularEstudiante } from "../datos_maquetados/actions/discusiones";
+import { getBoletines, getMaterias } from "../datos_maquetados/actions/boletines";
+import { promedio, notaColor, desglose, actividadesDe } from "../datos_maquetados/data/boletines";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
@@ -13,15 +15,33 @@ const EVAL_COLS = "grid-cols-[2fr_1fr_0.7fr_0.7fr]";
 export function EvalPostularEstudiantePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const [materia, setMateria] = useState("");
+  const [nota, setNota] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [fecha, setFecha] = useState("");
+
+  const { data: BOLETINES, loading: loadingBoletines } = useFetch(getBoletines, []);
+  const { data: MATERIAS, loading: loadingMaterias } = useFetch(getMaterias, []);
+
+  const loading = loadingBoletines || loadingMaterias;
   const b = BOLETINES.find((x) => String(x.id) === id);
 
   // Índice de la materia con nota más baja (probable caso a discutir)
   const idxMenor = b ? b.notas.reduce((m, n, i, a) => (n < a[m] ? i : m), 0) : 0;
 
-  const [materia, setMateria] = useState(b ? MATERIAS[idxMenor] : MATERIAS[0]);
-  const [nota, setNota] = useState(b ? String(b.notas[idxMenor]) : "");
-  const [motivo, setMotivo] = useState("");
-  const [fecha, setFecha] = useState("");
+  // Al resolverse los datos, precarga la materia con nota más baja y su nota.
+  useEffect(() => {
+    if (b && MATERIAS.length) {
+      setMateria(MATERIAS[idxMenor]);
+      setNota(String(b.notas[idxMenor]));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [b, MATERIAS]);
+
+  if (loading) {
+    return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+  }
 
   if (!b) {
     return (
@@ -46,9 +66,9 @@ export function EvalPostularEstudiantePage() {
     setNota(String(b.notas[MATERIAS.indexOf(m)]));
   };
 
-  const enviar = (e: React.FormEvent) => {
+  const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
-    postularEstudiante({
+    await postularEstudiante({
       estudiante: b.student,
       materia,
       anio: `${b.anio} ${b.seccion}`,
@@ -213,19 +233,23 @@ export function EvalPostularEstudiantePage() {
                 <span className="text-edu-ink-400"> / 20</span>
               </span>
             </div>
-            <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-              {["Evaluación", "Tipo", "%", "Nota"].map((h, j) => (
-                <span key={h} className={`text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em] ${j >= 2 ? "text-right" : ""}`}>{h}</span>
-              ))}
-            </div>
-            {evals.map((e, j) => (
-              <div key={j} className={`grid ${EVAL_COLS} px-5 py-[11px] items-center ${j < evals.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-                <span className="text-[0.875rem] text-edu-ink font-medium">{e.nombre}</span>
-                <span className="text-[0.8125rem] text-edu-ink-700">{e.tipo}</span>
-                <span className="text-[0.8125rem] text-edu-ink-500 text-right">{e.porcentaje}%</span>
-                <span className={`text-[0.9rem] font-bold text-right ${notaColor(e.nota)}`}>{e.nota}</span>
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
+                <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                  {["Evaluación", "Tipo", "%", "Nota"].map((h, j) => (
+                    <span key={h} className={`text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em] ${j >= 2 ? "text-right" : ""}`}>{h}</span>
+                  ))}
+                </div>
+                {evals.map((e, j) => (
+                  <div key={j} className={`grid ${EVAL_COLS} px-5 py-[11px] items-center ${j < evals.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                    <span className="text-[0.875rem] text-edu-ink font-medium">{e.nombre}</span>
+                    <span className="text-[0.8125rem] text-edu-ink-700">{e.tipo}</span>
+                    <span className="text-[0.8125rem] text-edu-ink-500 text-right">{e.porcentaje}%</span>
+                    <span className={`text-[0.9rem] font-bold text-right ${notaColor(e.nota)}`}>{e.nota}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         );
       })}

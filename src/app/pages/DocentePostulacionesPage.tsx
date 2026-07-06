@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Trophy,
     Music,
@@ -18,82 +18,14 @@ import {
 import { accent } from "../theme/tokens";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Pagination } from "../components/Pagination";
-
-type TipoActividad = "Cultural" | "Deportiva" | "Científica" | "Artística";
-type EstadoPostulado = "Pendiente" | "Aprobado" | "Rechazado";
-
-interface Postulado {
-    id: number;
-    nombre: string;
-    seccion: string;
-    cedula: string;
-    estado: EstadoPostulado;
-}
-
-interface Actividad {
-    id: number;
-    nombre: string;
-    tipo: TipoActividad;
-    fecha: string;
-    lugar: string;
-    cupo: number;
-    postulados: Postulado[];
-}
-
-const ESTUDIANTES_DISPONIBLES = [
-    { id: 101, nombre: "Carlos Mendoza", seccion: "4.º Año B", cedula: "V-28.123.456" },
-    { id: 102, nombre: "Valeria Contreras", seccion: "3.º Año A", cedula: "V-29.234.567" },
-    { id: 103, nombre: "Daniel Peña", seccion: "2.º Año B", cedula: "V-30.345.678" },
-    { id: 104, nombre: "Isabella Moreno", seccion: "4.º Año C", cedula: "V-28.456.789" },
-    { id: 105, nombre: "Sebastián Torres", seccion: "5.º Año A", cedula: "V-27.567.890" },
-    { id: 106, nombre: "Gabriela Ríos", seccion: "1.º Año D", cedula: "V-31.678.901" },
-    { id: 107, nombre: "Andrés López", seccion: "3.º Año B", cedula: "V-29.789.012" },
-    { id: 108, nombre: "Fernanda Castro", seccion: "5.º Año C", cedula: "V-27.890.123" },
-];
-
-const ACTIVIDADES_INICIALES: Actividad[] = [
-    {
-        id: 1,
-        nombre: "Danzas Tradicionales Venezolanas",
-        tipo: "Cultural",
-        fecha: "2026-07-10",
-        lugar: "Tariba, Táchira",
-        cupo: 25,
-        postulados: [
-            { id: 11, nombre: "Valeria Contreras", seccion: "3.º Año A", cedula: "V-29.234.567", estado: "Aprobado" },
-            { id: 12, nombre: "Daniel Peña", seccion: "2.º Año B", cedula: "V-30.345.678", estado: "Pendiente" },
-        ],
-    },
-    {
-        id: 2,
-        nombre: "Feria de Ciencias Regionales",
-        tipo: "Científica",
-        fecha: "2026-07-18",
-        lugar: "San Cristóbal, Táchira",
-        cupo: 15,
-        postulados: [
-            { id: 21, nombre: "Sebastián Torres", seccion: "5.º Año A", cedula: "V-27.567.890", estado: "Pendiente" },
-        ],
-    },
-    {
-        id: 3,
-        nombre: "Torneo Intercolegial de Ajedrez",
-        tipo: "Deportiva",
-        fecha: "2026-08-05",
-        lugar: "Colegio San José, Rubio",
-        cupo: 10,
-        postulados: [],
-    },
-    {
-        id: 4,
-        nombre: "Exposición de Arte Escolar",
-        tipo: "Artística",
-        fecha: "2026-08-20",
-        lugar: "Sala Cultural Municipal, San Cristóbal",
-        cupo: 20,
-        postulados: [],
-    },
-];
+import { useFetch } from "../datos_maquetados";
+import {
+    getPostulacionesActividades,
+    getEstudiantesDisponibles,
+    type TipoActividad,
+    type EstadoPostulado,
+    type Actividad,
+} from "../datos_maquetados/actions/docente-eval";
 
 const TIPO_META: Record<TipoActividad, { icon: React.FC<{ style?: React.CSSProperties }>; ac: { bg: string; fg: string } }> = {
     Cultural: { icon: Music, ac: accent.purple },
@@ -116,7 +48,11 @@ const TABLE_HEADERS = ["Título", "Tipo", "Fecha", "Lugar", "Cupos", ""];
 const PER_PAGE = 6;
 
 export function DocentePostulacionesPage() {
-    const [actividades, setActividades] = useState<Actividad[]>(ACTIVIDADES_INICIALES);
+    const { data: actividadesIniciales, loading } = useFetch(getPostulacionesActividades, []);
+    const { data: ESTUDIANTES_DISPONIBLES } = useFetch(getEstudiantesDisponibles, []);
+
+    const [actividades, setActividades] = useState<Actividad[]>([]);
+    useEffect(() => setActividades(actividadesIniciales), [actividadesIniciales]);
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(1);
 
@@ -125,7 +61,7 @@ export function DocentePostulacionesPage() {
 
     // Modal: postular estudiante
     const [showPostular, setShowPostular] = useState(false);
-    const [estudianteId, setEstudianteId] = useState<number>(ESTUDIANTES_DISPONIBLES[0].id);
+    const [estudianteId, setEstudianteId] = useState<number>(0);
 
     // Confirmación: quitar postulado
     const [confirmRemove, setConfirmRemove] = useState<{ postId: number; nombre: string } | null>(null);
@@ -142,10 +78,10 @@ export function DocentePostulacionesPage() {
         .sort((a, b) => a.fecha.localeCompare(b.fecha))[0];
 
     const KPIS = [
-        { label: "Actividades asignadas", value: String(actividades.length), note: "Total de actividades a tu cargo", ac: accent.blue, Icon: Trophy },
-        { label: "Total postulados", value: String(totalPostulados), note: `${pendientes} pendiente${pendientes !== 1 ? "s" : ""} de aprobación`, ac: accent.purple, Icon: Users },
-        { label: "Próxima actividad", value: proxima ? fmtFecha(proxima.fecha) : "—", note: proxima ? proxima.nombre : "Sin actividades próximas", ac: accent.amber, Icon: CalendarDays },
-        { label: "Pendientes de revisión", value: String(pendientes), note: "Postulaciones esperando al coordinador", ac: accent.red, Icon: Clock },
+        { label: "Actividades asignadas", value: String(actividades.length), note: "Total de actividades a tu cargo", ac: accent.blue, Icon: Trophy, hideOnPhone: false },
+        { label: "Total postulados", value: String(totalPostulados), note: `${pendientes} pendiente${pendientes !== 1 ? "s" : ""} de aprobación`, ac: accent.purple, Icon: Users, hideOnPhone: false },
+        { label: "Próxima actividad", value: proxima ? fmtFecha(proxima.fecha) : "—", note: proxima ? proxima.nombre : "Sin actividades próximas", ac: accent.amber, Icon: CalendarDays, hideOnPhone: false },
+        { label: "Pendientes de revisión", value: String(pendientes), note: "Postulaciones esperando al coordinador", ac: accent.red, Icon: Clock, hideOnPhone: true },
     ];
 
     // ---- Filtros y paginación ----
@@ -192,7 +128,7 @@ export function DocentePostulacionesPage() {
     const abrirPostular = (act: Actividad) => {
         const ceds = new Set(act.postulados.map((p) => p.cedula));
         const libre = ESTUDIANTES_DISPONIBLES.find((e) => !ceds.has(e.cedula));
-        setEstudianteId(libre?.id ?? ESTUDIANTES_DISPONIBLES[0].id);
+        setEstudianteId(libre?.id ?? ESTUDIANTES_DISPONIBLES[0]?.id ?? 0);
         setSelectedId(act.id);
         setShowPostular(true);
     };
@@ -223,6 +159,8 @@ export function DocentePostulacionesPage() {
         setConfirmRemove(null);
     };
 
+    if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
@@ -234,9 +172,9 @@ export function DocentePostulacionesPage() {
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {KPIS.map((k) => (
-                    <div key={k.label} className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-4 flex gap-3 items-start">
+                    <div key={k.label} className={`bg-edu-surface rounded-edu-card border border-edu-border-soft p-4 gap-3 items-start ${k.hideOnPhone ? "hidden sm:flex" : "flex"}`}>
                         <div className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: k.ac.bg }}>
                             <k.Icon style={{ width: 20, height: 20, color: k.ac.fg }} />
                         </div>
@@ -273,6 +211,8 @@ export function DocentePostulacionesPage() {
                 </div>
 
                 {/* Cabecera de columnas */}
+                <div className="overflow-x-auto">
+                <div className="min-w-[760px]">
                 <div className={`grid ${TABLE_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                     {TABLE_HEADERS.map((h) => (
                         <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -328,6 +268,8 @@ export function DocentePostulacionesPage() {
                         );
                     })
                 )}
+                </div>
+                </div>
 
                 {totalPages > 1 && (
                     <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -416,6 +358,8 @@ export function DocentePostulacionesPage() {
                                 </div>
                             ) : (
                                 <div>
+                                    <div className="overflow-x-auto">
+                                    <div className="min-w-[680px]">
                                     <div className="grid grid-cols-[1.8fr_1.2fr_1fr_0.9fr_2rem] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                                         {["Estudiante", "Sección", "Cédula", "Estado", ""].map((h) => (
                                             <span key={h} className="text-[0.68rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -444,6 +388,8 @@ export function DocentePostulacionesPage() {
                                             </div>
                                         );
                                     })}
+                                    </div>
+                                    </div>
                                     {modalTotalPages > 1 && (
                                         <div className="px-5 py-3 border-t border-edu-border-soft">
                                             <Pagination currentPage={modalCurrentPage} totalPages={modalTotalPages} onPageChange={setModalPage} />
@@ -473,7 +419,7 @@ export function DocentePostulacionesPage() {
                     onClick={() => setShowPostular(false)}
                 >
                     <div
-                        className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+                        className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">

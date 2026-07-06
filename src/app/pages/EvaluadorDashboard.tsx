@@ -19,44 +19,28 @@ import {
   Cell,
 } from "recharts";
 import { color, shadow, accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import { getDashboard, type DashboardKpiKey } from "../datos_maquetados/actions/evaluador";
 
 /* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
+/* Presentación (label/icono/tono/ruta) — los VALORES vienen del fetch */
 /* ------------------------------------------------------------------ */
 
-const KPIS: {
-  label: string;
-  value: string;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-  tone: { bg: string; fg: string };
-  foot: string;
-  to: string;
-}[] = [
-  {
-    label: "Revisiones pendientes",
-    value: "7",
-    icon: ClipboardList,
-    tone: accent.amber,
-    foot: "3 vencen esta semana",
-    to: "/evaluador/revisiones",
-  },
-  {
-    label: "Exámenes por aprobar",
-    value: "3",
-    icon: FileCheck2,
-    tone: accent.blue,
-    foot: "Enviados por 3 docentes",
-    to: "/evaluador/revisiones",
-  },
-  {
-    label: "Boletines generados",
-    value: "12",
-    icon: FileBarChart2,
-    tone: accent.green,
-    foot: "de 15 secciones",
-    to: "/evaluador/boletines",
-  },
-];
+const KPI_META: Record<
+  DashboardKpiKey,
+  { label: string; icon: React.FC<{ style?: React.CSSProperties }>; tone: { bg: string; fg: string }; to: string }
+> = {
+  revisiones: { label: "Revisiones pendientes", icon: ClipboardList, tone: accent.amber, to: "/evaluador/revisiones" },
+  examenes: { label: "Exámenes por aprobar", icon: FileCheck2, tone: accent.blue, to: "/evaluador/revisiones" },
+  boletines: { label: "Boletines generados", icon: FileBarChart2, tone: accent.green, to: "/evaluador/boletines" },
+};
+
+/** Color de cada barra del gráfico, por estado. */
+const CHART_FILL: Record<string, string> = {
+  Pendiente: color.primary,
+  Aprobado: color.success,
+  Cambios: color.danger,
+};
 
 const QUICK_ACTIONS: {
   label: string;
@@ -68,12 +52,6 @@ const QUICK_ACTIONS: {
   { label: "Asignar cronograma", icon: CalendarClock, primary: false, to: "/evaluador/cronograma" },
   { label: "Generar boletín", icon: FilePlus2, primary: false, to: "/evaluador/boletines" },
   { label: "Nueva discusión de notas", icon: MessageSquarePlus, primary: false, to: "/evaluador/discusion" },
-];
-
-const CHART_DATA = [
-  { estado: "Pendiente", cantidad: 7, fill: color.primary },
-  { estado: "Aprobado", cantidad: 12, fill: color.success },
-  { estado: "Cambios", cantidad: 3, fill: color.danger },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -128,16 +106,28 @@ function Pill({ label, tone }: { label: string; tone: { bg: string; fg: string }
 
 export function EvaluadorDashboard() {
   const navigate = useNavigate();
+  const { data, loading } = useFetch(getDashboard, { kpis: [], chart: [] });
+
+  const kpis = data.kpis.map((k) => ({ ...k, ...KPI_META[k.key] }));
+  const chartData = data.chart.map((c) => ({ ...c, fill: CHART_FILL[c.estado] ?? color.primary }));
+
+  if (loading) {
+    return (
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+        Cargando…
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
       {/* Fila de KPIs — cada bloque redirige a su página */}
-      <div className="grid grid-cols-3 gap-4">
-        {KPIS.map((kpi) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
             <div
-              key={kpi.label}
+              key={kpi.key}
               onClick={() => navigate(kpi.to)}
               role="button"
               tabIndex={0}
@@ -167,7 +157,7 @@ export function EvaluadorDashboard() {
       </div>
 
       {/* Acciones rápidas (estilo botones) */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
         {QUICK_ACTIONS.map((qa) => {
           const Icon = qa.icon;
           return (
@@ -187,7 +177,7 @@ export function EvaluadorDashboard() {
       </div>
 
       {/* Cronograma + gráfico */}
-      <div className="grid grid-cols-[1.5fr_1fr] gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5 items-stretch">
         {/* Cronograma de evaluación */}
         <SectionCard title="Cronograma de evaluación" subtitle="Lapso académico en curso" action="Ajustar reglas →">
           <div className="p-5 flex flex-col gap-[18px]">
@@ -246,7 +236,7 @@ export function EvaluadorDashboard() {
         <SectionCard title="Revisiones por estado" subtitle="Distribución del lapso">
           <div className="px-3 pt-4 pb-2.5">
             <ResponsiveContainer width="100%" height={210}>
-              <BarChart data={CHART_DATA} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+              <BarChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={color.borderSoft} vertical={false} />
                 <XAxis
                   dataKey="estado"
@@ -270,7 +260,7 @@ export function EvaluadorDashboard() {
                   }}
                 />
                 <Bar dataKey="cantidad" radius={[6, 6, 0, 0]} maxBarSize={54}>
-                  {CHART_DATA.map((d) => (
+                  {chartData.map((d) => (
                     <Cell key={d.estado} fill={d.fill} />
                   ))}
                 </Bar>

@@ -14,10 +14,12 @@ import {
   Phone,
 } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { BOLETINES, ANIOS, SECCIONES, MATERIAS, promedio, notaColor, notasDe, type Boletin } from "../data/boletines";
+import { useFetch } from "../datos_maquetados";
+import { getBoletines, getAnios, getSecciones, getMaterias, type Boletin } from "../datos_maquetados/actions/boletines";
+import { promedio, notaColor, notasDe } from "../datos_maquetados/data/boletines";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import type { LapsoId } from "../data/lapsos";
+import type { LapsoId } from "../datos_maquetados/data/lapsos";
 
 /* ------------------------------------------------------------------ */
 /* Constantes                                                          */
@@ -35,9 +37,9 @@ interface Grupo {
   recibidos: number;
 }
 
-function buildGrupos(lapso: LapsoId): Grupo[] {
+function buildGrupos(boletines: Boletin[], lapso: LapsoId): Grupo[] {
   const map = new Map<string, Boletin[]>();
-  for (const b of BOLETINES) {
+  for (const b of boletines) {
     const key = `${b.anio} ${b.seccion}`;
     const arr = map.get(key);
     if (arr) arr.push(b);
@@ -72,12 +74,19 @@ export function EvalBoletinesPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [vista, setVista] = useState<"estudiante" | "seccion">("estudiante");
 
+  const { data: BOLETINES } = useFetch(getBoletines, []);
+  const { data: ANIOS } = useFetch(getAnios, []);
+  const { data: SECCIONES } = useFetch(getSecciones, []);
+  const { data: MATERIAS } = useFetch(getMaterias, []);
+
   const { selectedId } = useLapso();
-  const GRUPOS = buildGrupos(selectedId);
+  const GRUPOS = buildGrupos(BOLETINES, selectedId);
 
   // Totales globales (para la sábana por año / sección)
   const recibidosGlobal = BOLETINES.filter((b) => b.retirado).length;
-  const promGlobal = (BOLETINES.reduce((a, b) => a + promedio(notasDe(b, selectedId)), 0) / BOLETINES.length).toFixed(2);
+  const promGlobal = BOLETINES.length
+    ? (BOLETINES.reduce((a, b) => a + promedio(notasDe(b, selectedId)), 0) / BOLETINES.length).toFixed(2)
+    : "—";
   const descargarGrupo = (g: Grupo) => setFeedback(`Se generaron ${g.estudiantes} boletines de ${g.label} en un solo archivo PDF.`);
 
   // Filtro por selects (año / sección / materia) — base de los KPIs y de la descarga masiva
@@ -157,7 +166,7 @@ export function EvalBoletinesPage() {
       {vista === "estudiante" && (
         <>
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {KPIS.map((k) => {
           const Icon = k.icon;
           return (
@@ -232,6 +241,9 @@ export function EvalBoletinesPage() {
           </button>
         </div>
 
+        {/* Cabecera + filas (scroll horizontal en móvil) */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[760px]">
         {/* Cabecera de tabla */}
         <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {HEADERS.map((h) => (
@@ -284,6 +296,8 @@ export function EvalBoletinesPage() {
             );
           })
         )}
+          </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -302,6 +316,9 @@ export function EvalBoletinesPage() {
             <span className="text-[0.8rem] text-edu-ink-400 font-medium">{GRUPOS.length} secciones</span>
           </div>
 
+          {/* Resumen + tabla (scroll horizontal en móvil) */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[680px]">
           {/* Resumen */}
           <div className="flex gap-0 border-b border-edu-border-soft bg-edu-subtle">
             {[
@@ -348,6 +365,8 @@ export function EvalBoletinesPage() {
               </div>
             );
           })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -388,7 +407,7 @@ export function EvalBoletinesPage() {
                 </div>
 
                 {/* Datos del estudiante y representante */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                   <div className="flex items-start gap-2">
                     <Users className="w-4 h-4 text-edu-ink-400 mt-0.5 shrink-0" />
                     <div>

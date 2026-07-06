@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import { getClasesHoy, getHorarioSemanal } from "../datos_maquetados/actions/docente";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
@@ -24,11 +26,11 @@ const KPIS: {
   hint: string;
   alert?: boolean;
 }[] = [
-  { label: "Secciones asignadas", value: "5", icon: Layers, ac: accent.blue, hint: "Ciclo escolar 2026-I" },
-  { label: "Estudiantes", value: "142", icon: Users, ac: accent.green, hint: "En todas tus secciones" },
-  { label: "Clases de hoy", value: "3", icon: CalendarClock, ac: accent.purple, hint: "Miércoles 1 jul 2026" },
-  { label: "Planes por revisar", value: "1", icon: ClipboardList, ac: accent.amber, hint: "Requiere tu atención", alert: true },
-];
+    { label: "Secciones asignadas", value: "5", icon: Layers, ac: accent.blue, hint: "Ciclo escolar 2026-I" },
+    { label: "Estudiantes", value: "142", icon: Users, ac: accent.green, hint: "En todas tus secciones" },
+    { label: "Clases de hoy", value: "3", icon: CalendarClock, ac: accent.purple, hint: "Miércoles 1 jul 2026" },
+    { label: "Planes por revisar", value: "1", icon: ClipboardList, ac: accent.amber, hint: "Requiere tu atención", alert: true },
+  ];
 
 const QUICK_ACTIONS: {
   label: string;
@@ -36,65 +38,10 @@ const QUICK_ACTIONS: {
   to: string;
   primary?: boolean;
 }[] = [
-  { label: "Añadir calificaciones", icon: FileSpreadsheet, to: "/docente/calificaciones", primary: true },
-  { label: "Crear plan de evaluación", icon: PlusCircle, to: "/docente/planes/nuevo" },
-  { label: "Subir prueba de examen", icon: Upload, to: "/docente/revisiones" },
-];
-
-const TODAY_CLASSES: {
-  time: string;
-  subject: string;
-  section: string;
-  room: string;
-  status: "En curso" | "Próxima";
-}[] = [
-  { time: "07:00", subject: "Ciencias Naturales", section: "4.º B", room: "Lab 102", status: "En curso" },
-  { time: "09:30", subject: "Biología", section: "5.º A", room: "Aula 204", status: "Próxima" },
-  { time: "11:15", subject: "Ciencias de la Tierra", section: "3.º C", room: "Aula 108", status: "Próxima" },
-];
-
-const SCHEDULE: {
-  day: string;
-  classes: { time: string; subject: string; section: string; color: string }[];
-}[] = [
-  {
-    day: "Lun",
-    classes: [
-      { time: "07:00", subject: "Ciencias Naturales", section: "4.º B", color: "#dbeafe" },
-      { time: "09:30", subject: "Química", section: "5.º B", color: "#ffedd5" },
-      { time: "11:15", subject: "Ciencias Naturales", section: "4.º A", color: "#dbeafe" },
-    ],
-  },
-  {
-    day: "Mar",
-    classes: [
-      { time: "08:00", subject: "Biología", section: "5.º A", color: "#dcfce7" },
-      { time: "10:00", subject: "Ciencias de la Tierra", section: "3.º C", color: "#ede9fe" },
-    ],
-  },
-  {
-    day: "Mié",
-    classes: [
-      { time: "07:00", subject: "Ciencias Naturales", section: "4.º B", color: "#dbeafe" },
-      { time: "09:30", subject: "Biología", section: "5.º A", color: "#dcfce7" },
-      { time: "11:15", subject: "Ciencias de la Tierra", section: "3.º C", color: "#ede9fe" },
-    ],
-  },
-  {
-    day: "Jue",
-    classes: [
-      { time: "08:00", subject: "Química", section: "5.º B", color: "#ffedd5" },
-      { time: "10:00", subject: "Ciencias Naturales", section: "4.º A", color: "#dbeafe" },
-    ],
-  },
-  {
-    day: "Vie",
-    classes: [
-      { time: "07:00", subject: "Biología", section: "5.º A", color: "#dcfce7" },
-      { time: "09:30", subject: "Ciencias de la Tierra", section: "3.º C", color: "#ede9fe" },
-    ],
-  },
-];
+    { label: "Añadir calificaciones", icon: FileSpreadsheet, to: "/docente/calificaciones", primary: true },
+    { label: "Crear plan de evaluación", icon: PlusCircle, to: "/docente/planes/nuevo" },
+    { label: "Subir prueba de examen", icon: Upload, to: "/docente/revisiones" },
+  ];
 
 /* ------------------------------------------------------------------ */
 /* Página                                                              */
@@ -102,6 +49,8 @@ const SCHEDULE: {
 
 export function DocenteDashboard() {
   const navigate = useNavigate();
+  const { data: TODAY_CLASSES } = useFetch(getClasesHoy, []);
+  const { data: SCHEDULE } = useFetch(getHorarioSemanal, []);
   const today = new Date();
   const dayIndex = today.getDay();
   const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie"];
@@ -110,13 +59,13 @@ export function DocenteDashboard() {
   return (
     <div className="flex flex-col gap-5">
       {/* Fila de KPIs */}
-      <div className="grid grid-cols-4 gap-4">
-        {KPIS.map((kpi) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPIS.map((kpi, index) => {
           const Icon = kpi.icon;
           return (
             <div
               key={kpi.label}
-              className={`bg-edu-surface rounded-edu-card p-5 flex flex-col gap-3 ${kpi.alert ? "border border-edu-warning-bg" : "border border-edu-border-soft"}`}
+              className={`${index + 1 === KPIS.length && "hidden md:block"} bg-edu-surface rounded-edu-card p-5 flex flex-col gap-3 ${kpi.alert ? "border border-edu-warning-bg" : "border border-edu-border-soft"}`}
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -142,7 +91,7 @@ export function DocenteDashboard() {
       </div>
 
       {/* Acciones rápidas */}
-      <div className="flex gap-2.5 flex-wrap">
+      <div className="grid md:grid-cols-3 gap-4">
         {QUICK_ACTIONS.map((action) => {
           const Icon = action.icon;
           const primary = action.primary;
@@ -150,11 +99,10 @@ export function DocenteDashboard() {
             <button
               key={action.label}
               onClick={() => navigate(action.to)}
-              className={`inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer transition-colors ${
-                primary
-                  ? "border-[1.5px] border-edu-primary bg-edu-primary text-white hover:bg-edu-primary-hover"
-                  : "border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 hover:bg-edu-subtle hover:border-edu-ink-300"
-              }`}
+              className={`w-full justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer transition-colors ${primary
+                ? "border-[1.5px] border-edu-primary bg-edu-primary text-white hover:bg-edu-primary-hover"
+                : "border-[1.5px] border-edu-border bg-edu-surface text-edu-ink-700 hover:bg-edu-subtle hover:border-edu-ink-300"
+                }`}
             >
               <Icon style={{ width: "16px", height: "16px" }} />
               {action.label}
@@ -164,43 +112,45 @@ export function DocenteDashboard() {
       </div>
 
       {/* Horario semanal (2 col) + Clases de hoy (1 col) */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
         {/* Horario */}
-        <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+        <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
             <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Horario</h3>
             <span className="text-[0.8rem] text-edu-primary cursor-pointer font-medium">Ver horario completo →</span>
           </div>
-          <div className="grid grid-cols-5">
-            {SCHEDULE.map(({ day, classes }) => {
-              const isToday = day === activeDay;
-              return (
-                <div
-                  key={day}
-                  className={`px-3 py-3.5 ${day !== "Vie" ? "border-r border-edu-border-soft" : ""}`}
-                >
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-5 min-w-[640px]">
+              {SCHEDULE.map(({ day, classes }) => {
+                const isToday = day === activeDay;
+                return (
                   <div
-                    className={`text-xs font-bold uppercase tracking-[0.06em] mb-2.5 flex items-center gap-[5px] ${isToday ? "text-edu-primary" : "text-edu-ink-400"}`}
+                    key={day}
+                    className={`px-3 py-3.5 ${day !== "Vie" ? "border-r border-edu-border-soft" : ""}`}
                   >
-                    {day}
-                    {isToday && <span className="w-1.5 h-1.5 rounded-full bg-edu-primary inline-block" />}
+                    <div
+                      className={`text-xs font-bold uppercase tracking-[0.06em] mb-2.5 flex items-center gap-[5px] ${isToday ? "text-edu-primary" : "text-edu-ink-400"}`}
+                    >
+                      {day}
+                      {isToday && <span className="w-1.5 h-1.5 rounded-full bg-edu-primary inline-block" />}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {classes.map((cls, i) => (
+                        <div
+                          key={i}
+                          className="rounded-edu-chip px-2.5 py-2"
+                          style={{ backgroundColor: cls.color }}
+                        >
+                          <div className="text-[0.7rem] text-edu-ink-500 font-medium">{cls.time}</div>
+                          <div className="text-[0.8rem] text-edu-ink font-semibold mt-px">{cls.subject}</div>
+                          <div className="text-[0.7rem] text-edu-ink-500 mt-px">{cls.section}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    {classes.map((cls, i) => (
-                      <div
-                        key={i}
-                        className="rounded-edu-chip px-2.5 py-2"
-                        style={{ backgroundColor: cls.color }}
-                      >
-                        <div className="text-[0.7rem] text-edu-ink-500 font-medium">{cls.time}</div>
-                        <div className="text-[0.8rem] text-edu-ink font-semibold mt-px">{cls.subject}</div>
-                        <div className="text-[0.7rem] text-edu-ink-500 mt-px">{cls.section}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 

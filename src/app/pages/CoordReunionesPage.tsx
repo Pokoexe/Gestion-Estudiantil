@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     CalendarClock,
     CheckCircle2,
@@ -12,31 +12,20 @@ import {
 } from "lucide-react";
 import { accent } from "../theme/tokens";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useFetch } from "../datos_maquetados";
+import {
+    getReuniones,
+    type Reunion,
+    type ReunionEstado,
+    type ReunionConvocados,
+} from "../datos_maquetados/actions/coordinador";
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Tipos y presentación                                                */
 /* ------------------------------------------------------------------ */
 
-type Estado = "Programada" | "Realizada" | "Cancelada";
-type Convocados = "Docentes" | "Representantes" | "Ambos";
-
-interface Reunion {
-    id: number;
-    tema: string;
-    fecha: string;
-    hora: string;
-    convocados: Convocados;
-    estado: Estado;
-    observaciones?: string;
-}
-
-const REUNIONES_INICIALES: Reunion[] = [
-    { id: 1, tema: "Cierre del segundo lapso", fecha: "10 jul 2026", hora: "08:00", convocados: "Docentes", estado: "Programada", observaciones: "Traer consolidado de notas por sección." },
-    { id: 2, tema: "Entrega de boletines 4.º Año", fecha: "12 jul 2026", hora: "14:00", convocados: "Representantes", estado: "Programada" },
-    { id: 3, tema: "Planificación del acto de graduación", fecha: "28 jun 2026", hora: "10:30", convocados: "Ambos", estado: "Realizada", observaciones: "Se conformó la comisión de logística." },
-    { id: 4, tema: "Revisión de convivencia escolar", fecha: "20 jun 2026", hora: "09:00", convocados: "Docentes", estado: "Realizada" },
-    { id: 5, tema: "Feria científica anual", fecha: "5 jun 2026", hora: "11:00", convocados: "Ambos", estado: "Cancelada", observaciones: "Reprogramada por lluvias." },
-];
+type Estado = ReunionEstado;
+type Convocados = ReunionConvocados;
 
 const ESTADO_META: Record<Estado, { cls: string }> = {
     Programada: { cls: "bg-edu-primary-100 text-edu-primary" },
@@ -52,7 +41,9 @@ const HEADERS = ["Tema", "Fecha", "Hora", "Convocados", "Estado", "Acciones"];
 /* ------------------------------------------------------------------ */
 
 export function CoordReunionesPage() {
-    const [reuniones, setReuniones] = useState<Reunion[]>(REUNIONES_INICIALES);
+    const { data: reunionesFetched } = useFetch(getReuniones, []);
+    const [reuniones, setReuniones] = useState<Reunion[]>([]);
+    useEffect(() => setReuniones(reunionesFetched), [reunionesFetched]);
     const [showModal, setShowModal] = useState(false);
     const [confirm, setConfirm] = useState<{ id: number; action: "Realizada" | "Cancelada"; tema: string } | null>(null);
     const [form, setForm] = useState({
@@ -123,7 +114,7 @@ export function CoordReunionesPage() {
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {kpis.map((kpi) => {
                     const Icon = kpi.icon;
                     return (
@@ -146,7 +137,8 @@ export function CoordReunionesPage() {
                     <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Agenda de reuniones</h3>
                     <span className="text-[0.8rem] text-edu-ink-400 font-medium">{reuniones.length} reuniones</span>
                 </div>
-                <div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[760px]">
                     <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {HEADERS.map((h) => (
                             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -191,6 +183,7 @@ export function CoordReunionesPage() {
                             </div>
                         );
                     })}
+                    </div>
                 </div>
             </div>
 

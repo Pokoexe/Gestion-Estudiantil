@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from "react-router";
 import { PlusCircle, Pencil, X, CheckCircle2, AlertTriangle, Search } from "lucide-react";
 import { color } from "../theme/tokens";
 import { PlanStats } from "../components/PlanStats";
-import { PLANIFICACIONES, type PlanifEstado } from "../data/planificaciones";
+import { useFetch } from "../datos_maquetados";
+import { getPlanificaciones, type PlanifEstado } from "../datos_maquetados/actions/planificaciones";
 import { Pagination } from "../components/Pagination";
 
 const PER_PAGE = 5;
@@ -26,11 +27,13 @@ export function DocentePlanificacionPage() {
     const [statusFilter, setStatusFilter] = useState<"todos" | PlanifEstado>("todos");
     const [page, setPage] = useState(1);
 
-    const subidos = PLANIFICACIONES.filter((p) => p.status !== "draft").length;
-    const porRevisar = PLANIFICACIONES.filter((p) => p.status === "review").length;
-    const aprobados = PLANIFICACIONES.filter((p) => p.status === "approved").length;
+    const { data: planificaciones } = useFetch(getPlanificaciones, []);
 
-    const filteredPlanif = PLANIFICACIONES
+    const subidos = planificaciones.filter((p) => p.status !== "draft").length;
+    const porRevisar = planificaciones.filter((p) => p.status === "review").length;
+    const aprobados = planificaciones.filter((p) => p.status === "approved").length;
+
+    const filteredPlanif = planificaciones
         .filter((p) => statusFilter === "todos" || p.status === statusFilter)
         .filter((p) => !query.trim() || `${p.subject} ${p.section}`.toLowerCase().includes(query.trim().toLowerCase()));
     const totalPages = Math.max(1, Math.ceil(filteredPlanif.length / PER_PAGE));
@@ -64,7 +67,7 @@ export function DocentePlanificacionPage() {
                 </div>
                 <button
                     onClick={() => navigate("/docente/planificacion/nuevo")}
-                    className="inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
+                    className="w-full justify-center md:w-auto inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
                 >
                     <PlusCircle className="w-4 h-4" />
                     Crear planificación
@@ -103,50 +106,54 @@ export function DocentePlanificacionPage() {
                         <option value="changes">Cambios solicitados</option>
                     </select>
                 </div>
-                <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                    {["Materia", "Sección", "Sesiones", "Estado", "Acción"].map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
-                            {h}
-                        </span>
-                    ))}
-                </div>
-                {filteredPlanif.length === 0 && (
-                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay planificaciones que coincidan con el filtro.</div>
-                )}
-                {paged.map((planif, i) => {
-                    const st = STATUS_META[planif.status];
-                    return (
-                        <div
-                            key={planif.id}
-                            className={`px-5 py-[13px] transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                        >
-                            <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] items-center">
-                                <span className="text-sm text-edu-ink font-medium">{planif.subject}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{planif.section}</span>
-                                <span className="text-sm text-edu-ink-700 font-semibold">{planif.count} sesiones</span>
-                                <span
-                                    className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
-                                    style={{ backgroundColor: st.bg, color: st.fg }}
-                                >
-                                    {st.label}
+                <div className="overflow-x-auto">
+                    <div className="min-w-[680px]">
+                        <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                            {["Materia", "Sección", "Sesiones", "Estado", "Acción"].map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
+                                    {h}
                                 </span>
-                                <button
-                                    onClick={() => navigate(`/docente/planificacion/${planif.id}/editar`)}
-                                    className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold cursor-pointer w-fit bg-transparent border-none p-0"
-                                >
-                                    <Pencil style={{ width: "13px", height: "13px" }} />
-                                    Modificar
-                                </button>
-                            </div>
-                            {planif.note && (
-                                <div className={`mt-2 flex items-center gap-1.5 text-xs w-fit rounded-edu-chip px-2.5 py-1.5 ${planif.status === "changes" ? "text-edu-danger bg-edu-danger-bg" : "text-edu-ink-500 bg-edu-primary-50"}`}>
-                                    <AlertTriangle className="shrink-0" style={{ width: "12px", height: "12px" }} />
-                                    {planif.note}
-                                </div>
-                            )}
+                            ))}
                         </div>
-                    );
-                })}
+                        {filteredPlanif.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay planificaciones que coincidan con el filtro.</div>
+                        )}
+                        {paged.map((planif, i) => {
+                            const st = STATUS_META[planif.status];
+                            return (
+                                <div
+                                    key={planif.id}
+                                    className={`px-5 py-[13px] transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] items-center">
+                                        <span className="text-sm text-edu-ink font-medium">{planif.subject}</span>
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{planif.section}</span>
+                                        <span className="text-sm text-edu-ink-700 font-semibold">{planif.count} sesiones</span>
+                                        <span
+                                            className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
+                                            style={{ backgroundColor: st.bg, color: st.fg }}
+                                        >
+                                            {st.label}
+                                        </span>
+                                        <button
+                                            onClick={() => navigate(`/docente/planificacion/${planif.id}/editar`)}
+                                            className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold cursor-pointer w-fit bg-transparent border-none p-0"
+                                        >
+                                            <Pencil style={{ width: "13px", height: "13px" }} />
+                                            Modificar
+                                        </button>
+                                    </div>
+                                    {planif.note && (
+                                        <div className={`mt-2 flex items-center gap-1.5 text-xs w-fit rounded-edu-chip px-2.5 py-1.5 ${planif.status === "changes" ? "text-edu-danger bg-edu-danger-bg" : "text-edu-ink-500 bg-edu-primary-50"}`}>
+                                            <AlertTriangle className="shrink-0" style={{ width: "12px", height: "12px" }} />
+                                            {planif.note}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
                 {totalPages > 1 && (
                     <div className="px-5 py-4 border-t border-edu-border-soft">
                         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />

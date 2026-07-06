@@ -17,7 +17,11 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen w-full">
-      <LandingView config={config} onLogin={() => navigate("/login")} />
+      <LandingView
+        config={config}
+        onLogin={() => navigate("/login")}
+        onEnroll={() => navigate("/inscripcion")}
+      />
     </div>
   );
 }

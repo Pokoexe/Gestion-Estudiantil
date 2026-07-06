@@ -13,51 +13,8 @@ import {
 import { color, accent } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-
-/* ------------------------------------------------------------------ */
-/* Tipos                                                               */
-/* ------------------------------------------------------------------ */
-
-type Currency = "USD" | "Bs." | "COP";
-
-interface Representative {
-  id: number;
-  rep: string;
-  students: string;
-  months: number; // 0 = solvente
-  amount: number; // 0 = solvente
-  currency: Currency;
-  phone: string;
-}
-
-/* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
-/* ------------------------------------------------------------------ */
-
-const REPRESENTATIVES: Representative[] = [
-  // En mora
-  { id: 1, rep: "Pedro Nava", students: "Andrés Nava · 5.º B", months: 3, amount: 195, currency: "USD", phone: "0414-1122334" },
-  { id: 2, rep: "Luisana Mendoza", students: "Camila Mendoza · 1.º A", months: 3, amount: 7200, currency: "Bs.", phone: "0424-5566778" },
-  { id: 3, rep: "Jorge Emilio Castro", students: "Sofía Castro · 4.º C, Luis Castro · 2.º B", months: 2, amount: 260, currency: "USD", phone: "0412-9988776" },
-  { id: 4, rep: "Neida Contreras", students: "Luis Contreras · 3.º A", months: 5, amount: 650000, currency: "COP", phone: "0416-3344556" },
-  { id: 5, rep: "Wilmer Ochoa", students: "Gabriel Ochoa · 6.º B", months: 1, amount: 65, currency: "USD", phone: "0426-7788990" },
-  { id: 6, rep: "Aracelis Duque", students: "Daniela Duque · 2.º C", months: 4, amount: 9600, currency: "Bs.", phone: "0414-2211009" },
-  { id: 7, rep: "Freddy Colmenares", students: "Yeison Colmenares · 5.º A, Ana Colmenares · 3.º B", months: 2, amount: 130, currency: "USD", phone: "0424-6655443" },
-  // Solventes
-  { id: 8, rep: "María Fernanda Rojas", students: "Diego Rojas · 4.º A", months: 0, amount: 0, currency: "USD", phone: "0414-3216549" },
-  { id: 9, rep: "Carlos Alberto Guerra", students: "Valentina Guerra · 1.º B", months: 0, amount: 0, currency: "Bs.", phone: "0424-1472583" },
-  { id: 10, rep: "Yohana Piñango", students: "Samuel Piñango · 6.º A", months: 0, amount: 0, currency: "COP", phone: "0412-7539514" },
-  { id: 11, rep: "Ronald Betancourt", students: "Isabella Betancourt · 3.º C", months: 0, amount: 0, currency: "USD", phone: "0416-9515357" },
-  { id: 12, rep: "Génesis Alvarado", students: "Mateo Alvarado · 2.º A", months: 0, amount: 0, currency: "Bs.", phone: "0426-3571592" },
-  { id: 13, rep: "Douglas Sánchez", students: "Andrea Sánchez · 5.º B", months: 0, amount: 0, currency: "USD", phone: "0414-8529637" },
-  { id: 14, rep: "Marbella Quintero", students: "Josué Quintero · 1.º A", months: 0, amount: 0, currency: "COP", phone: "0424-9637418" },
-  { id: 15, rep: "Alexis Parra", students: "Camila Parra · 4.º B", months: 0, amount: 0, currency: "Bs.", phone: "0412-1593574" },
-  { id: 16, rep: "Rosa Elena Díaz", students: "Miguel Díaz · 3.º A, Laura Díaz · 1.º C", months: 0, amount: 0, currency: "USD", phone: "0416-7412589" },
-  { id: 17, rep: "Héctor Villalba", students: "Fabiana Villalba · 6.º B", months: 0, amount: 0, currency: "Bs.", phone: "0426-8523697" },
-  { id: 18, rep: "Nancy Peralta", students: "Emilio Peralta · 2.º B", months: 0, amount: 0, currency: "USD", phone: "0414-3698521" },
-  { id: 19, rep: "Oswaldo Rincón", students: "Gabriela Rincón · 4.º A", months: 0, amount: 0, currency: "COP", phone: "0424-1234567" },
-  { id: 20, rep: "Yelitza Moreno", students: "Santiago Moreno · 5.º C", months: 0, amount: 0, currency: "Bs.", phone: "0412-7654321" },
-];
+import { useFetch } from "../datos_maquetados";
+import { getRepresentantes, type Representative } from "../datos_maquetados/actions/tesoreria";
 
 const money = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
 
@@ -90,40 +47,41 @@ const COLS = "grid-cols-[1.3fr_1.6fr_0.9fr_1fr_1fr_1.1fr]";
 const HEADERS = ["Representante", "Estudiante(s)", "Meses", "Adeudado", "Teléfono", "Acción"];
 
 /* ------------------------------------------------------------------ */
-/* Métricas de solvencia                                               */
-/* ------------------------------------------------------------------ */
-
-const morososCount = REPRESENTATIVES.filter((r) => r.months > 0).length;
-const solventesCount = REPRESENTATIVES.filter((r) => r.months === 0).length;
-const payRate = Math.round((solventesCount / REPRESENTATIVES.length) * 100);
-
-const SUMMARY: {
-  label: string;
-  value: string;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-  ac: { bg: string; fg: string };
-  hint: string;
-  trend?: string;
-}[] = [
-    { label: "Representantes en mora", value: String(morososCount), icon: AlertTriangle, ac: accent.red, hint: "Con una o más mensualidades" },
-    { label: "Representantes solventes", value: String(solventesCount), icon: UserCheck, ac: accent.green, hint: "Al día con sus pagos" },
-    { label: "Por cobrar (USD)", value: "$ 650", icon: Wallet, ac: accent.amber, hint: "Equivalente aproximado total" },
-    { label: "Representantes que pagan", value: `${payRate} %`, icon: TrendingDown, ac: accent.blue, hint: "Promedio mensual de pago" },
-  ];
-
-/* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
 
 const PER_PAGE = 7;
 
 export function TesoreriaSolvenciaPage() {
+  const { data: REPRESENTATIVES, loading } = useFetch(getRepresentantes, []);
+
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "solvente" | "mora">("todos");
   const [page, setPage] = useState(1);
   const [notified, setNotified] = useState<Record<number, boolean>>({});
   const [selected, setSelected] = useState<Representative | null>(null);
   const [confirmNotify, setConfirmNotify] = useState<Representative | null>(null);
+
+  /* ---- Métricas de solvencia (derivadas de la colección) ---- */
+  const morososCount = REPRESENTATIVES.filter((r) => r.months > 0).length;
+  const solventesCount = REPRESENTATIVES.filter((r) => r.months === 0).length;
+  const payRate = REPRESENTATIVES.length
+    ? Math.round((solventesCount / REPRESENTATIVES.length) * 100)
+    : 0;
+
+  const SUMMARY: {
+    label: string;
+    value: string;
+    icon: React.FC<{ style?: React.CSSProperties }>;
+    ac: { bg: string; fg: string };
+    hint: string;
+    trend?: string;
+  }[] = [
+      { label: "Representantes en mora", value: String(morososCount), icon: AlertTriangle, ac: accent.red, hint: "Con una o más mensualidades" },
+      { label: "Representantes solventes", value: String(solventesCount), icon: UserCheck, ac: accent.green, hint: "Al día con sus pagos" },
+      { label: "Por cobrar (USD)", value: "$ 650", icon: Wallet, ac: accent.amber, hint: "Equivalente aproximado total" },
+      { label: "Representantes que pagan", value: `${payRate} %`, icon: TrendingDown, ac: accent.blue, hint: "Promedio mensual de pago" },
+    ];
 
   const filtered = REPRESENTATIVES.filter((r) => {
     const solvent = r.months === 0;
@@ -139,10 +97,12 @@ export function TesoreriaSolvenciaPage() {
 
   const notify = (id: number) => setNotified((prev) => ({ ...prev, [id]: true }));
 
+  if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
   return (
     <div className="flex flex-col gap-5">
       {/* Resumen de solvencia */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {SUMMARY.map((k) => {
           const Icon = k.icon;
           return (
@@ -198,6 +158,8 @@ export function TesoreriaSolvenciaPage() {
           </select>
         </div>
 
+        <div className="overflow-x-auto">
+          <div className="min-w-[760px]">
         <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {HEADERS.map((h) => (
             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -267,6 +229,8 @@ export function TesoreriaSolvenciaPage() {
             </div>
           );
         })}
+          </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -315,7 +279,7 @@ export function TesoreriaSolvenciaPage() {
                 </div>
 
                 {/* Datos */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                   <div className="col-span-2">
                     <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Estudiante(s)</div>
                     <div className="text-[0.875rem] text-edu-ink font-medium">{selected.students}</div>

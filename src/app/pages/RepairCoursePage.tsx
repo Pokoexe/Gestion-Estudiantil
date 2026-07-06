@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
 import {
     Phone,
@@ -16,171 +16,8 @@ import {
     MessageCircle,
 } from "lucide-react";
 import { color } from "../theme/tokens";
-
-interface Topic {
-    id: number;
-    text: string;
-}
-
-interface Assignment {
-    id: number;
-    title: string;
-    type: "presentation" | "exam" | "lab" | "essay";
-    dueDate: string;
-    weight: string;
-    status: "pending" | "submitted" | "graded";
-    grade?: string;
-    description?: string;
-    duration?: string;
-    topics?: Topic[];
-    hasAttachment?: boolean;
-    attachmentName?: string;
-}
-
-type EtapaStatus = "passed" | "failed" | "in_progress" | "pending";
-
-interface Etapa {
-    order: number;
-    status: EtapaStatus;
-    room: string;
-    schedule: string;
-    term: string;
-    finalAverage?: string;
-    assignments: Assignment[];
-}
-
-interface RepairSubject {
-    name: string;
-    code: string;
-    section: string;
-    teacher: { name: string; title: string; phone: string; email: string; initials: string };
-    etapas: Etapa[];
-}
-
-const REPAIR_SUBJECTS: Record<string, RepairSubject> = {
-    "11": {
-        name: "Química",
-        code: "QUI-401",
-        section: "Sección B",
-        teacher: {
-            name: "Prof. Ricardo Méndez",
-            title: "Docente titular de Química",
-            phone: "+58 412-555-0177",
-            email: "r.mendez@edugestion.edu",
-            initials: "RM",
-        },
-        etapas: [
-            {
-                order: 1,
-                status: "failed",
-                room: "Lab 102",
-                schedule: "Lun / Mié · 07:00 – 08:30",
-                term: "2026-I",
-                finalAverage: "8",
-                assignments: [
-                    { id: 1, title: "Exposición sobre enlaces químicos", type: "presentation", dueDate: "5 may 2026", weight: "20%", status: "graded", grade: "9" },
-                    { id: 2, title: "Examen escrito · Unidad 2", type: "exam", dueDate: "12 may 2026", weight: "30%", status: "graded", grade: "8", description: "Examen a libro cerrado sobre estequiometría y enlaces." },
-                    { id: 3, title: "Informe de laboratorio · Reacciones", type: "lab", dueDate: "19 may 2026", weight: "25%", status: "graded", grade: "10" },
-                    { id: 4, title: "Ensayo sobre química ambiental", type: "essay", dueDate: "26 may 2026", weight: "25%", status: "graded", grade: "7" },
-                ],
-            },
-            {
-                order: 2,
-                status: "in_progress",
-                room: "Lab 104",
-                schedule: "Mar / Jue · 09:00 – 10:30",
-                term: "2026-I",
-                assignments: [
-                    { id: 1, title: "Taller práctico de laboratorio", type: "lab", dueDate: "1 jul 2026", weight: "25%", status: "graded", grade: "14", description: "Práctica supervisada para reforzar los procedimientos evaluados." },
-                    { id: 2, title: "Prueba corta de repaso", type: "exam", dueDate: "3 jul 2026", weight: "15%", status: "graded", grade: "13" },
-                    {
-                        id: 3,
-                        title: "Examen parcial de recuperación",
-                        type: "exam",
-                        dueDate: "8 jul 2026",
-                        weight: "30%",
-                        status: "pending",
-                        description: "Examen escrito que evalúa los contenidos no aprobados de la etapa anterior.",
-                        duration: "90 minutos",
-                        topics: [
-                            { id: 1, text: "Estequiometría y balanceo de ecuaciones" },
-                            { id: 2, text: "Tipos de enlaces y propiedades" },
-                        ],
-                        hasAttachment: true,
-                        attachmentName: "Guia_Recuperacion.pdf",
-                    },
-                    { id: 4, title: "Exposición final del taller", type: "presentation", dueDate: "10 jul 2026", weight: "30%", status: "pending" },
-                ],
-            },
-            {
-                order: 3,
-                status: "pending",
-                room: "Lab 102",
-                schedule: "Vie · 07:00 – 10:00",
-                term: "2026-II",
-                assignments: [
-                    { id: 1, title: "Diagnóstico inicial", type: "exam", dueDate: "Por definir", weight: "10%", status: "pending" },
-                    { id: 2, title: "Taller de refuerzo", type: "lab", dueDate: "Por definir", weight: "25%", status: "pending" },
-                    { id: 3, title: "Proyecto integrador", type: "essay", dueDate: "Por definir", weight: "25%", status: "pending" },
-                    { id: 4, title: "Examen final", type: "exam", dueDate: "Por definir", weight: "40%", status: "pending" },
-                ],
-            },
-        ],
-    },
-    "12": {
-        name: "Matemática",
-        code: "MAT-401",
-        section: "Sección B",
-        teacher: {
-            name: "Prof. Ana Ramírez",
-            title: "Docente titular de Matemática",
-            phone: "+58 412-555-0104",
-            email: "a.ramirez@edugestion.edu",
-            initials: "AR",
-        },
-        etapas: [
-            {
-                order: 1,
-                status: "failed",
-                room: "Aula 210",
-                schedule: "Lun / Mié · 10:00 – 11:30",
-                term: "2026-I",
-                finalAverage: "8",
-                assignments: [
-                    { id: 1, title: "Examen de álgebra", type: "exam", dueDate: "6 may 2026", weight: "30%", status: "graded", grade: "8" },
-                    { id: 2, title: "Taller de factorización", type: "lab", dueDate: "13 may 2026", weight: "25%", status: "graded", grade: "9" },
-                    { id: 3, title: "Prueba corta de ecuaciones", type: "exam", dueDate: "20 may 2026", weight: "20%", status: "graded", grade: "10" },
-                    { id: 4, title: "Proyecto de aplicación", type: "essay", dueDate: "27 may 2026", weight: "25%", status: "graded", grade: "7" },
-                ],
-            },
-            {
-                order: 2,
-                status: "in_progress",
-                room: "Aula 208",
-                schedule: "Mar / Jue · 07:00 – 08:30",
-                term: "2026-I",
-                assignments: [
-                    { id: 1, title: "Examen de funciones", type: "exam", dueDate: "2 jul 2026", weight: "25%", status: "graded", grade: "12" },
-                    {
-                        id: 2,
-                        title: "Taller de límites y derivadas",
-                        type: "lab",
-                        dueDate: "9 jul 2026",
-                        weight: "25%",
-                        status: "pending",
-                        description: "Serie de ejercicios guiados sobre los temas con menor rendimiento.",
-                        hasAttachment: true,
-                        attachmentName: "Guia_Limites_Derivadas.pdf",
-                    },
-                    { id: 3, title: "Prueba corta de repaso", type: "exam", dueDate: "14 jul 2026", weight: "10%", status: "pending" },
-                    { id: 4, title: "Examen de recuperación final", type: "exam", dueDate: "17 jul 2026", weight: "40%", status: "pending", description: "Evaluación final que integra todo el plan de reparación.", duration: "120 minutos" },
-                ],
-            },
-        ],
-    },
-};
-
-const DEFAULT_SUBJECT_ID = "11";
+import { useFetch } from "../datos_maquetados";
+import { getReparacionMateria, type Assignment, type EtapaStatus } from "../datos_maquetados/actions/estudiante";
 
 const TYPE_META: Record<Assignment["type"], { icon: React.FC<{ style?: React.CSSProperties }>, bg: string, color: string, label: string }> = {
     presentation: { icon: Presentation, bg: color.primary50, color: color.primary, label: "Exposición" },
@@ -331,13 +168,34 @@ function AssignmentCard({ assignment, defaultOpen }: { assignment: Assignment; d
 
 export function RepairCoursePage() {
     const { id } = useParams();
-    const subject = REPAIR_SUBJECTS[id ?? ""] ?? REPAIR_SUBJECTS[DEFAULT_SUBJECT_ID];
-
-    const initialIdx = Math.max(0, subject.etapas.findIndex((e) => e.status === "in_progress"));
-    const [activeIdx, setActiveIdx] = useState(initialIdx);
+    const fetchSubject = useCallback(() => getReparacionMateria(id ?? ""), [id]);
+    const { data: subject, loading } = useFetch(fetchSubject, undefined, [id]);
+    const [activeIdx, setActiveIdx] = useState(0);
     const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
 
-    const etapa = subject.etapas[activeIdx];
+    // Al cargar la materia, abre la etapa en curso (o la primera).
+    useEffect(() => {
+        if (!subject) return;
+        setActiveIdx(Math.max(0, subject.etapas.findIndex((e) => e.status === "in_progress")));
+    }, [subject]);
+
+    if (loading) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                Cargando reparación…
+            </div>
+        );
+    }
+
+    if (!subject) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                No se encontró la materia en reparación.
+            </div>
+        );
+    }
+
+    const etapa = subject.etapas[activeIdx] ?? subject.etapas[0];
     const pendingCount = etapa.assignments.filter((a) => a.status === "pending").length;
     const gradedCount = etapa.assignments.filter((a) => a.status === "graded").length;
     const firstPending = etapa.assignments.find((a) => a.status === "pending");
@@ -376,9 +234,9 @@ export function RepairCoursePage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-                <div className="col-span-2 space-y-2">
+                <div className="lg:col-span-2 space-y-2">
                     {/* Banner de la etapa */}
                     <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
                 <div>
@@ -414,7 +272,7 @@ export function RepairCoursePage() {
             </div>
 
                     {/* Resumen de la etapa */}
-                    <div className="grid grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
                         {[
                             { label: "Completadas", value: `${gradedCount}/${etapa.assignments.length}`, color: color.success },
                             { label: "Promedio de la etapa", value: etapa.finalAverage ? `${etapa.finalAverage}/20` : "En curso", color: color.primary },
@@ -471,7 +329,7 @@ export function RepairCoursePage() {
                 </div>
 
                 {/* Plan de evaluación de la etapa */}
-                <div className="col-span-3">
+                <div className="lg:col-span-3">
                     <div className="flex justify-between items-center mb-3">
                         <div>
                             <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación · Etapa {etapa.order}</h3>

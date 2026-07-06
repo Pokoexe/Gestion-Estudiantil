@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PackagePlus,
   Package,
@@ -12,52 +12,20 @@ import {
 import { color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-
-/* ------------------------------------------------------------------ */
-/* Tipos                                                               */
-/* ------------------------------------------------------------------ */
-
-type Currency = "USD" | "Bs." | "COP";
-type ItemStatus = "ok" | "low" | "out";
-
-interface InvItem {
-  id: number;
-  name: string;
-  category: string;
-  qty: number;
-  unit: number; // valor unitario en USD
-  status: ItemStatus;
-}
-
-interface Movement {
-  id: number;
-  itemId: number;
-  item: string;
-  qty: number;
-  note: string;
-  date: string;
-}
+import { useFetch } from "../datos_maquetados";
+import {
+  getInventario,
+  getMovimientosInventario,
+  getSaldoInventario,
+  type Currency,
+  type ItemStatus,
+  type InvItem,
+  type Movement,
+} from "../datos_maquetados/actions/tesoreria";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
 /* ------------------------------------------------------------------ */
-
-const INITIAL: InvItem[] = [
-  { id: 1, name: "Sillas de aula", category: "Mobiliario", qty: 340, unit: 12, status: "ok" },
-  { id: 2, name: "Mesas de trabajo", category: "Mobiliario", qty: 172, unit: 28, status: "ok" },
-  { id: 3, name: "Computadoras de escritorio", category: "Tecnología", qty: 24, unit: 320, status: "low" },
-  { id: 4, name: "Tabletas educativas", category: "Tecnología", qty: 6, unit: 150, status: "low" },
-  { id: 5, name: "Escobas y coletos", category: "Limpieza", qty: 3, unit: 4, status: "out" },
-  { id: 6, name: "Líquidos de limpieza", category: "Limpieza", qty: 42, unit: 3, status: "ok" },
-  { id: 7, name: "Pizarras acrílicas", category: "Aula", qty: 28, unit: 22, status: "ok" },
-  { id: 8, name: "Resmas de papel bond", category: "Insumos", qty: 90, unit: 5, status: "ok" },
-  { id: 9, name: "Globos decorativos", category: "Insumos", qty: 200, unit: 0.3, status: "ok" },
-];
-
-const INITIAL_MOVEMENTS: Movement[] = [
-  { id: 1, itemId: 6, item: "Líquidos de limpieza", qty: 4, note: "Limpieza general de aulas tras la jornada.", date: "1 jul 2026" },
-  { id: 2, itemId: 8, item: "Resmas de papel bond", qty: 3, note: "Impresión de boletines del 3.º lapso.", date: "30 jun 2026" },
-];
 
 const CATEGORIES = ["Mobiliario", "Tecnología", "Limpieza", "Aula", "Insumos"];
 
@@ -78,7 +46,6 @@ const money = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 
 const COLS = "grid-cols-[1.5fr_0.9fr_0.6fr_0.8fr_0.8fr_0.8fr_1fr]";
 const HEADERS = ["Artículo", "Categoría", "Cantidad", "Valor unit.", "Valor total", "Estado", "Acciones"];
 
-const INITIAL_BALANCE = 8450; // saldo disponible en USD
 const PER_PAGE = 6;
 
 /* ------------------------------------------------------------------ */
@@ -86,10 +53,18 @@ const PER_PAGE = 6;
 /* ------------------------------------------------------------------ */
 
 export function TesoreriaInventarioPage() {
-  const [items, setItems] = useState<InvItem[]>(INITIAL);
-  const [movements, setMovements] = useState<Movement[]>(INITIAL_MOVEMENTS);
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
+  const { data: fetchedItems } = useFetch(getInventario, []);
+  const { data: fetchedMovements } = useFetch(getMovimientosInventario, []);
+  const { data: fetchedBalance } = useFetch(getSaldoInventario, 0);
+
+  const [items, setItems] = useState<InvItem[]>([]);
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [balance, setBalance] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => setItems(fetchedItems), [fetchedItems]);
+  useEffect(() => setMovements(fetchedMovements), [fetchedMovements]);
+  useEffect(() => setBalance(fetchedBalance), [fetchedBalance]);
 
   // Alta de inventario
   const [showAdd, setShowAdd] = useState(false);
@@ -234,7 +209,7 @@ export function TesoreriaInventarioPage() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
           <div className="flex justify-between items-start">
             <div>
@@ -252,7 +227,7 @@ export function TesoreriaInventarioPage() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">Saldo disponible</p>
-              <p className={`text-[1.6rem] font-bold mt-1 m-0 ${balance < INITIAL_BALANCE ? "text-edu-warning" : "text-edu-ink"}`}>$ {money(balance)}</p>
+              <p className={`text-[1.6rem] font-bold mt-1 m-0 ${balance < fetchedBalance ? "text-edu-warning" : "text-edu-ink"}`}>$ {money(balance)}</p>
             </div>
             <div className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: color.primary50 }}>
               <Wallet style={{ width: "20px", height: "20px", color: color.primary }} />
@@ -276,9 +251,9 @@ export function TesoreriaInventarioPage() {
       </div>
 
       {/* Inventario + registro de descuentos, lado a lado */}
-      <div className="grid grid-cols-3 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         {/* Tabla de inventario (col-span-2) */}
-        <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+        <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
             <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Inventario de la institución</h3>
             <span className="text-[0.8rem] text-edu-ink-400 font-medium">{filtered.length} artículo{filtered.length === 1 ? "" : "s"}</span>
@@ -318,6 +293,8 @@ export function TesoreriaInventarioPage() {
             </select>
           </div>
 
+          <div className="overflow-x-auto">
+            <div className="min-w-[860px]">
           <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
             {HEADERS.map((h) => (
               <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -362,6 +339,8 @@ export function TesoreriaInventarioPage() {
               </div>
             );
           })}
+            </div>
+          </div>
 
           {totalPages > 1 && (
             <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -372,7 +351,7 @@ export function TesoreriaInventarioPage() {
 
 
 
-        <div className="col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4">
 
           {/* Acción */}
           <div className="flex gap-3 w-full flex-wrap">
@@ -426,7 +405,7 @@ export function TesoreriaInventarioPage() {
       {/* Modal: agregar inventario */}
       {showAdd && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowAdd(false)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-success-bg flex items-center justify-center">
@@ -451,7 +430,7 @@ export function TesoreriaInventarioPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Cantidad</label>
                   <input type="number" required min="0" value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} placeholder="0" className={field} />
@@ -490,7 +469,7 @@ export function TesoreriaInventarioPage() {
       {/* Modal: modificar inventario */}
       {editItem && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditItem(null)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-primary-50 flex items-center justify-center">
@@ -515,7 +494,7 @@ export function TesoreriaInventarioPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Cantidad</label>
                   <input type="number" required min="0" value={editForm.qty} onChange={(e) => setEditForm({ ...editForm, qty: e.target.value })} className={field} />
@@ -550,7 +529,7 @@ export function TesoreriaInventarioPage() {
       {/* Modal: descontar inventario */}
       {discountItem && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setDiscountItem(null)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-warning-bg flex items-center justify-center">
@@ -615,7 +594,7 @@ export function TesoreriaInventarioPage() {
       {/* Modal: editar / eliminar movimiento */}
       {editMov && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditMov(null)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-warning-bg flex items-center justify-center">

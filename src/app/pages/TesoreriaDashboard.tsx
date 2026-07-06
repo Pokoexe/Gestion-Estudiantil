@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
   Wallet,
@@ -24,6 +24,13 @@ import {
 import { color, radius, shadow, accent } from "../theme/tokens";
 import { BaucheModal } from "../components/BaucheModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useFetch } from "../datos_maquetados";
+import {
+  getRecaudoMensual,
+  getPagosPorConfirmarResumen,
+  getMorosos,
+  type DashboardPendingPay,
+} from "../datos_maquetados/actions/tesoreria";
 
 /* ---------- Datos ficticios ---------- */
 
@@ -64,47 +71,7 @@ const QUICK_ACTIONS: {
     { label: "Agregar inventario", icon: PackagePlus, primary: false, to: "/tesoreria/inventario" },
   ];
 
-const MONTHLY_COLLECTION: { mes: string; monto: number }[] = [
-  { mes: "Ene", monto: 6120 },
-  { mes: "Feb", monto: 6980 },
-  { mes: "Mar", monto: 7540 },
-  { mes: "Abr", monto: 7210 },
-  { mes: "May", monto: 7520 },
-  { mes: "Jun", monto: 8450 },
-];
-
-const PENDING_PAYMENTS: {
-  id: number;
-  rep: string;
-  student: string;
-  amount: string;
-  method: string;
-  date: string;
-  ref: string;
-}[] = [
-    { id: 1, rep: "María Fernanda Rojas", student: "Diego Rojas · 4to A", amount: "$ 65", method: "Transferencia", date: "28 jun 2026", ref: "Zelle · 4821" },
-    { id: 2, rep: "Carlos Alberto Guerra", student: "Valentina Guerra · 1ro B", amount: "Bs 2.400", method: "Transferencia", date: "29 jun 2026", ref: "Pago Móvil · 0102" },
-    { id: 3, rep: "Yohana Piñango", student: "Samuel Piñango · 6to A", amount: "$ 130.000", method: "Transferencia", date: "30 jun 2026", ref: "Nequi COP · 3390" },
-    { id: 4, rep: "Ronald Betancourt", student: "Isabella Betancourt · 3ro C", amount: "$ 65", method: "Transferencia", date: "30 jun 2026", ref: "Zelle · 7715" },
-    { id: 5, rep: "Génesis Alvarado", student: "Mateo Alvarado · 2do A", amount: "Bs 2.400", method: "Transferencia", date: "1 jul 2026", ref: "Pago Móvil · 0134" },
-  ];
-
-type PendingPay = (typeof PENDING_PAYMENTS)[number];
-
-const DEBTORS: {
-  id: number;
-  rep: string;
-  student: string;
-  months: number;
-  amount: string;
-}[] = [
-    { id: 1, rep: "Pedro Nava", student: "Andrés Nava · 5to B", months: 3, amount: "$ 195" },
-    { id: 2, rep: "Luisana Mendoza", student: "Camila Mendoza · 1ro A", amount: "Bs 7.200", months: 3 },
-    { id: 3, rep: "Jorge Emilio Castro", student: "Sofía Castro · 4to C", months: 2, amount: "$ 130" },
-    { id: 4, rep: "Neida Contreras", student: "Luis Contreras · 3ro A", months: 5, amount: "$ 390.000" },
-    { id: 5, rep: "Wilmer Ochoa", student: "Gabriel Ochoa · 6to B", months: 1, amount: "$ 65" },
-    { id: 6, rep: "Aracelis Duque", student: "Daniela Duque · 2do C", months: 4, amount: "Bs 9.600" },
-  ];
+type PendingPay = DashboardPendingPay;
 
 /* ---------- Metadatos semánticos ---------- */
 
@@ -144,11 +111,17 @@ function CustomTooltip({ active, payload, label }: any) {
 
 export function TesoreriaDashboard() {
   const navigate = useNavigate();
+  const { data: MONTHLY_COLLECTION } = useFetch(getRecaudoMensual, []);
+  const { data: fetchedPending } = useFetch(getPagosPorConfirmarResumen, []);
+  const { data: DEBTORS } = useFetch(getMorosos, []);
+
   const [tab, setTab] = useState<"pagos" | "solvencia">("pagos");
-  const [pending, setPending] = useState<PendingPay[]>(PENDING_PAYMENTS);
+  const [pending, setPending] = useState<PendingPay[]>([]);
   const [selectedPay, setSelectedPay] = useState<PendingPay | null>(null);
   const [confirmPay, setConfirmPay] = useState<{ p: PendingPay; ok: boolean } | null>(null);
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
+
+  useEffect(() => setPending(fetchedPending), [fetchedPending]);
 
   const resolvePay = (p: PendingPay, ok: boolean) => {
     setPending((prev) => prev.filter((x) => x.id !== p.id));
@@ -177,7 +150,7 @@ export function TesoreriaDashboard() {
 
       {/* Fila superior: KPIs + panel por confirmar / sin solvencia */}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         <div className="space-y-4">
           {/* Pagos del mes — gráfico a ancho completo */}
@@ -211,7 +184,7 @@ export function TesoreriaDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {KPIS.map((kpi) => {
               const Icon = kpi.icon;
               return (
@@ -251,7 +224,7 @@ export function TesoreriaDashboard() {
 
         <div className="space-y-4">
           {/* Acciones rápidas */}
-          <div className="flex gap-3 ">
+          <div className="flex flex-wrap gap-3 ">
             {QUICK_ACTIONS.map((action) => {
               const Icon = action.icon;
               return (

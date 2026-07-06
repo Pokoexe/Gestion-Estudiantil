@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Check,
   X,
@@ -10,35 +10,8 @@ import {
 } from "lucide-react";
 import { BaucheModal } from "../components/BaucheModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-
-/* ------------------------------------------------------------------ */
-/* Tipos                                                               */
-/* ------------------------------------------------------------------ */
-
-type Currency = "USD" | "Bs." | "COP";
-
-interface PendingPay {
-  id: number;
-  rep: string;
-  student: string;
-  amount: number;
-  currency: Currency;
-  bank: string;
-  ref: string;
-  date: string;
-}
-
-/* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
-/* ------------------------------------------------------------------ */
-
-const PENDING: PendingPay[] = [
-  { id: 1, rep: "María Fernanda Rojas", student: "Diego Rojas · 4.º A", amount: 65, currency: "USD", bank: "Zelle · Bank of America", ref: "4821-0092", date: "2 jul 2026" },
-  { id: 2, rep: "Carlos Alberto Guerra", student: "Valentina Guerra · 1.º B", amount: 2400, currency: "Bs.", bank: "Pago Móvil · Banco de Venezuela", ref: "0102-77341", date: "2 jul 2026" },
-  { id: 3, rep: "Yohana Piñango", student: "Samuel Piñango · 6.º A", amount: 260000, currency: "COP", bank: "Nequi · Bancolombia", ref: "3390-1187", date: "1 jul 2026" },
-  { id: 4, rep: "Ronald Betancourt", student: "Isabella Betancourt · 3.º C", amount: 65, currency: "USD", bank: "Zelle · Chase", ref: "7715-4408", date: "1 jul 2026" },
-  { id: 5, rep: "Génesis Alvarado", student: "Mateo Alvarado · 2.º A", amount: 4800, currency: "Bs.", bank: "Transferencia · Banesco", ref: "0134-98220", date: "30 jun 2026" },
-];
+import { useFetch } from "../datos_maquetados";
+import { getPagosPorConfirmar, type PendingPay } from "../datos_maquetados/actions/tesoreria";
 
 const money = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
 
@@ -47,10 +20,14 @@ const money = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 
 /* ------------------------------------------------------------------ */
 
 export function TesoreriaConfirmarPage() {
-  const [pending, setPending] = useState<PendingPay[]>(PENDING);
+  const { data: fetchedPending } = useFetch(getPagosPorConfirmar, []);
+
+  const [pending, setPending] = useState<PendingPay[]>([]);
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
   const [selected, setSelected] = useState<PendingPay | null>(null);
   const [confirm, setConfirm] = useState<{ p: PendingPay; ok: boolean } | null>(null);
+
+  useEffect(() => setPending(fetchedPending), [fetchedPending]);
 
   const resolve = (p: PendingPay, ok: boolean) => {
     setPending((prev) => prev.filter((x) => x.id !== p.id));
@@ -98,7 +75,7 @@ export function TesoreriaConfirmarPage() {
           <p className="text-edu-ink-400 text-sm m-0">Todos los comprobantes fueron revisados.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {pending.map((p) => (
             <div
               key={p.id}

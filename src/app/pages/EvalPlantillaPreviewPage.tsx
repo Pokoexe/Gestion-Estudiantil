@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router";
 import { ArrowLeft, FileText, Save } from "lucide-react";
-import { CAMPOS_DEFAULT, type Campo } from "../data/plantilla";
+import { useFetch } from "../datos_maquetados";
+import { getCampos, type Campo } from "../datos_maquetados/actions/plantilla";
 
 const TEAL = "#0d9488";
 const TEAL_50 = "#f0fdfa";
@@ -37,7 +38,8 @@ function CampoPreview({ campo }: { campo: Campo }) {
 export function EvalPlantillaPreviewPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const campos = ((location.state as { campos?: Campo[] } | null)?.campos ?? CAMPOS_DEFAULT);
+  const { data: camposDefault } = useFetch(getCampos, []);
+  const campos = ((location.state as { campos?: Campo[] } | null)?.campos ?? camposDefault);
 
   return (
     <div className="flex flex-col gap-5">
@@ -72,7 +74,7 @@ export function EvalPlantillaPreviewPage() {
               <p className="text-[0.72rem] text-edu-ink-400 m-0 mt-1">Los campos con <span className="text-edu-danger font-semibold">*</span> son obligatorios.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
               {campos.map((c) => (
                 <CampoPreview key={c.id} campo={c} />
               ))}

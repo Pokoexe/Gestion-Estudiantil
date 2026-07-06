@@ -15,15 +15,16 @@ import {
     Book,
 } from "lucide-react";
 import { color } from "../theme/tokens";
-
-const STUDENT = {
-    name: "Carlos Mendoza",
-    initials: "CM",
-    section: "4.º Año · Sección B",
-    id: "V-30.123.456",
-    email: "carlos.mendoza@edugestion.edu",
-    term: "2026-I",
-};
+import { useFetch } from "../datos_maquetados";
+import {
+    getPerfilEstudiante,
+    getProximasEvaluaciones,
+    getMateriasReprobadas,
+    getIncidencias,
+    getActividadesPerfil,
+    type ReproStatus,
+    type Severity,
+} from "../datos_maquetados/actions/estudiante";
 
 interface Stat {
     label: string;
@@ -42,51 +43,10 @@ const STATS: Stat[] = [
     { label: "Asistencia promedio", value: "92,4 %", hint: "2 inasistencias este lapso", icon: CalendarCheck, iconBg: "bg-edu-warning-bg", iconFg: "text-edu-warning-strong" },
 ];
 
-interface ProximaEval {
-    id: number;
-    subjectId: number;
-    subject: string;
-    type: string;
-    date: string;
-    dot: string;
-}
-
-const PROXIMAS_EVAL: ProximaEval[] = [
-    { id: 1, subjectId: 3, subject: "Matemática", type: "Examen parcial", date: "5 jul 2026", dot: color.primary },
-    { id: 2, subjectId: 5, subject: "Química", type: "Informe de laboratorio", date: "7 jul 2026", dot: color.purple },
-    { id: 3, subjectId: 4, subject: "Literatura", type: "Entrega de ensayo", date: "10 jul 2026", dot: color.success },
-    { id: 4, subjectId: 7, subject: "Historia", type: "Exposición oral", date: "12 jul 2026", dot: color.danger },
-];
-
-type ReproStatus = "reprobado" | "por_reprobar";
-
-interface MateriaRepro {
-    id: number;
-    subject: string;
-    teacher: string;
-    average: number;
-    status: ReproStatus;
-}
-
-const MATERIAS_REPROBADAS: MateriaRepro[] = [
-    { id: 8, subject: "Inglés", teacher: "Prof. Collins", average: 8, status: "reprobado" },
-    { id: 7, subject: "Historia", teacher: "Prof. Flores", average: 10, status: "por_reprobar" },
-];
-
 const REPRO_META: Record<ReproStatus, { label: string; cls: string }> = {
     reprobado: { label: "Reprobado", cls: "bg-edu-danger-bg text-edu-danger" },
     por_reprobar: { label: "Por reprobar", cls: "bg-edu-danger-bg text-edu-danger" },
 };
-
-type Severity = "leve" | "grave" | "positiva";
-
-interface Incidencia {
-    id: number;
-    type: string;
-    detail: string;
-    date: string;
-    severity: Severity;
-}
 
 const SEVERITY_DOT: Record<Severity, string> = {
     leve: color.warningStrong,
@@ -94,70 +54,62 @@ const SEVERITY_DOT: Record<Severity, string> = {
     positiva: color.success,
 };
 
-const INCIDENCIAS: Incidencia[] = [
-    { id: 1, type: "Reconocimiento por conducta", detail: "Mejor promedio de la sección", date: "20 jun 2026", severity: "positiva" },
-    { id: 2, type: "Uso de celular en clase", detail: "Matemática · Prof. Ramírez", date: "3 jun 2026", severity: "leve" },
-    { id: 3, type: "Inasistencia sin justificar", detail: "Falta del 18 de junio", date: "18 jun 2026", severity: "grave" },
-    { id: 4, type: "Llegada tarde", detail: "Retraso de 15 min a primera hora", date: "12 may 2026", severity: "leve" },
-];
-
-interface Actividad {
-    id: number;
-    name: string;
-    detail: string;
-    date: string;
-}
-
-const ACTIVIDADES: Actividad[] = [
-    { id: 1, name: "Ajedrez estratégico", detail: "Curso · Torneo interno", date: "ago 2026" },
-    { id: 2, name: "Ecología y huerto escolar", detail: "Curso extracurricular", date: "jul 2026" },
-    { id: 3, name: "Olimpiada de matemática", detail: "Representó a la sección", date: "jun 2026" },
-    { id: 4, name: "Feria de ciencias", detail: "Actividad institucional", date: "may 2026" },
-    { id: 5, name: "Jornada de reforestación", detail: "Voluntariado", date: "may 2026" },
-];
-
 const MAX_ITEMS = 5;
 
 export function StudentDataPage() {
     const navigate = useNavigate();
-    const incidencias = INCIDENCIAS.slice(0, MAX_ITEMS);
-    const actividades = ACTIVIDADES.slice(0, MAX_ITEMS);
-    const proximas = PROXIMAS_EVAL.slice(0, MAX_ITEMS);
-    const reprobadas = MATERIAS_REPROBADAS.slice(0, MAX_ITEMS);
+    const { data: student, loading: loadingStudent } = useFetch(getPerfilEstudiante, null);
+    const { data: proximasEval, loading: loadingProximas } = useFetch(getProximasEvaluaciones, []);
+    const { data: materiasReprobadas, loading: loadingReprobadas } = useFetch(getMateriasReprobadas, []);
+    const { data: incidenciasData, loading: loadingIncidencias } = useFetch(getIncidencias, []);
+    const { data: actividadesData, loading: loadingActividades } = useFetch(getActividadesPerfil, []);
+
+    const incidencias = incidenciasData.slice(0, MAX_ITEMS);
+    const actividades = actividadesData.slice(0, MAX_ITEMS);
+    const proximas = proximasEval.slice(0, MAX_ITEMS);
+    const reprobadas = materiasReprobadas.slice(0, MAX_ITEMS);
+
+    if (loadingStudent || loadingProximas || loadingReprobadas || loadingIncidencias || loadingActividades) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                Cargando…
+            </div>
+        );
+    }
 
     return (
         <>
             {/* Perfil del estudiante */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-4 flex items-center gap-4 flex-wrap">
                 <div className="w-[52px] h-[52px] rounded-full bg-edu-primary flex items-center justify-center text-white text-base font-bold shrink-0">
-                    {STUDENT.initials}
+                    {student?.initials}
                 </div>
                 <div className="min-w-0">
-                    <div className="text-edu-ink font-bold text-[1.05rem] leading-tight">{STUDENT.name}</div>
+                    <div className="text-edu-ink font-bold text-[1.05rem] leading-tight">{student?.name}</div>
                     <div className="text-edu-ink-500 text-[0.8rem] flex items-center gap-1.5 mt-0.5">
                         <GraduationCap className="w-3.5 h-3.5 text-edu-ink-400" />
-                        {STUDENT.section}
+                        {student?.section}
                     </div>
                 </div>
                 <div className="w-px h-9 bg-edu-border-soft shrink-0 hidden sm:block" />
                 <div className="flex gap-5 flex-wrap">
                     <div className="flex items-center gap-1.5 text-[0.8rem] text-edu-ink-700">
                         <Hash className="w-3.5 h-3.5 text-edu-ink-400" />
-                        {STUDENT.id}
+                        {student?.id}
                     </div>
                     <div className="flex items-center gap-1.5 text-[0.8rem] text-edu-ink-700">
                         <Mail className="w-3.5 h-3.5 text-edu-ink-400" />
-                        {STUDENT.email}
+                        {student?.email}
                     </div>
                     <div className="flex items-center gap-1.5 text-[0.8rem] text-edu-ink-700">
                         <CalendarCheck className="w-3.5 h-3.5 text-edu-ink-400" />
-                        Período {STUDENT.term}
+                        Período {student?.term}
                     </div>
                 </div>
             </div>
 
             {/* Indicadores generales */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {STATS.map((s) => {
                     const Icon = s.icon;
                     const clickable = s.subjectId !== undefined;
@@ -200,7 +152,7 @@ export function StudentDataPage() {
             </div>
 
             {/* Próximas evaluaciones y materias en riesgo */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Próximas evaluaciones */}
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
                     <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
@@ -231,7 +183,7 @@ export function StudentDataPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                     {/* Materias reprobadas*/}
                     <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
@@ -296,7 +248,7 @@ export function StudentDataPage() {
             </div>
 
             {/* Incidencias y actividades (máx. 5 ítems c/u) */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Cursos extracurriculares */}
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
                     <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">

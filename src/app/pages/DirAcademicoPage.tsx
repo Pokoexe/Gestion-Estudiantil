@@ -25,7 +25,15 @@ import {
 import { color, accent } from "../theme/tokens";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import type { LapsoId } from "../data/lapsos";
+import { useFetch } from "../datos_maquetados";
+import {
+  getSecciones,
+  getRendimiento,
+  getRendimientoLapso,
+  getAsistenciaMes,
+  getAcademicoAjustes,
+  type AcademicoLapsoAjustes,
+} from "../datos_maquetados/actions/director";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
@@ -47,74 +55,9 @@ const KPIS: Kpi[] = [
   { label: "Asistencia global", value: "91 %", icon: ClipboardCheck, ac: accent.red, hint: "Promedio del lapso" },
 ];
 
-interface SectionRow {
-  year: string;
-  section: string;
-  students: number;
-  average: number;
-  attendance: number;
-}
-
-const SECTIONS: SectionRow[] = [
-  { year: "1.º Año", section: "A / B / C", students: 96, average: 16.4, attendance: 94 },
-  { year: "2.º Año", section: "A / B / C", students: 90, average: 15.9, attendance: 92 },
-  { year: "3.º Año", section: "A / B / C", students: 88, average: 15.2, attendance: 89 },
-  { year: "4.º Año", section: "A / B / C", students: 84, average: 15.6, attendance: 90 },
-  { year: "5.º Año", section: "A / B / C", students: 79, average: 16.1, attendance: 93 },
-  { year: "6.º Año", section: "A / B", students: 58, average: 14.8, attendance: 87 },
-];
-
-const PERFORMANCE = [
-  { anio: "1.º", promedio: 16.4 },
-  { anio: "2.º", promedio: 15.9 },
-  { anio: "3.º", promedio: 15.2 },
-  { anio: "4.º", promedio: 15.6 },
-  { anio: "5.º", promedio: 16.1 },
-  { anio: "6.º", promedio: 14.8 },
-];
-
-const RENDIMIENTO_LAPSO = [
-  { lapso: "Lapso I", promedio: 15.1 },
-  { lapso: "Lapso II", promedio: 15.6 },
-  { lapso: "Lapso III", promedio: 15.8 },
-];
-
-/* Ajustes por lapso aplicados a las cifras agregadas del panorama. */
-const PROMEDIO_POR_LAPSO: Record<LapsoId, number> = { 1: 15.1, 2: 15.6, 3: 15.8 };
-const DELTA_PROMEDIO: Record<LapsoId, number> = { 1: -0.5, 2: 0, 3: 0.2 };
-const DELTA_ASISTENCIA: Record<LapsoId, number> = { 1: -2, 2: 0, 3: 1 };
+/* Redondeo y recorte de las cifras agregadas ajustadas por lapso. */
 const round1 = (n: number) => Math.round(n * 10) / 10;
 const clampPct = (n: number) => Math.max(0, Math.min(100, n));
-
-const ASISTENCIA_MES = [
-  { mes: "Feb", asistencia: 88 },
-  { mes: "Mar", asistencia: 90 },
-  { mes: "Abr", asistencia: 89 },
-  { mes: "May", asistencia: 92 },
-  { mes: "Jun", asistencia: 91 },
-  { mes: "Jul", asistencia: 93 },
-];
-
-interface Incident {
-  who: string;
-  role: "Docente" | "Estudiante";
-  detail: string;
-  date: string;
-  level: "alta" | "media" | "baja";
-}
-
-const INCIDENTS: Incident[] = [
-  { who: "Prof. Ricardo Salas", role: "Docente", detail: "Retraso reiterado en carga de notas", date: "1 jul", level: "media" },
-  { who: "Luis Fernández — 4.º B", role: "Estudiante", detail: "Ausencia injustificada (3 días)", date: "30 jun", level: "alta" },
-  { who: "María Colmenares — 5.º A", role: "Estudiante", detail: "Incidente disciplinario en aula", date: "29 jun", level: "media" },
-  { who: "Prof. Daniela Herrera", role: "Docente", detail: "Solicitud de permiso académico", date: "28 jun", level: "baja" },
-];
-
-const LEVEL_META: Record<Incident["level"], { label: string; cls: string }> = {
-  alta: { label: "Prioridad alta", cls: "bg-edu-danger-bg text-edu-danger" },
-  media: { label: "Prioridad media", cls: "bg-edu-warning-bg text-edu-warning" },
-  baja: { label: "Informativa", cls: "bg-edu-primary-100 text-edu-primary" },
-};
 
 interface AttStat {
   label: string;
@@ -200,20 +143,34 @@ export function DirAcademicoPage() {
   const navigate = useNavigate();
   const { selected, selectedId } = useLapso();
 
+  const { data: SECTIONS, loading: loadingSecciones } = useFetch(getSecciones, []);
+  const { data: PERFORMANCE, loading: loadingRendimiento } = useFetch(getRendimiento, []);
+  const { data: RENDIMIENTO_LAPSO, loading: loadingRendLapso } = useFetch(getRendimientoLapso, []);
+  const { data: ASISTENCIA_MES, loading: loadingAsistencia } = useFetch(getAsistenciaMes, []);
+  const ajustesEmpty: AcademicoLapsoAjustes = {
+    promedioPorLapso: { 1: 0, 2: 0, 3: 0 },
+    deltaPromedio: { 1: 0, 2: 0, 3: 0 },
+    deltaAsistencia: { 1: 0, 2: 0, 3: 0 },
+  };
+  const { data: ajustes, loading: loadingAjustes } = useFetch(getAcademicoAjustes, ajustesEmpty);
+
+  if (loadingSecciones || loadingRendimiento || loadingRendLapso || loadingAsistencia || loadingAjustes)
+    return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
   // Cifras agregadas ajustadas al lapso seleccionado.
   const kpis = KPIS.map((k) => {
     if (k.label === "Promedio general")
-      return { ...k, value: PROMEDIO_POR_LAPSO[selectedId].toLocaleString("es-ES", { minimumFractionDigits: 1 }), hint: `Escala 0 – 20 · ${selected.label}` };
+      return { ...k, value: (ajustes.promedioPorLapso[selectedId] ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 1 }), hint: `Escala 0 – 20 · ${selected.label}` };
     if (k.label === "Asistencia global")
-      return { ...k, value: `${clampPct(91 + DELTA_ASISTENCIA[selectedId])} %`, hint: `Promedio del ${selected.label.toLowerCase()}` };
+      return { ...k, value: `${clampPct(91 + (ajustes.deltaAsistencia[selectedId] ?? 0))} %`, hint: `Promedio del ${selected.label.toLowerCase()}` };
     return k;
   });
   const sections = SECTIONS.map((s) => ({
     ...s,
-    average: round1(s.average + DELTA_PROMEDIO[selectedId]),
-    attendance: clampPct(s.attendance + DELTA_ASISTENCIA[selectedId]),
+    average: round1(s.average + (ajustes.deltaPromedio[selectedId] ?? 0)),
+    attendance: clampPct(s.attendance + (ajustes.deltaAsistencia[selectedId] ?? 0)),
   }));
-  const performance = PERFORMANCE.map((p) => ({ ...p, promedio: round1(p.promedio + DELTA_PROMEDIO[selectedId]) }));
+  const performance = PERFORMANCE.map((p) => ({ ...p, promedio: round1(p.promedio + (ajustes.deltaPromedio[selectedId] ?? 0)) }));
 
   return (
     <div className="flex flex-col gap-5">
@@ -229,7 +186,7 @@ export function DirAcademicoPage() {
       </div>
 
       {/* Fila de KPIs */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -250,7 +207,7 @@ export function DirAcademicoPage() {
       </div>
 
       {/* Rendimiento por año + resumen de asistencia */}
-      <div className="grid grid-cols-[1.7fr_1fr] gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-4 items-stretch">
         <SectionCard title="Rendimiento por año" hint="Promedio institucional 0 – 20">
           <div className="px-3 pt-[18px] pb-3 flex-1">
             <ResponsiveContainer width="100%" height={240}>
@@ -286,7 +243,7 @@ export function DirAcademicoPage() {
       </div>
 
       {/* Asistencia mensual + Rendimiento por lapso */}
-      <div className="grid grid-cols-2 gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <SectionCard title="Asistencia mensual" hint="% promedio · últimos 6 meses">
           <div className="px-3 pt-[18px] pb-3 flex-1">
             <ResponsiveContainer width="100%" height={220}>
@@ -324,7 +281,8 @@ export function DirAcademicoPage() {
 
       {/* Tabla de secciones por año */}
       <SectionCard title="Secciones por año" hint="24 secciones activas">
-        <div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[680px]">
           <div className="grid grid-cols-[1fr_1fr_0.8fr_0.9fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
             {["Año", "Secciones", "Estudiantes", "Promedio", "Asistencia"].map((h) => (
               <Th key={h}>{h}</Th>
@@ -348,6 +306,7 @@ export function DirAcademicoPage() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       </SectionCard>
 

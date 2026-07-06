@@ -37,6 +37,7 @@ import {
   Presentation,
   Award,
   Clock,
+  UserPlus,
 } from "lucide-react";
 import { color } from "./theme/tokens";
 
@@ -116,6 +117,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
         ],
       },
       { items: [{ icon: MessageSquare, label: "Mensajes", to: "mensajes", ready: true }] },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 
@@ -143,6 +145,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
           { icon: Users, label: "Mis secciones", to: "secciones", ready: true },
           { icon: Calendar, label: "Horario", to: "horario", ready: true },
           { icon: Wrench, label: "Reparaciones", to: "reparaciones", ready: true },
+          { icon: BookOpen, label: "Cursos", to: "cursos", ready: true },
         ],
       },
       {
@@ -150,10 +153,11 @@ export const ROLES: Record<RoleId, RoleConfig> = {
         items: [
           { icon: Scale, label: "Concejo de profesores", to: "concejo", ready: true },
           { icon: BarChart2, label: "Calificaciones", to: "calificaciones", ready: true },
-          { icon: Award, label: "Postulaciones", to: "postulaciones", ready: true },
+          { icon: Award, label: "Actividades extracurriculares", to: "actividades", ready: true },
         ],
       },
       { items: [{ icon: MessageSquare, label: "Mensajes", to: "mensajes", ready: true }] },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 
@@ -182,9 +186,11 @@ export const ROLES: Record<RoleId, RoleConfig> = {
           { icon: Star, label: "Actividades", to: "actividades", ready: true },
           { icon: FileText, label: "Incidencias", to: "incidencias", ready: true },
           { icon: ClipboardCheck, label: "Planificaciones", to: "planificaciones", ready: true },
+          { icon: BookOpen, label: "Cursos", to: "cursos", ready: true },
           { icon: Calendar, label: "Lapsos", to: "lapsos", ready: true },
         ],
       },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 
@@ -215,6 +221,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
           { icon: Calendar, label: "Lapsos", to: "lapsos", ready: true },
         ],
       },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 
@@ -243,6 +250,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
           { icon: ClipboardCheck, label: "Por confirmar", to: "confirmar", ready: true },
         ],
       },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 
@@ -259,6 +267,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
       {
         label: "Alumnado",
         items: [
+          { icon: UserPlus, label: "Inscripciones", to: "inscripciones", ready: true },
           { icon: CheckSquare, label: "Asistencia", to: "asistencia", ready: true },
           { icon: Users, label: "Estudiantes", to: "personas", ready: true },
           { icon: Layers, label: "Secciones y materias", to: "secciones", ready: true },
@@ -269,7 +278,6 @@ export const ROLES: Record<RoleId, RoleConfig> = {
         items: [
           { icon: GraduationCap, label: "Académico", to: "academico", ready: true },
           { icon: Landmark, label: "Finanzas", to: "finanzas", ready: true },
-          { icon: PieChart, label: "Reportes", to: "reportes", ready: true },
           { icon: Calendar, label: "Lapsos", to: "lapsos", ready: true },
         ],
       },
@@ -277,14 +285,15 @@ export const ROLES: Record<RoleId, RoleConfig> = {
         label: "Institución",
         items: [
           { icon: CalendarDays, label: "Reuniones", to: "reuniones", ready: true },
+          { icon: BookOpen, label: "Cursos", to: "cursos", ready: true },
           { icon: Star, label: "Actividades", to: "actividades", ready: true },
-          { icon: Star, label: "Actividades (Coordinación)", to: "actividades-coord", ready: true },
           { icon: FileText, label: "Incidencias", to: "incidencias", ready: true },
           { icon: BookOpen, label: "Docentes", to: "docentes", ready: true },
           { icon: ClipboardCheck, label: "Planificaciones", to: "planificaciones", ready: true },
           { icon: Presentation, label: "Página de presentación", to: "presentacion", ready: true },
         ],
       },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 
@@ -304,9 +313,9 @@ export const ROLES: Record<RoleId, RoleConfig> = {
           { icon: Activity, label: "Estado del sistema", to: "estado" },
           { icon: ScrollText, label: "Registros", to: "registros" },
           { icon: Plug, label: "Integraciones", to: "integraciones" },
-          { icon: Settings, label: "Configuración", to: "configuracion" },
         ],
       },
+      { items: [{ icon: Settings, label: "Configuración", to: "configuracion", ready: true }] },
     ],
   },
 };

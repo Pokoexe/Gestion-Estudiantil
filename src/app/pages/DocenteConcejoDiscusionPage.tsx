@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
     ArrowLeft,
@@ -12,8 +12,10 @@ import {
     Info,
     MessageSquare,
 } from "lucide-react";
-import { POSTULACIONES, decidirPostulacion, type PostEstado } from "../data/discusiones";
-import { BOLETINES, MATERIAS, desglose, notaColor, promedio } from "../data/boletines";
+import { desglose, notaColor, promedio } from "../datos_maquetados/data/boletines";
+import { useFetch } from "../datos_maquetados";
+import { getPostulaciones, decidirPostulacion, type PostEstado } from "../datos_maquetados/actions/discusiones";
+import { getBoletines, getMaterias } from "../datos_maquetados/actions/boletines";
 
 const ESTADO_META: Record<PostEstado, string> = {
     Pendiente: "bg-edu-warning-bg text-edu-warning",
@@ -30,14 +32,37 @@ const EVAL_COLS = "grid-cols-[2fr_1fr_0.7fr_0.7fr]";
 export function DocenteConcejoDiscusionPage() {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    const { data: POSTULACIONES, loading: loadingPost } = useFetch(getPostulaciones, []);
+    const { data: BOLETINES, loading: loadingBol } = useFetch(getBoletines, []);
+    const { data: MATERIAS, loading: loadingMat } = useFetch(getMaterias, []);
+    const loading = loadingPost || loadingBol || loadingMat;
+
     const post = POSTULACIONES.find((p) => String(p.id) === id);
 
-    const [obs, setObs] = useState(post?.observacion ?? "");
+    const [obs, setObs] = useState("");
     // Materia cuyas notas se están VISUALIZANDO (no necesariamente la que se discute).
-    const [viewMateria, setViewMateria] = useState(post?.materia ?? MATERIAS[0]);
+    const [viewMateria, setViewMateria] = useState("");
     const [confirm, setConfirm] = useState<"Aceptada" | "Rechazada" | null>(null);
 
+    // Sincroniza los valores iniciales editables una vez cargados los datos.
+    useEffect(() => {
+        if (post) setObs(post.observacion ?? "");
+    }, [post]);
+    useEffect(() => {
+        if (post) setViewMateria(post.materia);
+        else if (MATERIAS.length) setViewMateria(MATERIAS[0]);
+    }, [post, MATERIAS]);
+
     const volver = () => navigate("/docente/concejo");
+
+    if (loading) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                Cargando…
+            </div>
+        );
+    }
 
     if (!post) {
         return (
@@ -70,9 +95,9 @@ export function DocenteConcejoDiscusionPage() {
     const viewEvals = desglose(viewNota);
     const viendoDiscusion = viewMateria === post.materia;
 
-    const confirmarDecision = () => {
+    const confirmarDecision = async () => {
         if (!confirm) return;
-        decidirPostulacion(post.id, confirm, obs);
+        await decidirPostulacion(post.id, confirm, obs);
         setConfirm(null);
         volver();
     };
@@ -219,6 +244,8 @@ export function DocenteConcejoDiscusionPage() {
                         </div>
 
                         {/* Desglose de evaluaciones */}
+                        <div className="overflow-x-auto">
+                        <div className="min-w-[600px]">
                         <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-y border-edu-border-soft`}>
                             {["Evaluación", "Tipo", "%", "Nota"].map((h, j) => (
                                 <span key={h} className={`text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em] ${j >= 2 ? "text-right" : ""}`}>{h}</span>
@@ -232,13 +259,15 @@ export function DocenteConcejoDiscusionPage() {
                                 <span className={`text-[0.9rem] font-bold text-right ${notaColor(e.nota)}`}>{e.nota}</span>
                             </div>
                         ))}
+                        </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Dos botones grandes: aceptar o rechazar (con confirmación) */}
             {pendiente ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
                         type="button"
                         onClick={() => setConfirm("Aceptada")}
@@ -266,7 +295,7 @@ export function DocenteConcejoDiscusionPage() {
             {/* Modal de confirmación */}
             {confirm && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setConfirm(null)}>
-                    <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
                         <div className="px-5 py-4 border-b border-edu-border-soft flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-edu-control flex items-center justify-center ${confirm === "Aceptada" ? "bg-edu-success-bg" : "bg-edu-danger-bg"}`}>
                                 {confirm === "Aceptada" ? <CheckCircle2 className="w-4 h-4 text-edu-success" /> : <XCircle className="w-4 h-4 text-edu-danger" />}

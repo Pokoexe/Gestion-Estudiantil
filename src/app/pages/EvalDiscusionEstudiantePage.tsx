@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import {
   ArrowLeft,
@@ -14,8 +14,10 @@ import {
   Image as ImageIcon,
   X,
 } from "lucide-react";
-import { POSTULACIONES, postularEstudiante, type PostEstado } from "../data/discusiones";
-import { BOLETINES, MATERIAS, promedio, notaColor, desglose, actividadesDe, type Boletin, type EvalNota } from "../data/boletines";
+import { useFetch } from "../datos_maquetados";
+import { getPostulaciones, postularEstudiante, type PostEstado } from "../datos_maquetados/actions/discusiones";
+import { getBoletines, getMaterias, type Boletin, type EvalNota } from "../datos_maquetados/actions/boletines";
+import { promedio, notaColor, desglose, actividadesDe } from "../datos_maquetados/data/boletines";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
@@ -69,16 +71,30 @@ export function EvalDiscusionEstudiantePage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const b = BOLETINES.find((x) => String(x.id) === id);
 
-  // Materia activa (pestaña). Se toma del query param; si no es válida, la primera.
-  const materiaParam = searchParams.get("materia") ?? "";
-  const materiaInicial = MATERIAS.includes(materiaParam) ? materiaParam : MATERIAS[0];
-  const [tab, setTab] = useState(materiaInicial);
+  const [tab, setTab] = useState("");
   const [postulando, setPostulando] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [fecha, setFecha] = useState("");
   const [evalSel, setEvalSel] = useState<EvalNota | null>(null);
+
+  const { data: POSTULACIONES } = useFetch(getPostulaciones, []);
+  const { data: BOLETINES, loading: loadingBoletines } = useFetch(getBoletines, []);
+  const { data: MATERIAS, loading: loadingMaterias } = useFetch(getMaterias, []);
+
+  const loading = loadingBoletines || loadingMaterias;
+  const b = BOLETINES.find((x) => String(x.id) === id);
+
+  // Materia activa (pestaña). Se toma del query param; si no es válida, la primera.
+  const materiaParam = searchParams.get("materia") ?? "";
+  useEffect(() => {
+    if (MATERIAS.length) setTab(MATERIAS.includes(materiaParam) ? materiaParam : MATERIAS[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [MATERIAS, materiaParam]);
+
+  if (loading) {
+    return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+  }
 
   if (!b) {
     return (
@@ -97,7 +113,7 @@ export function EvalDiscusionEstudiantePage() {
 
   const actividades = actividadesDe(b.id);
   const prom = promedio(b.notas);
-  const idxTab = MATERIAS.indexOf(tab);
+  const idxTab = Math.max(0, MATERIAS.indexOf(tab));
   const notaTab = b.notas[idxTab];
   const evals = desglose(notaTab);
 
@@ -117,9 +133,9 @@ export function EvalDiscusionEstudiantePage() {
     else navigate("/evaluador/discusion/concejo");
   };
 
-  const confirmarPostulacion = (e: React.FormEvent) => {
+  const confirmarPostulacion = async (e: React.FormEvent) => {
     e.preventDefault();
-    postularEstudiante({
+    await postularEstudiante({
       estudiante: b.student,
       materia: tab,
       anio: `${b.anio} ${b.seccion}`,
@@ -227,33 +243,37 @@ export function EvalDiscusionEstudiantePage() {
         </div>
 
         {/* Desglose de evaluaciones de la materia activa */}
-        <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-y border-edu-border-soft`}>
-          {["Evaluación", "Tipo", "%", "Nota"].map((h, j) => (
-            <span key={h} className={`text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em] ${j >= 2 ? "text-right" : ""}`}>{h}</span>
-          ))}
-        </div>
-        {evals.map((e, j) => (
-          <div
-            key={j}
-            onClick={() => setEvalSel(e)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && setEvalSel(e)}
-            className={`grid ${EVAL_COLS} px-5 py-[11px] items-center cursor-pointer transition-colors hover:bg-edu-subtle focus:outline-none focus-visible:bg-edu-subtle ${j < evals.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-          >
-            <span className="text-[0.875rem] text-edu-ink font-medium inline-flex items-center gap-1.5">
-              {e.nombre}
-              <Paperclip className="w-3.5 h-3.5 text-edu-ink-300 shrink-0" />
-            </span>
-            <span className="text-[0.8125rem] text-edu-ink-700">{e.tipo}</span>
-            <span className="text-[0.8125rem] text-edu-ink-500 text-right">{e.porcentaje}%</span>
-            <span className={`text-[0.9rem] font-bold text-right ${notaColor(e.nota)}`}>{e.nota}</span>
+        <div className="overflow-x-auto">
+          <div className="min-w-[600px]">
+            <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-y border-edu-border-soft`}>
+              {["Evaluación", "Tipo", "%", "Nota"].map((h, j) => (
+                <span key={h} className={`text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em] ${j >= 2 ? "text-right" : ""}`}>{h}</span>
+              ))}
+            </div>
+            {evals.map((e, j) => (
+              <div
+                key={j}
+                onClick={() => setEvalSel(e)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && setEvalSel(e)}
+                className={`grid ${EVAL_COLS} px-5 py-[11px] items-center cursor-pointer transition-colors hover:bg-edu-subtle focus:outline-none focus-visible:bg-edu-subtle ${j < evals.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+              >
+                <span className="text-[0.875rem] text-edu-ink font-medium inline-flex items-center gap-1.5">
+                  {e.nombre}
+                  <Paperclip className="w-3.5 h-3.5 text-edu-ink-300 shrink-0" />
+                </span>
+                <span className="text-[0.8125rem] text-edu-ink-700">{e.tipo}</span>
+                <span className="text-[0.8125rem] text-edu-ink-500 text-right">{e.porcentaje}%</span>
+                <span className={`text-[0.9rem] font-bold text-right ${notaColor(e.nota)}`}>{e.nota}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Decisión: postular o dejar como está */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {postulacionActiva ? (
           <div className="inline-flex items-center justify-center gap-2 py-3.5 rounded-edu-card text-sm font-semibold bg-edu-success-bg text-edu-success">
             <CheckCircle2 className="w-5 h-5" /> Ya postulado en {tab}
@@ -301,7 +321,7 @@ export function EvalDiscusionEstudiantePage() {
       {/* Modal: postular al Concejo */}
       {postulando && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setPostulando(false)}>
-          <form onSubmit={confirmarPostulacion} className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <form onSubmit={confirmarPostulacion} className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control flex items-center justify-center" style={{ backgroundColor: TEAL_50 }}>
@@ -376,7 +396,7 @@ export function EvalDiscusionEstudiantePage() {
 
             <div className="p-5 flex flex-col gap-4">
               {/* Información de la nota */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="rounded-edu-control border border-edu-border-soft px-3.5 py-3">
                   <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Tipo</div>
                   <div className="text-[0.875rem] text-edu-ink font-semibold mt-0.5">{evalSel.tipo}</div>

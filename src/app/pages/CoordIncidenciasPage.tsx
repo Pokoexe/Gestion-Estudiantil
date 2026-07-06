@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     ShieldAlert,
     GraduationCap,
@@ -11,35 +11,20 @@ import {
 } from "lucide-react";
 import { accent } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import {
+    getIncidencias,
+    getFormatoIncidencias,
+    type Incidencia,
+    type TipoPersona,
+    type Gravedad,
+} from "../datos_maquetados/actions/coordinador";
 
 const PER_PAGE = 5;
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Presentación                                                        */
 /* ------------------------------------------------------------------ */
-
-type TipoPersona = "Docente" | "Estudiante" | "Formato";
-type Gravedad = "Leve" | "Moderada" | "Grave";
-
-interface Incidencia {
-    id: number;
-    persona: string;
-    tipo: TipoPersona;
-    gravedad: Gravedad;
-    fecha: string;
-    descripcion: string;
-}
-
-const INCIDENCIAS_INICIALES: Incidencia[] = [
-    { id: 1, persona: "Andrés Villalobos", tipo: "Estudiante", gravedad: "Moderada", fecha: "2 jul 2026", descripcion: "Se retiró del aula sin autorización durante la clase de Matemática." },
-    { id: 2, persona: "Prof. Luis Rondón", tipo: "Docente", gravedad: "Leve", fecha: "1 jul 2026", descripcion: "Entrega tardía del consolidado de notas del segundo lapso." },
-    { id: 3, persona: "Mariangel Ochoa", tipo: "Estudiante", gravedad: "Grave", fecha: "29 jun 2026", descripcion: "Riña con otra estudiante en el receso; se citó a los representantes." },
-    { id: 4, persona: "Prof. Pedro Uzcátegui", tipo: "Docente", gravedad: "Moderada", fecha: "27 jun 2026", descripcion: "Inasistencia sin justificativo a la reunión de departamento." },
-    { id: 5, persona: "Kevin Graterol", tipo: "Estudiante", gravedad: "Leve", fecha: "25 jun 2026", descripcion: "Uso del teléfono celular durante la evaluación de Biología." },
-    { id: 6, persona: "Daniela Sánchez", tipo: "Estudiante", gravedad: "Moderada", fecha: "24 jun 2026", descripcion: "Llegada tarde reiterada a la primera hora de clase." },
-    { id: 7, persona: "Prof. Carla Yépez", tipo: "Docente", gravedad: "Leve", fecha: "22 jun 2026", descripcion: "No registró la asistencia en el sistema durante la semana." },
-    { id: 8, persona: "Josué Ramírez", tipo: "Estudiante", gravedad: "Grave", fecha: "20 jun 2026", descripcion: "Daño intencional al mobiliario del laboratorio de Física." },
-];
 
 const GRAVEDAD_META: Record<Gravedad, { cls: string }> = {
     Leve: { cls: "bg-edu-primary-100 text-edu-primary" },
@@ -49,18 +34,6 @@ const GRAVEDAD_META: Record<Gravedad, { cls: string }> = {
 
 const GRAVEDADES: Gravedad[] = ["Leve", "Moderada", "Grave"];
 
-const CAMPOS_FORMATO = [
-    "Nombre y apellido de la persona",
-    "Cédula / código de estudiante",
-    "Tipo (docente / estudiante)",
-    "Año y sección (si aplica)",
-    "Fecha y hora del hecho",
-    "Gravedad de la incidencia",
-    "Descripción detallada del hecho",
-    "Medida o acción tomada",
-    "Responsable del registro",
-];
-
 const COLS = "grid-cols-[1.2fr_0.9fr_0.9fr_0.8fr_1.9fr]";
 const HEADERS = ["Persona", "Tipo", "Gravedad", "Fecha", "Descripción"];
 
@@ -69,7 +42,10 @@ const HEADERS = ["Persona", "Tipo", "Gravedad", "Fecha", "Descripción"];
 /* ------------------------------------------------------------------ */
 
 export function CoordIncidenciasPage() {
-    const [incidencias, setIncidencias] = useState<Incidencia[]>(INCIDENCIAS_INICIALES);
+    const { data: incidenciasFetched } = useFetch(getIncidencias, []);
+    const { data: camposFormato } = useFetch(getFormatoIncidencias, []);
+    const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
+    useEffect(() => setIncidencias(incidenciasFetched), [incidenciasFetched]);
     const [filtro, setFiltro] = useState<"Todos" | TipoPersona>("Todos");
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(1);
@@ -158,8 +134,8 @@ export function CoordIncidenciasPage() {
                         </div>
                         <div className="px-5 py-4">
                             <p className="m-0 mb-3 text-[0.8125rem] text-edu-ink-500">Campos que se incluyen al registrar una incidencia. Puedes activarlos o desactivarlos según la política del plantel.</p>
-                            <div className="grid grid-cols-3 gap-2.5">
-                                {CAMPOS_FORMATO.map((campo) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                {camposFormato.map((campo) => (
                                     <label key={campo} className="flex items-center gap-2 px-3 py-2 rounded-edu-control bg-edu-subtle border border-edu-border-soft cursor-pointer">
                                         <input type="checkbox" defaultChecked className="w-4 h-4 cursor-pointer accent-edu-purple" />
                                         <span className="text-[0.8rem] text-edu-ink-700">{campo}</span>
@@ -190,6 +166,8 @@ export function CoordIncidenciasPage() {
                         </div>
 
                         <div>
+                            <div className="overflow-x-auto">
+                            <div className="min-w-[680px]">
                             <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                                 {HEADERS.map((h) => (
                                     <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -214,6 +192,8 @@ export function CoordIncidenciasPage() {
                                     );
                                 })
                             )}
+                            </div>
+                            </div>
                             {totalPages > 1 && (
                                 <div className="px-5 py-4 border-t border-edu-border-soft">
                                     <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />

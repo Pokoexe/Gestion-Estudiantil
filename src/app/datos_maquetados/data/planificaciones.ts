@@ -35,6 +35,9 @@ export let PLANIFICACIONES: Planificacion[] = [
     { id: 2, subject: "Ciencias Naturales", section: "4.º Año B", count: 5, status: "review", note: "En espera de aprobación del coordinador" },
     { id: 3, subject: "Química", section: "5.º Año B", count: 4, status: "changes", note: "El coordinador solicitó detallar las actividades de la semana 3" },
     { id: 4, subject: "Ciencias de la Tierra", section: "3.º Año C", count: 5, status: "draft" },
+    { id: 5, subject: "Química", section: "4.º Año A", count: 5, status: "approved" },
+    { id: 6, subject: "Biología", section: "5.º Año B", count: 6, status: "review", note: "En espera de aprobación del coordinador" },
+    { id: 7, subject: "Ciencias de la Tierra", section: "4.º Año B", count: 4, status: "draft" },
 ];
 
 export const getPlanifById = (id: string | number | undefined): Planificacion | undefined =>

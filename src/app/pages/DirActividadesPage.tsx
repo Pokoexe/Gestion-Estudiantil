@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Trophy,
   Palette,
@@ -9,34 +9,18 @@ import {
   Trash2,
   Users,
   X,
+  Search,
 } from "lucide-react";
 import { color, accent } from "../theme/tokens";
+import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import { getActividades, type Activity, type ActType } from "../datos_maquetados/actions/director";
+
+const PER_PAGE = 6;
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
 /* ------------------------------------------------------------------ */
-
-type ActType = "Deportiva" | "Cultural" | "Académica" | "Curso";
-type ActStatus = "Activa" | "Por aceptar";
-
-interface Activity {
-  id: number;
-  name: string;
-  type: ActType;
-  teacher: string;
-  enrolled: number;
-  capacity: number;
-  status: ActStatus;
-}
-
-const INITIAL: Activity[] = [
-  { id: 1, name: "Escuela de fútbol", type: "Deportiva", teacher: "Prof. Ricardo Salas", enrolled: 28, capacity: 30, status: "Activa" },
-  { id: 2, name: "Coro estudiantil", type: "Cultural", teacher: "Prof. Daniela Herrera", enrolled: 22, capacity: 25, status: "Activa" },
-  { id: 3, name: "Club de robótica", type: "Académica", teacher: "Prof. Alejandro Morales", enrolled: 18, capacity: 20, status: "Activa" },
-  { id: 4, name: "Curso de nivelación de Matemática", type: "Curso", teacher: "Prof. Carmen Villalobos", enrolled: 15, capacity: 24, status: "Activa" },
-  { id: 5, name: "Taller de teatro", type: "Cultural", teacher: "Prof. Gustavo Peña", enrolled: 9, capacity: 20, status: "Por aceptar" },
-  { id: 6, name: "Ajedrez competitivo", type: "Deportiva", teacher: "Prof. Marisol Rangel", enrolled: 12, capacity: 16, status: "Por aceptar" },
-];
 
 const TYPE_META: Record<ActType, { bg: string; fg: string; icon: React.FC<{ style?: React.CSSProperties }> }> = {
   Deportiva: { bg: accent.green.bg, fg: accent.green.fg, icon: Trophy },
@@ -52,8 +36,12 @@ const FILTERS: (ActType | "Todas")[] = ["Todas", "Deportiva", "Cultural", "Acad�
 /* ------------------------------------------------------------------ */
 
 export function DirActividadesPage() {
-  const [items, setItems] = useState<Activity[]>(INITIAL);
+  const { data: actividades } = useFetch(getActividades, []);
+  const [items, setItems] = useState<Activity[]>([]);
+  useEffect(() => setItems(actividades), [actividades]);
   const [filter, setFilter] = useState<(ActType | "Todas")>("Todas");
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<{ name: string; type: ActType; teacher: string; capacity: string }>({
     name: "",
@@ -62,7 +50,13 @@ export function DirActividadesPage() {
     capacity: "20",
   });
 
-  const visible = items.filter((a) => filter === "Todas" || a.type === filter);
+  const filtered = items
+    .filter((a) => filter === "Todas" || a.type === filter)
+    .filter((a) => !query.trim() || a.name.toLowerCase().includes(query.trim().toLowerCase()) || a.teacher.toLowerCase().includes(query.trim().toLowerCase()));
+
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const visible     = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
   const accept = (id: number) =>
     setItems((list) => list.map((a) => (a.id === id ? { ...a, status: "Activa" } : a)));
@@ -103,27 +97,42 @@ export function DirActividadesPage() {
         </button>
       </div>
 
-      {/* Filtro por tipo */}
-      <div className="flex gap-2 flex-wrap">
-        {FILTERS.map((f) => {
-          const active = filter === f;
-          return (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3.5 py-1.5 rounded-edu-pill text-[0.8rem] font-semibold border cursor-pointer transition-colors ${
-                active ? "text-white border-transparent" : "bg-edu-surface text-edu-ink-500 border-edu-border hover:bg-edu-subtle"
-              }`}
-              style={active ? { backgroundColor: color.warning } : undefined}
-            >
-              {f}
-            </button>
-          );
-        })}
+      {/* Buscador + filtro por tipo */}
+      <div className="flex flex-col gap-3">
+        <div className="relative">
+          <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+            placeholder="Buscar por nombre o docente…"
+            className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-surface outline-none transition-colors focus:border-edu-warning"
+          />
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {FILTERS.map((f) => {
+            const active = filter === f;
+            return (
+              <button
+                key={f}
+                onClick={() => { setFilter(f); setPage(1); }}
+                className={`px-3.5 py-1.5 rounded-edu-pill text-[0.8rem] font-semibold border cursor-pointer transition-colors ${
+                  active ? "text-white border-transparent" : "bg-edu-surface text-edu-ink-500 border-edu-border hover:bg-edu-subtle"
+                }`}
+                style={active ? { backgroundColor: color.warning } : undefined}
+              >
+                {f}
+              </button>
+            );
+          })}
+          <span className="ml-auto text-[0.8rem] text-edu-ink-400 self-center">
+            {filtered.length} resultado{filtered.length === 1 ? "" : "s"}
+          </span>
+        </div>
       </div>
 
       {/* Tarjetas de actividades */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {visible.map((a) => {
           const meta = TYPE_META[a.type];
           const Icon = meta.icon;
@@ -182,10 +191,16 @@ export function DirActividadesPage() {
         })}
       </div>
 
-      {visible.length === 0 && (
+      {filtered.length === 0 && (
         <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-12 flex flex-col items-center gap-2 text-center">
           <FlaskConical className="w-8 h-8 text-edu-ink-300" />
-          <span className="text-sm text-edu-ink-500">No hay actividades de este tipo.</span>
+          <span className="text-sm text-edu-ink-500">No hay actividades que coincidan con la búsqueda.</span>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-4">
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
 

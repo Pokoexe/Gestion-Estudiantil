@@ -11,7 +11,9 @@ import {
   Save,
 } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { PLANES, ESTADO_LABEL, fmtFecha, fmtFechaLarga, type PlanEstado } from "../data/cronograma";
+import { useFetch } from "../datos_maquetados";
+import { getPlanes, type PlanEstado } from "../datos_maquetados/actions/cronograma";
+import { ESTADO_LABEL, fmtFecha, fmtFechaLarga } from "../datos_maquetados/data/cronograma";
 
 /* ------------------------------------------------------------------ */
 /* Constantes                                                          */
@@ -43,6 +45,7 @@ function diasEntre(a: string, b: string): number {
 
 export function EvalCronogramaPage() {
   const navigate = useNavigate();
+  const { data: PLANES } = useFetch(getPlanes, []);
 
   // Cronograma / lapso en curso
   const [lapso, setLapso] = useState({ nombre: "Lapso II · 2026-I", inicio: "2026-07-01", cierre: "2026-07-31", min: 5, max: 15 });
@@ -88,7 +91,7 @@ export function EvalCronogramaPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {KPIS.map((k) => {
           const Icon = k.icon;
           return (
@@ -206,6 +209,9 @@ export function EvalCronogramaPage() {
           </select>
         </div>
 
+        {/* Cabecera + filas (scroll horizontal en móvil) */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[680px]">
         {/* Cabecera de tabla */}
         <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {HEADERS.map((h) => (
@@ -248,6 +254,8 @@ export function EvalCronogramaPage() {
             );
           })
         )}
+          </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -259,7 +267,7 @@ export function EvalCronogramaPage() {
       {/* Modal: modificar cronograma */}
       {showEdit && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowEdit(false)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control flex items-center justify-center" style={{ backgroundColor: TEAL_50 }}>
@@ -281,7 +289,7 @@ export function EvalCronogramaPage() {
                   className="border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full focus:border-teal-600"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Inicio</label>
                   <input
@@ -301,7 +309,7 @@ export function EvalCronogramaPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Separación mínima (días)</label>
                   <input

@@ -3,30 +3,12 @@ import { useNavigate } from "react-router";
 import { Search, BookOpen, CalendarClock, ChevronRight, Wrench } from "lucide-react";
 import { color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import { getMateriasPendientes, type PendingStatus } from "../datos_maquetados/actions/estudiante";
 
 const PER_PAGE = 5;
 
-type PendingStatus = "reparacion" | "espera";
 type StatusFilter = "todas" | PendingStatus;
-
-interface PendingSubject {
-    id: number;
-    name: string;
-    year: string;
-    average: number;
-    status: PendingStatus;
-    repairDate?: string;
-}
-
-const PENDING_SUBJECTS: PendingSubject[] = [
-    { id: 1, name: "Inglés", year: "2022–2023", average: 8, status: "reparacion", repairDate: "15 Jul 2026" },
-    { id: 2, name: "Historia", year: "2022–2023", average: 10, status: "reparacion", repairDate: "18 Jul 2026" },
-    { id: 3, name: "Geografía", year: "2021–2022", average: 9, status: "espera" },
-    { id: 4, name: "Química", year: "2021–2022", average: 7, status: "espera" },
-    { id: 5, name: "Arte", year: "2020–2021", average: 6, status: "espera" },
-    { id: 6, name: "Educación Física", year: "2020–2021", average: 11, status: "espera" },
-    { id: 7, name: "Matemática", year: "2023–2024", average: 9, status: "reparacion", repairDate: "20 Jul 2026" },
-];
 
 const STATUS_META: Record<PendingStatus, { label: string; cls: string; dot: string }> = {
     reparacion: { label: "En reparación", cls: "bg-edu-primary-50 text-edu-primary", dot: color.primary },
@@ -47,13 +29,14 @@ export function MateriasPendientesPage() {
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas");
     const [page, setPage] = useState(1);
+    const { data: pendingSubjects } = useFetch(getMateriasPendientes, []);
 
-    const totalPendientes = PENDING_SUBJECTS.length;
-    const proximaReparacion = PENDING_SUBJECTS
+    const totalPendientes = pendingSubjects.length;
+    const proximaReparacion = pendingSubjects
         .filter((s) => s.status === "reparacion" && s.repairDate)
         .sort((a, b) => a.repairDate!.localeCompare(b.repairDate!))[0]?.repairDate ?? "—";
 
-    const rows = PENDING_SUBJECTS.filter((s) => {
+    const rows = pendingSubjects.filter((s) => {
         if (statusFilter !== "todas" && s.status !== statusFilter) return false;
         if (
             query.trim() &&
@@ -70,7 +53,7 @@ export function MateriasPendientesPage() {
     return (
         <>
             {/* KPIs */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
                         <div>
@@ -145,7 +128,8 @@ export function MateriasPendientesPage() {
                 </div>
 
                 {/* Cabecera */}
-                <div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[640px]">
                     <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {HEADERS.map((h, i) => (
                             <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
@@ -191,6 +175,7 @@ export function MateriasPendientesPage() {
                             </div>
                         );
                     })}
+                    </div>
 
                     {totalPages > 1 && (
                         <div className="px-5 py-4 border-t border-edu-border-soft">

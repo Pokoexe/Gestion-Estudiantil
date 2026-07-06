@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
     PlusCircle,
@@ -13,16 +13,17 @@ import {
     ArrowLeft,
     BookOpen,
 } from "lucide-react";
+import { LAPSO, MIN_EVALS } from "../datos_maquetados/data/plans";
+import { useFetch } from "../datos_maquetados";
 import {
-    MATERIA_OPTIONS,
-    SECCION_OPTIONS,
-    LAPSO,
-    MIN_EVALS,
     getPlanById,
-    addPlan,
-    updatePlan,
+    getMateriaOptions,
+    getSeccionOptions,
+    crearPlan,
+    actualizarPlan,
     type PlanEvaluacion,
-} from "../data/plans";
+    type Plan,
+} from "../datos_maquetados/actions/plans";
 
 const emptyRow = (id: number): PlanEvaluacion => ({
     id,
@@ -37,23 +38,43 @@ export function DocentePlanFormPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const editing = id != null;
-    const plan = editing ? getPlanById(id) : undefined;
 
-    const [form, setForm] = useState(() => ({
-        subject: plan?.subject ?? "",
-        section: plan?.section ?? "",
-    }));
-    const [rows, setRows] = useState<PlanEvaluacion[]>(() => {
-        if (plan?.evaluations && plan.evaluations.length) return plan.evaluations.map((e) => ({ ...e, files: [...e.files] }));
-        if (plan) {
-            return Array.from({ length: plan.count }, (_, i) => ({
+    const { data: MATERIA_OPTIONS } = useFetch(getMateriaOptions, []);
+    const { data: SECCION_OPTIONS } = useFetch(getSeccionOptions, []);
+
+    // Carga async del plan a editar (undefined mientras carga o si no existe).
+    const [plan, setPlan] = useState<Plan | undefined>(undefined);
+    const [planLoaded, setPlanLoaded] = useState(!editing);
+    useEffect(() => {
+        if (!editing) return;
+        let alive = true;
+        getPlanById(id!).then((p) => {
+            if (!alive) return;
+            setPlan(p);
+            setPlanLoaded(true);
+        });
+        return () => { alive = false; };
+    }, [editing, id]);
+
+    const [form, setForm] = useState({ subject: "", section: "" });
+    const [rows, setRows] = useState<PlanEvaluacion[]>([
+        emptyRow(1), emptyRow(2), emptyRow(3), emptyRow(4),
+    ]);
+    const [activeTab, setActiveTab] = useState<number | "review">(0);
+
+    // Al llegar el plan (modo edición), rellena el formulario con sus datos.
+    useEffect(() => {
+        if (!plan) return;
+        setForm({ subject: plan.subject ?? "", section: plan.section ?? "" });
+        if (plan.evaluations && plan.evaluations.length) {
+            setRows(plan.evaluations.map((e) => ({ ...e, files: [...e.files] })));
+        } else {
+            setRows(Array.from({ length: plan.count }, (_, i) => ({
                 ...emptyRow(i + 1),
                 content: `Evaluación ${i + 1}`,
-            }));
+            })));
         }
-        return [emptyRow(1), emptyRow(2), emptyRow(3), emptyRow(4)];
-    });
-    const [activeTab, setActiveTab] = useState<number | "review">(0);
+    }, [plan]);
 
     const totalWeight = rows.reduce((a, r) => a + (parseFloat(r.weight) || 0), 0);
 
@@ -95,14 +116,14 @@ export function DocentePlanFormPage() {
     }
     const allValid = seleccionOk && evalsComplete && weightOk && datesInRange && spacingOk;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const data = { subject: form.subject, section: form.section, evaluations: rows };
         if (editing && plan) {
-            updatePlan(plan.id, data);
+            await actualizarPlan(plan.id, data);
             navigate("/docente/planes", { state: { feedback: "El plan de evaluación fue actualizado y enviado al evaluador." } });
         } else {
-            addPlan(data);
+            await crearPlan(data);
             navigate("/docente/planes", { state: { feedback: "Plan creado y enviado al evaluador para su revisión." } });
         }
     };
@@ -112,7 +133,7 @@ export function DocentePlanFormPage() {
     const labelCls = "text-edu-ink-700 text-sm font-medium";
 
     // Plan a editar inexistente
-    if (editing && !plan) {
+    if (editing && planLoaded && !plan) {
         return (
             <div className="flex flex-col gap-4">
                 <button
@@ -174,7 +195,7 @@ export function DocentePlanFormPage() {
             <form onSubmit={handleSubmit} className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-col gap-4">
                 {/* Materia + sección: selects solo al crear (en modificar van en el banner) */}
                 {!editing && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label className={labelCls}>Materia</label>
                             <select
@@ -286,7 +307,7 @@ export function DocentePlanFormPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex flex-col gap-1.5">
                                 <label className={labelCls}>Ponderación (%)</label>
                                 <input
@@ -355,7 +376,7 @@ export function DocentePlanFormPage() {
                 {/* Pestaña "Datos colocados" (revisión) */}
                 {activeTab === "review" && (
                     <div className="flex flex-col gap-4">
-                        <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-3">
+                        <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Materia</div>
                                 <div className="text-[0.875rem] text-edu-ink font-medium">{form.subject || "—"}</div>
@@ -367,6 +388,8 @@ export function DocentePlanFormPage() {
                         </div>
 
                         <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
+                            <div className="overflow-x-auto">
+                            <div className="min-w-[680px]">
                             <div className="grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
                                 {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h, idx) => (
                                     <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
@@ -391,6 +414,8 @@ export function DocentePlanFormPage() {
                             <div className="px-3 py-2 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
                                 <span className="text-edu-ink-500">Ponderación total</span>
                                 <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight} %</span>
+                            </div>
+                            </div>
                             </div>
                         </div>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Wallet,
   Coins,
@@ -20,48 +20,19 @@ import {
 } from "recharts";
 import { color, accent } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
-
-/* ------------------------------------------------------------------ */
-/* Tipos                                                               */
-/* ------------------------------------------------------------------ */
-
-type Currency = "USD" | "Bs." | "COP";
-type Method = "Efectivo" | "Transferencia";
-type PayStatus = "confirmed" | "review";
-
-interface Payment {
-  id: number;
-  rep: string;
-  student: string;
-  amount: number;
-  currency: Currency;
-  date: string;
-  method: Method;
-  status: PayStatus;
-}
+import { useFetch } from "../datos_maquetados";
+import {
+  getPagos,
+  getRecaudoSemanal,
+  type Currency,
+  type Method,
+  type PayStatus,
+  type Payment,
+} from "../datos_maquetados/actions/tesoreria";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
 /* ------------------------------------------------------------------ */
-
-const PAYMENTS: Payment[] = [
-  { id: 1, rep: "María Fernanda Rojas", student: "Diego Rojas · 4.º A", amount: 65, currency: "USD", date: "1 jul 2026", method: "Efectivo", status: "confirmed" },
-  { id: 2, rep: "Carlos Alberto Guerra", student: "Valentina Guerra · 1.º B", amount: 2400, currency: "Bs.", date: "1 jul 2026", method: "Transferencia", status: "confirmed" },
-  { id: 3, rep: "Yohana Piñango", student: "Samuel Piñango · 6.º A", amount: 260000, currency: "COP", date: "30 jun 2026", method: "Transferencia", status: "confirmed" },
-  { id: 4, rep: "Ronald Betancourt", student: "Isabella Betancourt · 3.º C", amount: 65, currency: "USD", date: "30 jun 2026", method: "Efectivo", status: "confirmed" },
-  { id: 5, rep: "Génesis Alvarado", student: "Mateo Alvarado · 2.º A", amount: 2400, currency: "Bs.", date: "29 jun 2026", method: "Transferencia", status: "review" },
-  { id: 6, rep: "Douglas Sánchez", student: "Andrea Sánchez · 5.º B", amount: 65, currency: "USD", date: "28 jun 2026", method: "Efectivo", status: "confirmed" },
-  { id: 7, rep: "Marbella Quintero", student: "Josué Quintero · 1.º A", amount: 130000, currency: "COP", date: "27 jun 2026", method: "Transferencia", status: "confirmed" },
-  { id: 8, rep: "Alexis Parra", student: "Camila Parra · 4.º B", amount: 4800, currency: "Bs.", date: "26 jun 2026", method: "Efectivo", status: "confirmed" },
-];
-
-/** Recaudo del mes en USD (equivalente) — para la gráfica. */
-const MONTHLY: { dia: string; monto: number }[] = [
-  { dia: "Sem 1", monto: 1240 },
-  { dia: "Sem 2", monto: 1980 },
-  { dia: "Sem 3", monto: 2340 },
-  { dia: "Sem 4", monto: 2890 },
-];
 
 const CURRENCIES: Currency[] = ["USD", "Bs.", "COP"];
 
@@ -101,13 +72,18 @@ function ChartTooltip({ active, payload, label }: any) {
 /* ------------------------------------------------------------------ */
 
 export function TesoreriaPagosPage() {
-  const [payments, setPayments] = useState<Payment[]>(PAYMENTS);
+  const { data: fetchedPayments } = useFetch(getPagos, []);
+  const { data: MONTHLY } = useFetch(getRecaudoSemanal, []);
+
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ rep: "", amount: "", currency: "USD" as Currency, concepto: "Mensualidad" });
   const [query, setQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState<"todos" | Method>("todos");
   const [statusFilter, setStatusFilter] = useState<"todos" | PayStatus>("todos");
   const [page, setPage] = useState(1);
+
+  useEffect(() => setPayments(fetchedPayments), [fetchedPayments]);
 
   const PER_PAGE = 6;
   const filtered = payments.filter((p) => {
@@ -144,9 +120,9 @@ export function TesoreriaPagosPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* Gráfica (2 cols) + disponibles por moneda apilados (1 col) */}
-      <div className="grid grid-cols-3 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         {/* Gráfica de pagos del mes */}
-        <div className="col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+        <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <div className="px-5 py-4 border-b border-edu-border-soft">
             <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Pagos de julio 2026</h3>
             <p className="mt-0.5 text-edu-ink-400 text-[0.78rem]">Recaudo semanal en USD equivalente</p>
@@ -169,7 +145,7 @@ export function TesoreriaPagosPage() {
         </div>
 
         {/* Disponibles por moneda (apilados) */}
-        <div className="col-span-1 flex flex-col gap-4">
+        <div className="lg:col-span-1 flex flex-col gap-4">
           {AVAILABLE.map((k) => {
             const Icon = k.icon;
             return (
@@ -240,28 +216,32 @@ export function TesoreriaPagosPage() {
           </select>
         </div>
 
-        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-          {HEADERS.map((h) => (
-            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-          ))}
-        </div>
-        {pageItems.length === 0 && (
-          <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay pagos que coincidan con el filtro.</div>
-        )}
-        {pageItems.map((p, i) => {
-          const st = STATUS_META[p.status];
-          return (
-            <div key={p.id} className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pageItems.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-              <span className="text-sm text-edu-ink font-medium">{p.rep}</span>
-              <span className="text-[0.8125rem] text-edu-ink-700">{p.student}</span>
-              <span className="text-sm text-edu-ink font-bold">{money(p.amount)}</span>
-              <span className="text-[0.8125rem] text-edu-ink-700">{p.currency}</span>
-              <span className="text-[0.8125rem] text-edu-ink-500">{p.date}</span>
-              <span className="text-[0.8125rem] text-edu-ink-700">{p.method}</span>
-              <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>{st.label}</span>
+        <div className="overflow-x-auto">
+          <div className="min-w-[860px]">
+            <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+              {HEADERS.map((h) => (
+                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+              ))}
             </div>
-          );
-        })}
+            {pageItems.length === 0 && (
+              <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay pagos que coincidan con el filtro.</div>
+            )}
+            {pageItems.map((p, i) => {
+              const st = STATUS_META[p.status];
+              return (
+                <div key={p.id} className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pageItems.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                  <span className="text-sm text-edu-ink font-medium">{p.rep}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-700">{p.student}</span>
+                  <span className="text-sm text-edu-ink font-bold">{money(p.amount)}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-700">{p.currency}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-500">{p.date}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-700">{p.method}</span>
+                  <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>{st.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">
             <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
@@ -272,7 +252,7 @@ export function TesoreriaPagosPage() {
       {/* Modal: agregar pago en efectivo */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control bg-edu-success-bg flex items-center justify-center">
@@ -296,7 +276,7 @@ export function TesoreriaPagosPage() {
                   className="border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none transition-colors bg-edu-subtle text-[0.9375rem] w-full focus:border-edu-success"
                 />
               </div>
-              <div className="grid grid-cols-[1.4fr_1fr] gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-[1.4fr_1fr] gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Monto</label>
                   <input

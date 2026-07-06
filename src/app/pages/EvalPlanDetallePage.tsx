@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
@@ -7,7 +7,9 @@ import {
   X,
   Clock,
 } from "lucide-react";
-import { PLANES, ESTADO_LABEL, fmtFecha, fmtFechaLarga, type PlanEstado } from "../data/cronograma";
+import { useFetch } from "../datos_maquetados";
+import { getPlanes, type PlanEstado } from "../datos_maquetados/actions/cronograma";
+import { ESTADO_LABEL, fmtFecha, fmtFechaLarga } from "../datos_maquetados/data/cronograma";
 
 const TEAL = "#0d9488";
 const TEAL_50 = "#f0fdfa";
@@ -22,12 +24,26 @@ const PREVIEW_COLS = "grid-cols-[0.8fr_2fr_1fr_0.6fr]";
 export function EvalPlanDetallePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const plan = PLANES.find((p) => String(p.id) === id);
+  const { data: planes, loading } = useFetch(getPlanes, []);
+  const plan = planes.find((p) => String(p.id) === id);
 
-  const [estado, setEstado] = useState<PlanEstado>(plan ? plan.estado : "activo");
+  const [estado, setEstado] = useState<PlanEstado>("activo");
   const [showObs, setShowObs] = useState(false);
   const [obs, setObs] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Sincroniza el estado editable con el plan una vez cargado.
+  useEffect(() => {
+    if (plan) setEstado(plan.estado);
+  }, [plan]);
+
+  if (loading) {
+    return (
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+        Cargando…
+      </div>
+    );
+  }
 
   if (!plan) {
     return (
@@ -81,7 +97,7 @@ export function EvalPlanDetallePage() {
       )}
 
       {/* Contenido: previsualización (izq) + información (der) */}
-      <div className="grid grid-cols-[1.5fr_1fr] gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5 items-start">
         {/* Previsualización según plantilla */}
         <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <div className="px-5 py-4 border-b border-edu-border-soft flex items-center gap-2">
@@ -104,6 +120,8 @@ export function EvalPlanDetallePage() {
               </div>
 
               {/* Cabecera de la tabla */}
+              <div className="overflow-x-auto">
+                <div className="min-w-[600px]">
               <div className={`grid ${PREVIEW_COLS} px-2 py-2 mt-4 bg-edu-subtle rounded-edu-chip text-[0.68rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]`}>
                 <span>Fecha</span>
                 <span>Evaluación</span>
@@ -123,6 +141,8 @@ export function EvalPlanDetallePage() {
                 <span />
                 <span className="text-right text-edu-ink-500">Total</span>
                 <span className={`text-right ${totalPct === 100 ? "text-edu-success" : "text-edu-danger"}`}>{totalPct}%</span>
+              </div>
+                </div>
               </div>
             </div>
           </div>
@@ -172,7 +192,7 @@ export function EvalPlanDetallePage() {
       {/* Modal: escribir observación */}
       {showObs && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowObs(false)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control flex items-center justify-center" style={{ backgroundColor: TEAL_50 }}>

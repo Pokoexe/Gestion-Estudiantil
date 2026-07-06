@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Layers,
     BookOpen,
@@ -12,63 +12,25 @@ import {
 import { accent } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useFetch } from "../datos_maquetados";
+import {
+    getSecciones,
+    getMateriasCoord,
+    getBloques,
+    getDocentesSecciones,
+    type Seccion,
+    type Materia,
+    type Bloque,
+    type Nivel,
+} from "../datos_maquetados/actions/coordinador";
 
 const PER_PAGE = 5;
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Tipos y presentación                                                */
 /* ------------------------------------------------------------------ */
 
 type Tab = "secciones" | "materias" | "horarios";
-
-interface Seccion {
-    id: number;
-    anio: string;
-    seccion: string;
-    cupo: number;
-    tutor: string;
-}
-
-type Nivel = "Primaria" | "Liceo";
-
-interface Materia {
-    id: number;
-    nombre: string;
-    nivel: Nivel;
-}
-
-interface Bloque {
-    id: number;
-    inicio: string;
-    fin: string;
-}
-
-const SECCIONES_INICIALES: Seccion[] = [
-    { id: 1, anio: "1.º Año", seccion: "A", cupo: 32, tutor: "Prof. Ana Salazar" },
-    { id: 2, anio: "1.º Año", seccion: "B", cupo: 30, tutor: "Prof. José Bracho" },
-    { id: 3, anio: "2.º Año", seccion: "A", cupo: 30, tutor: "Prof. Carla Yépez" },
-    { id: 4, anio: "2.º Año", seccion: "B", cupo: 29, tutor: "Prof. Luis Rondón" },
-    { id: 5, anio: "3.º Año", seccion: "A", cupo: 28, tutor: "Prof. María Herrera" },
-    { id: 6, anio: "3.º Año", seccion: "B", cupo: 27, tutor: "Prof. Pedro Uzcátegui" },
-    { id: 7, anio: "4.º Año", seccion: "A", cupo: 31, tutor: "Prof. Ana Salazar" },
-    { id: 8, anio: "4.º Año", seccion: "B", cupo: 30, tutor: "Prof. José Bracho" },
-    { id: 9, anio: "5.º Año", seccion: "A", cupo: 27, tutor: "Prof. Carla Yépez" },
-];
-
-const MATERIAS_INICIALES: Materia[] = [
-    { id: 1, nombre: "Castellano", nivel: "Liceo" },
-    { id: 2, nombre: "Matemática", nivel: "Liceo" },
-    { id: 3, nombre: "Ciencias Naturales", nivel: "Primaria" },
-    { id: 4, nombre: "Biología", nivel: "Liceo" },
-    { id: 5, nombre: "Química", nivel: "Liceo" },
-    { id: 6, nombre: "Física", nivel: "Liceo" },
-    { id: 7, nombre: "Historia de Venezuela", nivel: "Liceo" },
-    { id: 8, nombre: "Geografía", nivel: "Liceo" },
-    { id: 9, nombre: "Inglés", nivel: "Liceo" },
-    { id: 10, nombre: "Educación Física", nivel: "Primaria" },
-    { id: 11, nombre: "Educación Artística", nivel: "Primaria" },
-    { id: 12, nombre: "Informática", nivel: "Liceo" },
-];
 
 const NIVELES: Nivel[] = ["Primaria", "Liceo"];
 
@@ -77,16 +39,7 @@ const NIVEL_META: Record<Nivel, { cls: string }> = {
     Liceo: { cls: "bg-edu-warning-bg text-edu-warning" },
 };
 
-const DOCENTES = ["Sin asignar", "Prof. María Herrera", "Prof. Luis Rondón", "Prof. Carla Yépez", "Prof. José Bracho", "Prof. Ana Salazar", "Prof. Pedro Uzcátegui"];
-
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
-
-const BLOQUES_INICIALES: Bloque[] = [
-    { id: 1, inicio: "07:00", fin: "07:45" },
-    { id: 2, inicio: "07:45", fin: "08:30" },
-    { id: 3, inicio: "08:30", fin: "09:15" },
-    { id: 4, inicio: "09:30", fin: "10:15" },
-];
 
 const ANIOS = ["1.º Año", "2.º Año", "3.º Año", "4.º Año", "5.º Año"];
 
@@ -101,24 +54,32 @@ const MAT_HEADERS = ["N.º", "Materia", "Nivel", "Acciones"];
 /* ------------------------------------------------------------------ */
 
 export function CoordSeccionesPage() {
+    const { data: seccionesFetched } = useFetch(getSecciones, []);
+    const { data: materiasFetched } = useFetch(getMateriasCoord, []);
+    const { data: bloquesFetched } = useFetch(getBloques, []);
+    const { data: DOCENTES } = useFetch(getDocentesSecciones, []);
+
     const [tab, setTab] = useState<Tab>("secciones");
 
     // Secciones
-    const [secciones, setSecciones] = useState<Seccion[]>(SECCIONES_INICIALES);
+    const [secciones, setSecciones] = useState<Seccion[]>([]);
+    useEffect(() => setSecciones(seccionesFetched), [seccionesFetched]);
     const [secModal, setSecModal] = useState<{ mode: "add" | "edit"; id: number | null; anio: string; seccion: string; cupo: string; tutor: string } | null>(null);
     const [confirmDelSec, setConfirmDelSec] = useState<Seccion | null>(null);
     const [secQuery, setSecQuery] = useState("");
     const [secPage, setSecPage] = useState(1);
 
     // Materias
-    const [materias, setMaterias] = useState<Materia[]>(MATERIAS_INICIALES);
+    const [materias, setMaterias] = useState<Materia[]>([]);
+    useEffect(() => setMaterias(materiasFetched), [materiasFetched]);
     const [matModal, setMatModal] = useState<{ mode: "add" | "edit"; id: number | null; nombre: string; nivel: Nivel } | null>(null);
     const [confirmDelMat, setConfirmDelMat] = useState<Materia | null>(null);
     const [matQuery, setMatQuery] = useState("");
     const [matPage, setMatPage] = useState(1);
 
     // Horarios
-    const [bloques, setBloques] = useState<Bloque[]>(BLOQUES_INICIALES);
+    const [bloques, setBloques] = useState<Bloque[]>([]);
+    useEffect(() => setBloques(bloquesFetched), [bloquesFetched]);
     const [nuevoBloque, setNuevoBloque] = useState({ inicio: "", fin: "" });
     // Asignación docente por celda: clave `${bloqueId}-${dia}`
     const [asignaciones, setAsignaciones] = useState<Record<string, string>>({});
@@ -262,30 +223,32 @@ export function CoordSeccionesPage() {
                         </div>
                     </div>
 
-                    <div>
-                        <div className={`grid ${SEC_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                            {SEC_HEADERS.map((h, i) => (
-                                <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[680px]">
+                            <div className={`grid ${SEC_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                {SEC_HEADERS.map((h, i) => (
+                                    <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                                ))}
+                            </div>
+                            {seccionesVisibles.length === 0 ? (
+                                <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">No hay secciones que coincidan con la búsqueda.</p>
+                            ) : pagedSecciones.map((s, i) => (
+                                <div key={s.id} className={`grid ${SEC_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pagedSecciones.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                                    <span className="text-sm text-edu-ink font-semibold">{s.anio}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-700">{s.seccion}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{s.cupo}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-700">{s.tutor}</span>
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => openEditSec(s)} aria-label="Modificar sección" className="text-edu-ink-400 hover:text-edu-purple bg-transparent border-none cursor-pointer p-0 flex items-center">
+                                            <Pencil style={{ width: 15, height: 15 }} />
+                                        </button>
+                                        <button onClick={() => setConfirmDelSec(s)} aria-label="Eliminar sección" className="text-edu-ink-400 hover:text-edu-danger bg-transparent border-none cursor-pointer p-0 flex items-center">
+                                            <Trash2 style={{ width: 15, height: 15 }} />
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
                         </div>
-                        {seccionesVisibles.length === 0 ? (
-                            <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">No hay secciones que coincidan con la búsqueda.</p>
-                        ) : pagedSecciones.map((s, i) => (
-                            <div key={s.id} className={`grid ${SEC_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pagedSecciones.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-                                <span className="text-sm text-edu-ink font-semibold">{s.anio}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-700">{s.seccion}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{s.cupo}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-700">{s.tutor}</span>
-                                <div className="flex items-center gap-3">
-                                    <button onClick={() => openEditSec(s)} aria-label="Modificar sección" className="text-edu-ink-400 hover:text-edu-purple bg-transparent border-none cursor-pointer p-0 flex items-center">
-                                        <Pencil style={{ width: 15, height: 15 }} />
-                                    </button>
-                                    <button onClick={() => setConfirmDelSec(s)} aria-label="Eliminar sección" className="text-edu-ink-400 hover:text-edu-danger bg-transparent border-none cursor-pointer p-0 flex items-center">
-                                        <Trash2 style={{ width: 15, height: 15 }} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                     {totalSecPages > 1 && (
                         <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -298,11 +261,17 @@ export function CoordSeccionesPage() {
             {/* --- Tab Materias --- */}
             {tab === "materias" && (
                 <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-                    <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
-                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias del plan de estudios</h3>
-                        <div className="flex items-center gap-3">
-                            <span className="text-[0.8rem] text-edu-ink-400 font-medium">{materiasVisibles.length} materia{materiasVisibles.length === 1 ? "" : "s"}</span>
-                            <button onClick={openAddMat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-edu-control text-[0.8rem] font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
+                    <div className="px-5 py-4 border-b border-edu-border-soft flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+                        {/* Título + contador (el contador va aquí solo en móvil) */}
+                        <div className="flex items-center justify-between gap-3">
+                            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias del plan de estudios</h3>
+                            <span className="md:hidden text-[0.8rem] text-edu-ink-400 font-medium">{materiasVisibles.length} materia{materiasVisibles.length === 1 ? "" : "s"}</span>
+                        </div>
+
+                        {/* Contador (solo desktop) + botón (w-full en móvil) */}
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <span className="hidden md:inline text-[0.8rem] text-edu-ink-400 font-medium">{materiasVisibles.length} materia{materiasVisibles.length === 1 ? "" : "s"}</span>
+                            <button onClick={openAddMat} className="w-full md:w-auto justify-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-edu-control text-[0.8rem] font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
                                 <Plus style={{ width: 14, height: 14 }} /> Agregar materia
                             </button>
                         </div>
@@ -324,33 +293,37 @@ export function CoordSeccionesPage() {
 
                     {/* Tabla */}
                     <div>
-                        <div className={`grid ${MAT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                            {MAT_HEADERS.map((h) => (
-                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                            ))}
-                        </div>
-                        {materiasVisibles.length === 0 ? (
-                            <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">No hay materias que coincidan con la búsqueda.</p>
-                        ) : (
-                            pagedMaterias.map((m, i) => (
-                                <div key={m.id} className={`grid ${MAT_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pagedMaterias.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-                                    <span className="text-[0.8125rem] text-edu-ink-500 font-semibold">{(matCurrentPage - 1) * PER_PAGE + i + 1}</span>
-                                    <span className="text-sm text-edu-ink font-semibold flex items-center gap-2">
-                                        <BookOpen className="text-edu-purple" style={{ width: 15, height: 15 }} />
-                                        {m.nombre}
-                                    </span>
-                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${NIVEL_META[m.nivel].cls}`}>{m.nivel}</span>
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => openEditMat(m)} aria-label={`Modificar ${m.nombre}`} className="text-edu-ink-400 hover:text-edu-purple bg-transparent border-none cursor-pointer p-0 flex items-center">
-                                            <Pencil style={{ width: 15, height: 15 }} />
-                                        </button>
-                                        <button onClick={() => setConfirmDelMat(m)} aria-label={`Eliminar ${m.nombre}`} className="text-edu-ink-400 hover:text-edu-danger bg-transparent border-none cursor-pointer p-0 flex items-center">
-                                            <Trash2 style={{ width: 15, height: 15 }} />
-                                        </button>
-                                    </div>
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[600px]">
+                                <div className={`grid ${MAT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                    {MAT_HEADERS.map((h) => (
+                                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                                    ))}
                                 </div>
-                            ))
-                        )}
+                                {materiasVisibles.length === 0 ? (
+                                    <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">No hay materias que coincidan con la búsqueda.</p>
+                                ) : (
+                                    pagedMaterias.map((m, i) => (
+                                        <div key={m.id} className={`grid ${MAT_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pagedMaterias.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                                            <span className="text-[0.8125rem] text-edu-ink-500 font-semibold">{(matCurrentPage - 1) * PER_PAGE + i + 1}</span>
+                                            <span className="text-sm text-edu-ink font-semibold flex items-center gap-2">
+                                                <BookOpen className="text-edu-purple" style={{ width: 15, height: 15 }} />
+                                                {m.nombre}
+                                            </span>
+                                            <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${NIVEL_META[m.nivel].cls}`}>{m.nivel}</span>
+                                            <div className="flex items-center gap-3">
+                                                <button onClick={() => openEditMat(m)} aria-label={`Modificar ${m.nombre}`} className="text-edu-ink-400 hover:text-edu-purple bg-transparent border-none cursor-pointer p-0 flex items-center">
+                                                    <Pencil style={{ width: 15, height: 15 }} />
+                                                </button>
+                                                <button onClick={() => setConfirmDelMat(m)} aria-label={`Eliminar ${m.nombre}`} className="text-edu-ink-400 hover:text-edu-danger bg-transparent border-none cursor-pointer p-0 flex items-center">
+                                                    <Trash2 style={{ width: 15, height: 15 }} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
                         {totalMatPages > 1 && (
                             <div className="px-5 py-4 border-t border-edu-border-soft">
                                 <Pagination currentPage={matCurrentPage} totalPages={totalMatPages} onPageChange={setMatPage} />
@@ -371,7 +344,7 @@ export function CoordSeccionesPage() {
                         {/* Crear separación (bloque horario) */}
                         <div>
                             <p className="m-0 mb-2 text-[0.8125rem] text-edu-ink-500">Crea la separación de horas y asigna un docente a cada bloque por día.</p>
-                            <form onSubmit={agregarBloque} className="flex items-end gap-2 flex-wrap">
+                            <form onSubmit={agregarBloque} className="grid grid-cols-2 md:grid-cols-3 items-end gap-4 flex-wrap">
                                 <div className="flex flex-col gap-1">
                                     <label className="text-[0.7rem] text-edu-ink-400 uppercase tracking-[0.04em] font-semibold">Inicio</label>
                                     <input type="time" value={nuevoBloque.inicio} onChange={(e) => setNuevoBloque({ ...nuevoBloque, inicio: e.target.value })} className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-edu-ink outline-none bg-edu-subtle text-[0.875rem] focus:border-edu-primary" />
@@ -380,7 +353,7 @@ export function CoordSeccionesPage() {
                                     <label className="text-[0.7rem] text-edu-ink-400 uppercase tracking-[0.04em] font-semibold">Fin</label>
                                     <input type="time" value={nuevoBloque.fin} onChange={(e) => setNuevoBloque({ ...nuevoBloque, fin: e.target.value })} className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-edu-ink outline-none bg-edu-subtle text-[0.875rem] focus:border-edu-primary" />
                                 </div>
-                                <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-edu-control text-sm font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
+                                <button type="submit" className="col-span-2 md:col-span-1 justify-center inline-flex items-center gap-1.5 px-4 py-2 rounded-edu-control text-sm font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
                                     <Plus style={{ width: 15, height: 15 }} /> Crear separación
                                 </button>
                             </form>

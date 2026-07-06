@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   GraduationCap,
   Users2,
@@ -13,65 +13,18 @@ import {
   Plus,
 } from "lucide-react";
 import { color } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import { getDocentes, getReuniones, getHorario, type Meeting, type TeacherState } from "../datos_maquetados/actions/director";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
 /* ------------------------------------------------------------------ */
-
-type TeacherState = "Activo" | "Permiso" | "Suplente";
-
-interface Teacher {
-  id: number;
-  name: string;
-  area: string;
-  sections: number;
-  attendance: number;
-  state: TeacherState;
-}
-
-const TEACHERS: Teacher[] = [
-  { id: 1, name: "Alejandro Morales", area: "Ciencias Naturales", sections: 5, attendance: 97, state: "Activo" },
-  { id: 2, name: "Carmen Villalobos", area: "Matemática", sections: 6, attendance: 95, state: "Activo" },
-  { id: 3, name: "Ricardo Salas", area: "Educación Física", sections: 4, attendance: 88, state: "Activo" },
-  { id: 4, name: "Daniela Herrera", area: "Castellano y Literatura", sections: 5, attendance: 92, state: "Permiso" },
-  { id: 5, name: "Gustavo Peña", area: "Geografía e Historia", sections: 4, attendance: 90, state: "Activo" },
-  { id: 6, name: "Marisol Rangel", area: "Inglés", sections: 6, attendance: 94, state: "Suplente" },
-];
 
 const STATE_META: Record<TeacherState, string> = {
   Activo: "bg-edu-success-bg text-edu-success",
   Permiso: "bg-edu-warning-bg text-edu-warning",
   Suplente: "bg-edu-primary-100 text-edu-primary",
 };
-
-interface Meeting {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  place: string;
-  attendees: string;
-  status: "Programada" | "Realizada";
-}
-
-const MEETINGS: Meeting[] = [
-  { id: 1, title: "Consejo docente — cierre de lapso", date: "8 jul 2026", time: "14:00", place: "Sala de profesores", attendees: "Todo el personal", status: "Programada" },
-  { id: 2, title: "Coordinación académica de Ciencias", date: "10 jul 2026", time: "10:00", place: "Aula 204", attendees: "Área de Ciencias", status: "Programada" },
-  { id: 3, title: "Revisión de casos disciplinarios", date: "27 jun 2026", time: "09:00", place: "Dirección", attendees: "Coordinación", status: "Realizada" },
-];
-
-interface ScheduleRow {
-  block: string;
-  monday: string;
-  wednesday: string;
-  friday: string;
-}
-
-const SCHEDULE: ScheduleRow[] = [
-  { block: "07:00 – 08:30", monday: "A. Morales · 4.º B", wednesday: "C. Villalobos · 5.º A", friday: "R. Salas · 3.º C" },
-  { block: "08:30 – 10:00", monday: "C. Villalobos · 5.º A", wednesday: "D. Herrera · 4.º A", friday: "G. Peña · 2.º B" },
-  { block: "10:15 – 11:45", monday: "M. Rangel · 1.º A", wednesday: "A. Morales · 5.º B", friday: "C. Villalobos · 6.º A" },
-];
 
 /* ------------------------------------------------------------------ */
 /* Subcomponentes                                                      */
@@ -134,8 +87,13 @@ function ActionIcon({
 /* ------------------------------------------------------------------ */
 
 export function DirPersonalPage() {
+  const { data: TEACHERS, loading: loadingDocentes } = useFetch(getDocentes, []);
+  const { data: SCHEDULE, loading: loadingHorario } = useFetch(getHorario, []);
+  const { data: reuniones } = useFetch(getReuniones, []);
+
   const [tab, setTab] = useState<"docentes" | "reuniones">("docentes");
-  const [meetings, setMeetings] = useState<Meeting[]>(MEETINGS);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  useEffect(() => setMeetings(reuniones), [reuniones]);
   const [creating, setCreating] = useState(false);
 
   const addMeeting = () => {
@@ -151,6 +109,9 @@ export function DirPersonalPage() {
     setMeetings((m) => [next, ...m]);
     setCreating(false);
   };
+
+  if (loadingDocentes || loadingHorario)
+    return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
 
   return (
     <div className="flex flex-col gap-5">
@@ -189,7 +150,8 @@ export function DirPersonalPage() {
       {tab === "docentes" && (
         <>
           <SectionCard title="Plantilla docente" hint={`${TEACHERS.length} docentes`}>
-            <div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[760px]">
               <div className="grid grid-cols-[1.4fr_1.4fr_0.7fr_1fr_0.8fr_1.2fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                 {["Nombre", "Área", "Secciones", "Asistencia", "Estado", "Acciones"].map((h) => (
                   <Th key={h}>{h}</Th>
@@ -218,12 +180,14 @@ export function DirPersonalPage() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           </SectionCard>
 
           {/* Horarios resumido */}
           <SectionCard title="Asignación de docentes por hora" hint="Resumen semanal">
-            <div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
               <div className="grid grid-cols-[1fr_1.4fr_1.4fr_1.4fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                 {["Bloque", "Lunes", "Miércoles", "Viernes"].map((h) => (
                   <Th key={h}>{h}</Th>
@@ -242,6 +206,7 @@ export function DirPersonalPage() {
                   ))}
                 </div>
               ))}
+              </div>
             </div>
           </SectionCard>
         </>

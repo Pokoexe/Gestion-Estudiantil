@@ -10,6 +10,8 @@ import {
     AlertTriangle,
     XCircle,
     BarChart3,
+    TrendingUp,
+    TrendingDown,
     CheckCircle2,
     Paperclip,
     Save,
@@ -25,137 +27,23 @@ import {
     PenLine,
 } from "lucide-react";
 import { color, accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import {
+    getSecciones,
+    getEstudiantes,
+    getPlanSeccion,
+    getPendientes,
+    type Seccion,
+    type Estudiante,
+    type EvalEstado,
+    type EvalTipo,
+    type EvaluacionPlan,
+    type Pendiente,
+} from "../datos_maquetados/actions/docente";
 
 /* ------------------------------------------------------------------ */
-/* Tipos e interfaces locales                                          */
+/* Mapas presentacionales                                             */
 /* ------------------------------------------------------------------ */
-
-interface Seccion {
-    id: number;
-    subject: string;
-    grade: string;
-    students: number;
-    attendance: number;
-    average: number;
-    accent: string;
-}
-
-interface Estudiante {
-    id: number;
-    name: string;
-    cedula: string;
-    attendance: number;
-    average: number;
-    /** Nota obtenida en cada evaluación del plan (alineado al orden de PLAN). null = sin entregar/pendiente. */
-    grades: (number | null)[];
-}
-
-type EvalEstado = "Calificada" | "En curso" | "Pendiente";
-type EvalTipo = "exam" | "lab" | "presentation" | "essay";
-
-interface EvaluacionPlan {
-    id: number;
-    name: string;
-    type: EvalTipo;
-    weight: number;
-    date: string;
-    horario: string;
-    status: EvalEstado;
-    description: string;
-    topics?: string[];
-    material?: string;
-}
-
-interface Pendiente {
-    student: string;
-    evaluation: string;
-    hasEvidence: boolean;
-    evidenceUrl?: string;
-}
-
-/* ------------------------------------------------------------------ */
-/* Datos ficticios                                                     */
-/* ------------------------------------------------------------------ */
-
-const SECCIONES: Seccion[] = [
-    { id: 1, subject: "Ciencias Naturales", grade: "4.º Año B", students: 6, attendance: 94, average: 15.8, accent: "#dbeafe" },
-    { id: 2, subject: "Biología", grade: "5.º Año A", students: 6, attendance: 91, average: 16.4, accent: "#dcfce7" },
-    { id: 3, subject: "Ciencias de la Tierra", grade: "3.º Año C", students: 6, attendance: 88, average: 13.9, accent: "#ede9fe" },
-    { id: 4, subject: "Química", grade: "5.º Año B", students: 6, attendance: 96, average: 14.7, accent: "#ffedd5" },
-];
-
-const ESTUDIANTES: Estudiante[] = [
-    { id: 1, name: "María Fernanda Rodríguez", cedula: "V-31.245.678", attendance: 97, average: 18.2, grades: [18, 19, 18, null, null] },
-    { id: 2, name: "José Gregorio Martínez", cedula: "V-30.987.321", attendance: 92, average: 14.5, grades: [15, null, 14, null, null] },
-    { id: 3, name: "Carla Valentina Pérez", cedula: "V-31.556.109", attendance: 88, average: 9.4, grades: [10, 9, null, null, null] },
-    { id: 4, name: "Luis Alberto Contreras", cedula: "V-30.442.870", attendance: 95, average: 16.7, grades: [17, 16, 17, null, null] },
-    { id: 5, name: "Andrea Carolina Suárez", cedula: "V-31.778.542", attendance: 78, average: 8.6, grades: [9, 8, null, null, null] },
-    { id: 6, name: "Daniel Eduardo Blanco", cedula: "V-30.615.233", attendance: 99, average: 17.9, grades: [18, 18, 17, null, null] },
-];
-
-const PLAN: EvaluacionPlan[] = [
-    {
-        id: 1,
-        name: "Prueba escrita · Unidad 1",
-        type: "exam",
-        weight: 20,
-        date: "12 may 2026",
-        horario: "Lun · 07:00",
-        status: "Calificada",
-        description: "Prueba escrita individual sobre los contenidos de la Unidad 1.",
-        topics: ["Método científico", "Materia y energía", "Estados de la materia"],
-        material: "Guia_Unidad1.pdf",
-    },
-    {
-        id: 2,
-        name: "Exposición: El Petróleo",
-        type: "presentation",
-        weight: 15,
-        date: "28 may 2026",
-        horario: "Mié · 09:30",
-        status: "Calificada",
-        description: "Exposición grupal sobre el petróleo, su origen y sus derivados.",
-        topics: ["Origen del petróleo", "Refinación", "Impacto ambiental"],
-    },
-    {
-        id: 3,
-        name: "Taller práctico de laboratorio",
-        type: "lab",
-        weight: 20,
-        date: "10 jun 2026",
-        horario: "Mié · 11:15",
-        status: "En curso",
-        description: "Taller práctico en el laboratorio sobre reacciones químicas y medición.",
-        material: "Instrucciones_Taller.pdf",
-    },
-    {
-        id: 4,
-        name: "Informe de investigación",
-        type: "essay",
-        weight: 25,
-        date: "25 jun 2026",
-        horario: "Lun · 07:00",
-        status: "Pendiente",
-        description: "Informe escrito de investigación sobre un tema asignado por el docente.",
-    },
-    {
-        id: 5,
-        name: "Examen final · Unidad 3",
-        type: "exam",
-        weight: 20,
-        date: "8 jul 2026",
-        horario: "Mié · 09:30",
-        status: "Pendiente",
-        description: "Examen final que abarca todos los contenidos de la Unidad 3.",
-        topics: ["Ecosistemas", "Ciclos biogeoquímicos", "Biodiversidad"],
-    },
-];
-
-const PENDIENTES: Pendiente[] = [
-    { student: "Carla Valentina Pérez", evaluation: "Taller práctico de laboratorio", hasEvidence: false },
-    { student: "Andrea Carolina Suárez", evaluation: "Taller práctico de laboratorio", hasEvidence: true, evidenceUrl: "https://picsum.photos/seed/evidencia-andrea/640/440" },
-    { student: "José Gregorio Martínez", evaluation: "Exposición: El Petróleo", hasEvidence: true, evidenceUrl: "https://picsum.photos/seed/evidencia-jose/640/440" },
-];
 
 const EVAL_STATUS: Record<EvalEstado, { bg: string; fg: string }> = {
     Calificada: { bg: color.successBg, fg: color.success },
@@ -219,15 +107,26 @@ export function DocenteSeccionesPage() {
     // Pestaña "Subir notas"
     const [query, setQuery] = useState("");
     const [filtro, setFiltro] = useState<FiltroNota>("todos");
-    const [selectedEvalId, setSelectedEvalId] = useState<number>(
-        PLAN.find((p) => p.status === "En curso")?.id ?? PLAN[0].id,
-    );
+    const [selectedEvalId, setSelectedEvalId] = useState<number>(0);
     const [notas, setNotas] = useState<Record<number, string>>({});
 
     // Modal para subir la nota de un estudiante
     const [gradeStudent, setGradeStudent] = useState<Estudiante | null>(null);
     const [gradeValue, setGradeValue] = useState("");
     const [gradeFile, setGradeFile] = useState<{ url: string; name: string; isImage: boolean } | null>(null);
+
+    // Datos maquetados de la sección
+    const { data: SECCIONES } = useFetch(getSecciones, []);
+    const { data: ESTUDIANTES } = useFetch(getEstudiantes, []);
+    const { data: PLAN } = useFetch(getPlanSeccion, []);
+    const { data: PENDIENTES } = useFetch(getPendientes, []);
+
+    // Al cargar el plan, selecciona por defecto la evaluación "En curso" (o la primera).
+    useEffect(() => {
+        if (PLAN.length && !selectedEvalId) {
+            setSelectedEvalId(PLAN.find((p) => p.status === "En curso")?.id ?? PLAN[0].id);
+        }
+    }, [PLAN, selectedEvalId]);
 
     // Permite abrir una sección concreta al llegar desde el horario
     const location = useLocation();
@@ -240,7 +139,7 @@ export function DocenteSeccionesPage() {
                 setTab("estudiantes");
             }
         }
-    }, [location.state]);
+    }, [location.state, SECCIONES]);
 
     const openSeccion = (sec: Seccion) => {
         setSelected(sec);
@@ -271,15 +170,15 @@ export function DocenteSeccionesPage() {
     };
 
     const raspados = ESTUDIANTES.filter((e) => e.average < 10);
-    const promedioSeccion = ESTUDIANTES.reduce((acc, e) => acc + e.average, 0) / ESTUDIANTES.length;
-    const asistenciaSeccion = ESTUDIANTES.reduce((acc, e) => acc + e.attendance, 0) / ESTUDIANTES.length;
+    const promedioSeccion = ESTUDIANTES.length ? ESTUDIANTES.reduce((acc, e) => acc + e.average, 0) / ESTUDIANTES.length : 0;
+    const asistenciaSeccion = ESTUDIANTES.length ? ESTUDIANTES.reduce((acc, e) => acc + e.attendance, 0) / ESTUDIANTES.length : 0;
     const aprobados = ESTUDIANTES.filter((e) => e.average >= 10).length;
-    const ultimaEval = PLAN.find((p) => p.status === "En curso") ?? PLAN[PLAN.length - 1];
-    const faltanUltima = PENDIENTES.filter((p) => p.evaluation === ultimaEval.name).length;
+    const ultimaEval = PLAN.find((p) => p.status === "En curso") ?? (PLAN.length ? PLAN[PLAN.length - 1] : undefined);
+    const faltanUltima = PENDIENTES.filter((p) => p.evaluation === ultimaEval?.name).length;
 
-    const selectedEval = PLAN.find((p) => p.id === selectedEvalId) ?? PLAN[0];
+    const selectedEval = PLAN.find((p) => p.id === selectedEvalId) ?? (PLAN.length ? PLAN[0] : undefined);
     const porEntregarNames = new Set(
-        PENDIENTES.filter((p) => p.evaluation === selectedEval.name).map((p) => p.student),
+        PENDIENTES.filter((p) => p.evaluation === selectedEval?.name).map((p) => p.student),
     );
     const filteredStudents = ESTUDIANTES.filter((e) => {
         if (query.trim() && !e.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
@@ -307,7 +206,7 @@ export function DocenteSeccionesPage() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {SECCIONES.map((sec) => (
                         <button
                             key={sec.id}
@@ -383,24 +282,31 @@ export function DocenteSeccionesPage() {
             </div>
 
             {/* Resumen general de la sección (antes "Notas generales") */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
-                    { label: "Promedio de la sección", value: promedioSeccion.toFixed(1), icon: BarChart3, ac: accent.blue, valueClass: notaColor(promedioSeccion) },
-                    { label: "Asistencia media", value: `${asistenciaSeccion.toFixed(0)} %`, icon: Users, ac: accent.purple, valueClass: "text-edu-ink" },
-                    { label: "Aprobados", value: `${aprobados}/${ESTUDIANTES.length}`, icon: CheckCircle2, ac: accent.green, valueClass: "text-edu-success" },
-                    { label: "Reprobados", value: String(raspados.length), icon: XCircle, ac: accent.red, valueClass: "text-edu-danger" },
-                    { label: "Faltan última evaluación", value: String(faltanUltima), icon: AlertTriangle, ac: accent.amber, valueClass: "text-edu-warning" },
+                    { label: "Promedio de la sección", value: promedioSeccion.toFixed(1), icon: BarChart3, ac: accent.blue, valueClass: notaColor(promedioSeccion), trend: { text: "0,4 más que el mes pasado", dir: "up" as const, good: true } },
+                    { label: "Asistencia media", value: `${asistenciaSeccion.toFixed(0)} %`, icon: Users, ac: accent.purple, valueClass: "text-edu-ink", trend: { text: "2 % menos que el mes pasado", dir: "down" as const, good: false } },
+                    { label: "Aprobados", value: `${aprobados}/${ESTUDIANTES.length}`, icon: CheckCircle2, ac: accent.green, valueClass: "text-edu-success", trend: { text: "3 más que el mes pasado", dir: "up" as const, good: true } },
+                    { label: "Reprobados", value: String(raspados.length), icon: XCircle, ac: accent.red, valueClass: "text-edu-danger", trend: { text: "1 menos que el mes pasado", dir: "down" as const, good: true } },
+                    { label: "Faltan última evaluación", value: String(faltanUltima), icon: AlertTriangle, ac: accent.amber, valueClass: "text-edu-warning", trend: { text: "2 más que el mes pasado", dir: "up" as const, good: false } },
                 ].map((s) => {
                     const Icon = s.icon;
+                    const TrendIcon = s.trend.dir === "up" ? TrendingUp : TrendingDown;
                     return (
-                        <div key={s.label} className="bg-edu-surface rounded-edu-card p-4 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div key={s.label} className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-3">
                             <div className="flex justify-between items-start gap-2">
-                                <p className="text-edu-ink-500 text-[0.7rem] font-medium m-0 uppercase tracking-[0.05em]">{s.label}</p>
-                                <div className="w-9 h-9 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: s.ac.bg }}>
-                                    <Icon style={{ width: "17px", height: "17px", color: s.ac.fg }} />
+                                <div className="min-w-0">
+                                    <p className="text-edu-ink-500 text-[0.75rem] font-medium m-0 uppercase tracking-[0.05em]">{s.label}</p>
+                                    <p className={`text-[1.6rem] font-bold mt-1.5 m-0 ${s.valueClass}`}>{s.value}</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: s.ac.bg }}>
+                                    <Icon style={{ width: "20px", height: "20px", color: s.ac.fg }} />
                                 </div>
                             </div>
-                            <p className={`text-[1.5rem] font-bold m-0 ${s.valueClass}`}>{s.value}</p>
+                            <p className="text-edu-ink-400 text-[0.75rem] m-0 flex items-center gap-[5px]">
+                                <TrendIcon style={{ width: "12px", height: "12px" }} className={s.trend.good ? "text-edu-success" : "text-edu-danger"} />
+                                {s.trend.text}
+                            </p>
                         </div>
                     );
                 })}
@@ -408,7 +314,7 @@ export function DocenteSeccionesPage() {
 
             {/* Pestañas */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-                <div className="px-3 pt-2 border-b border-edu-border-soft flex gap-1 flex-wrap">
+                <div className="px-3 pt-2 border-b border-edu-border-soft flex gap-1 flex-wrap justify-center sm:justify-start">
                     {TABS.map((t) => {
                         const Icon = t.icon;
                         const active = tab === t.key;
@@ -431,7 +337,8 @@ export function DocenteSeccionesPage() {
 
                 {/* Estudiantes */}
                 {tab === "estudiantes" && (
-                    <div>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[600px]">
                         <div className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                             {["Estudiante", "Cédula", "Asistencia", "Promedio"].map((h) => (
                                 <Th key={h}>{h}</Th>
@@ -452,12 +359,14 @@ export function DocenteSeccionesPage() {
                                 </div>
                             </div>
                         ))}
+                        </div>
                     </div>
                 )}
 
                 {/* Plan de evaluación (tabla clickable → modal) */}
                 {tab === "plan" && (
-                    <div>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[680px]">
                         <div className="grid grid-cols-[2fr_1fr_0.6fr_1fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                             {["Evaluación", "Horario", "%", "Fecha", "Estado"].map((h) => (
                                 <Th key={h}>{h}</Th>
@@ -502,14 +411,15 @@ export function DocenteSeccionesPage() {
                                 {PLAN.reduce((a, e) => a + e.weight, 0)} %
                             </span>
                         </div>
+                        </div>
                     </div>
                 )}
 
                 {/* Subir notas — estudiantes (izq) + plan visual (der) */}
                 {tab === "subir" && (
-                    <div className="grid grid-cols-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-3">
                         {/* Izquierda: estudiantes con buscador y filtro */}
-                        <div className="col-span-2 border-r border-edu-border-soft">
+                        <div className="lg:col-span-2 border-r border-edu-border-soft">
                             <div className="px-5 py-3 border-b border-edu-border-soft flex gap-2 items-center flex-wrap">
                                 <div className="relative flex-1 min-w-[160px]">
                                     <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -537,6 +447,8 @@ export function DocenteSeccionesPage() {
                                 ))}
                             </div>
 
+                            <div className="overflow-x-auto">
+                            <div className="min-w-[520px]">
                             <div className="grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                                 {["Estudiante", "Nota", "Estado", "Subir"].map((h) => (
                                     <Th key={h}>{h}</Th>
@@ -587,6 +499,8 @@ export function DocenteSeccionesPage() {
                                     </div>
                                 );
                             })}
+                            </div>
+                            </div>
                         </div>
 
                         {/* Derecha: plan de evaluación (visual, seleccionable) */}
@@ -626,7 +540,8 @@ export function DocenteSeccionesPage() {
 
                 {/* Faltan por entregar */}
                 {tab === "faltan" && (
-                    <div>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[520px]">
                         <div className="grid grid-cols-[1.6fr_1.6fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                             {["Estudiante", "Evaluación", "Evidencia"].map((h) => (
                                 <Th key={h}>{h}</Th>
@@ -653,6 +568,7 @@ export function DocenteSeccionesPage() {
                                 )}
                             </div>
                         ))}
+                        </div>
                     </div>
                 )}
 
@@ -663,6 +579,8 @@ export function DocenteSeccionesPage() {
                             <AlertTriangle className="w-4 h-4 shrink-0" />
                             {raspados.length} estudiante(s) con promedio inferior a 10 puntos
                         </div>
+                        <div className="overflow-x-auto">
+                        <div className="min-w-[520px]">
                         <div className="grid grid-cols-[2fr_1fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
                             {["Estudiante", "Cédula", "Promedio"].map((h) => (
                                 <Th key={h}>{h}</Th>
@@ -678,6 +596,8 @@ export function DocenteSeccionesPage() {
                                 <span className="text-sm font-bold text-edu-danger">{e.average.toFixed(1)}</span>
                             </div>
                         ))}
+                        </div>
+                        </div>
                     </div>
                 )}
             </div>
@@ -729,7 +649,7 @@ export function DocenteSeccionesPage() {
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                                             {[
                                                 { label: "Tipo", value: tm.label },
                                                 { label: "Peso", value: `${evalDetail.weight} %` },
@@ -832,7 +752,7 @@ export function DocenteSeccionesPage() {
 
                         <div className="p-5 flex flex-col gap-4">
                             <div className="px-3.5 py-2.5 rounded-edu-control bg-edu-primary-50 text-[0.8125rem] text-edu-primary">
-                                Evaluación: <strong>{selectedEval.name}</strong> ({selectedEval.weight} %)
+                                Evaluación: <strong>{selectedEval?.name}</strong> ({selectedEval?.weight} %)
                             </div>
 
                             {gradeIsChange && (
@@ -991,7 +911,7 @@ export function DocenteSeccionesPage() {
 
                         <div className="p-5 flex flex-col gap-4">
                             {/* Resumen del estudiante */}
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="bg-edu-subtle rounded-edu-control px-3 py-2.5">
                                     <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Promedio</div>
                                     <div className={`text-[1.2rem] font-bold ${notaColor(studentDetail.average)}`}>{studentDetail.average.toFixed(1)}</div>

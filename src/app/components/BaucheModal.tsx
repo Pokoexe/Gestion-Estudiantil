@@ -10,7 +10,7 @@ import {
   CalendarDays,
   MailQuestion,
 } from "lucide-react";
-import { BAUCHE_MOCK } from "../data/baucheMock";
+import { BAUCHE_MOCK } from "../datos_maquetados/data/baucheMock";
 
 /* ------------------------------------------------------------------ */
 /* Modal reutilizable: datos + bauche (imagen) de una transferencia    */

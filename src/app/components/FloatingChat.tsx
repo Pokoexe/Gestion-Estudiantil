@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, ChevronLeft, Send, Minus } from "lucide-react";
-import { CONVERSATIONS, nowTime, type Conversation } from "../data/chats";
+import { CONVERSATIONS, nowTime, type Conversation } from "../datos_maquetados/data/chats";
 
 interface FloatingChatProps {
     open: boolean;

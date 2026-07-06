@@ -3,32 +3,12 @@ import { useNavigate } from "react-router";
 import { Search, Wrench, Clock, ChevronRight, CircleAlert } from "lucide-react";
 import { color } from "../theme/tokens";
 import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import { getReparacionMaterias, type RepairSubjectRow, type RepairStatus } from "../datos_maquetados/actions/estudiante";
 
 const PER_PAGE = 5;
 
-type RepairStatus = "reprobado" | "reparando" | "pendiente";
 type StatusFilter = "todas" | RepairStatus;
-
-interface RepairSubject {
-    id: number;
-    name: string;
-    teacher: string;
-    failedEvals: number;
-    average: number;
-    status: RepairStatus;
-    stage?: number;
-    totalStages?: number;
-}
-
-const REPAIR_SUBJECTS: RepairSubject[] = [
-    { id: 8, name: "Inglés", teacher: "Prof. Collins", failedEvals: 4, average: 8, status: "reprobado" },
-    { id: 9, name: "Geografía", teacher: "Prof. Salas", failedEvals: 3, average: 9, status: "reprobado" },
-    { id: 11, name: "Química", teacher: "Prof. Méndez", failedEvals: 2, average: 9, status: "reparando", stage: 2, totalStages: 3 },
-    { id: 12, name: "Matemática", teacher: "Prof. Ramírez", failedEvals: 3, average: 8, status: "reparando", stage: 2, totalStages: 2 },
-    { id: 7, name: "Historia", teacher: "Prof. Flores", failedEvals: 1, average: 10, status: "pendiente" },
-    { id: 10, name: "Educación Física", teacher: "Prof. Nieves", failedEvals: 0, average: 13, status: "pendiente" },
-    { id: 13, name: "Arte", teacher: "Prof. Vega", failedEvals: 0, average: 12, status: "pendiente" },
-];
 
 const STATUS_META: Record<RepairStatus, { label: string; cls: string; dot: string }> = {
     reprobado: { label: "Reprobado", cls: "bg-edu-danger-bg text-edu-danger", dot: color.danger },
@@ -60,6 +40,7 @@ export function RepairPage() {
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("todas");
     const [page, setPage] = useState(1);
+    const { data: repairSubjects } = useFetch(getReparacionMaterias, []);
 
     const changeTab = (key: "todas" | "pendientes" | "reprobadas" | "reparacion") => {
         setTab(key);
@@ -67,13 +48,13 @@ export function RepairPage() {
         setPage(1);
     };
 
-    const reprobadoCount = REPAIR_SUBJECTS.filter((s) => s.status === "reprobado").length;
-    const repairingCount = REPAIR_SUBJECTS.filter((s) => s.status === "reparando").length;
-    const pendienteCount = REPAIR_SUBJECTS.filter((s) => s.status === "pendiente").length;
+    const reprobadoCount = repairSubjects.filter((s) => s.status === "reprobado").length;
+    const repairingCount = repairSubjects.filter((s) => s.status === "reparando").length;
+    const pendienteCount = repairSubjects.filter((s) => s.status === "pendiente").length;
 
     const tabStatuses = TABS.find((t) => t.key === tab)!.statuses;
 
-    const rows = REPAIR_SUBJECTS.filter((s) => {
+    const rows = repairSubjects.filter((s) => {
         if (!tabStatuses.includes(s.status)) return false;
         if (statusFilter !== "todas" && s.status !== statusFilter) return false;
         if (query.trim() && !s.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
@@ -84,13 +65,13 @@ export function RepairPage() {
     const currentPage = Math.min(page, totalPages);
     const paged = rows.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
-    const goToSubject = (s: RepairSubject) =>
+    const goToSubject = (s: RepairSubjectRow) =>
         navigate(s.status === "reparando" ? `/estudiante/reparacion/${s.id}` : `/estudiante/materias/${s.id}`);
 
     return (
         <>
             {/* Bloques resumen */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Materias pendientes */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
@@ -156,7 +137,7 @@ export function RepairPage() {
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 {/* Pestañas */}
                 <div className="px-5 pt-3 border-b border-edu-border-soft">
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                         {TABS.map((t) => (
                             <button
                                 key={t.key}
@@ -197,6 +178,8 @@ export function RepairPage() {
 
                 {/* Tabla */}
                 <div>
+                    <div className="overflow-x-auto">
+                    <div className="min-w-[680px]">
                     <div className={`grid ${REPAIR_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {REPAIR_HEADERS.map((h) => (
                             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
@@ -248,6 +231,8 @@ export function RepairPage() {
                             </div>
                         );
                     })}
+                    </div>
+                    </div>
 
                     {totalPages > 1 && (
                         <div className="px-5 py-4 border-t border-edu-border-soft">

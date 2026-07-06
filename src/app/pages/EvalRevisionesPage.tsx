@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ClipboardList,
   ClipboardCheck,
@@ -14,48 +14,18 @@ import { Pagination } from "../components/Pagination";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import type { LapsoId } from "../data/lapsos";
+import { useFetch } from "../datos_maquetados";
+import { getRevisiones, type Revision, type RevTipo, type RevEstado } from "../datos_maquetados/actions/evaluador";
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Presentación                                                        */
 /* ------------------------------------------------------------------ */
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
 const TEAL_50 = "#f0fdfa";
 
-type RevTipo = "Exámenes" | "Planes de evaluación" | "Temas de reparación";
-type RevEstado = "Pendiente" | "Aprobado" | "Revisión solicitada";
 type TabOpt = RevTipo | "Todas";
-
-interface Revision {
-  id: number;
-  lapso: LapsoId;
-  docente: string;
-  materia: string;
-  seccion: string;
-  tipo: RevTipo;
-  fecha: string;
-  estado: RevEstado;
-  adjunto: string;
-  observacion?: string;
-}
-
-const REVISIONES_INI: Revision[] = [
-  // Lapso II (en curso)
-  { id: 1, lapso: 2, docente: "Prof. María Fernández", materia: "Biología", seccion: "5.º Año A", tipo: "Planes de evaluación", fecha: "28 jun 2026", estado: "Pendiente", adjunto: "plan_biologia_5A.pdf" },
-  { id: 2, lapso: 2, docente: "Prof. José Rangel", materia: "Ciencias Naturales", seccion: "4.º Año B", tipo: "Exámenes", fecha: "27 jun 2026", estado: "Pendiente", adjunto: "examen_u3_4B.pdf" },
-  { id: 3, lapso: 2, docente: "Prof. Carmen Ortega", materia: "Química", seccion: "5.º Año B", tipo: "Planes de evaluación", fecha: "25 jun 2026", estado: "Aprobado", adjunto: "plan_quimica_5B.pdf" },
-  { id: 4, lapso: 2, docente: "Prof. Luis Guerra", materia: "Física", seccion: "5.º Año A", tipo: "Temas de reparación", fecha: "24 jun 2026", estado: "Revisión solicitada", adjunto: "reparacion_fisica_5A.pdf", observacion: "Faltan los objetivos de la Unidad 2 y el cronograma del período de reparación." },
-  { id: 5, lapso: 2, docente: "Prof. Ana Díaz", materia: "Matemáticas", seccion: "3.º Año C", tipo: "Exámenes", fecha: "23 jun 2026", estado: "Aprobado", adjunto: "examen_lapso2_3C.pdf" },
-  { id: 6, lapso: 2, docente: "Prof. Pedro Salas", materia: "Ciencias de la Tierra", seccion: "3.º Año C", tipo: "Temas de reparación", fecha: "22 jun 2026", estado: "Pendiente", adjunto: "reparacion_ct_3C.pdf" },
-  { id: 7, lapso: 2, docente: "Prof. María Fernández", materia: "Biología", seccion: "4.º Año A", tipo: "Exámenes", fecha: "21 jun 2026", estado: "Pendiente", adjunto: "examen_u2_4A.pdf" },
-  { id: 8, lapso: 2, docente: "Prof. Gabriel Suárez", materia: "Historia", seccion: "4.º Año B", tipo: "Planes de evaluación", fecha: "20 jun 2026", estado: "Revisión solicitada", adjunto: "plan_historia_4B.pdf", observacion: "El peso del examen final supera el 30% permitido. Ajustar la ponderación." },
-  { id: 9, lapso: 2, docente: "Prof. Ana Díaz", materia: "Matemáticas", seccion: "5.º Año B", tipo: "Exámenes", fecha: "19 jun 2026", estado: "Pendiente", adjunto: "examen_u4_5B.pdf" },
-  // Lapso I (finalizado) — entregas ya validadas
-  { id: 10, lapso: 1, docente: "Prof. María Fernández", materia: "Biología", seccion: "5.º Año A", tipo: "Planes de evaluación", fecha: "18 may 2026", estado: "Aprobado", adjunto: "plan_biologia_5A_l1.pdf" },
-  { id: 11, lapso: 1, docente: "Prof. José Rangel", materia: "Ciencias Naturales", seccion: "4.º Año B", tipo: "Exámenes", fecha: "15 may 2026", estado: "Aprobado", adjunto: "examen_u1_4B.pdf" },
-];
 
 const ESTADO_META: Record<RevEstado, string> = {
   Pendiente: "bg-edu-warning-bg text-edu-warning",
@@ -79,7 +49,10 @@ const PER_PAGE = 6;
 /* ------------------------------------------------------------------ */
 
 export function EvalRevisionesPage() {
-  const [revisiones, setRevisiones] = useState<Revision[]>(REVISIONES_INI);
+  const { data: fetched } = useFetch(getRevisiones, []);
+  const [revisiones, setRevisiones] = useState<Revision[]>([]);
+  useEffect(() => setRevisiones(fetched), [fetched]);
+
   const [tab, setTab] = useState<TabOpt>("Todas");
   const [query, setQuery] = useState("");
   const [estadoFilter, setEstadoFilter] = useState<"todos" | RevEstado>("todos");
@@ -133,7 +106,7 @@ export function EvalRevisionesPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {KPIS.map((k) => {
           const Icon = k.icon;
           return (
@@ -202,6 +175,9 @@ export function EvalRevisionesPage() {
           </select>
         </div>
 
+        {/* Cabecera + filas (scroll horizontal en móvil) */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[860px]">
         {/* Cabecera de tabla */}
         <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {HEADERS.map((h) => (
@@ -253,6 +229,8 @@ export function EvalRevisionesPage() {
             </div>
           ))
         )}
+          </div>
+        </div>
 
         {/* Paginación */}
         {totalPages > 1 && (
@@ -283,7 +261,7 @@ export function EvalRevisionesPage() {
                 <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold ${ESTADO_META[detail.estado]}`}>{detail.estado}</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 <div>
                   <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Docente</div>
                   <div className="text-[0.875rem] text-edu-ink font-medium">{detail.docente}</div>
@@ -328,7 +306,7 @@ export function EvalRevisionesPage() {
       {/* Modal: solicitar revisión con observación */}
       {modalId !== null && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setModalId(null)}>
-          <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-edu-control flex items-center justify-center" style={{ backgroundColor: TEAL_50 }}>

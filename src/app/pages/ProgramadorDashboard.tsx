@@ -25,45 +25,46 @@ import {
   Cell,
 } from "recharts";
 import { color, shadow, accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import {
+  getProgKpis,
+  getProgQuickActions,
+  getProgUsers,
+  getProgServices,
+  getProgRoleDistribution,
+  getProgLogs,
+  type ProgKpiKey,
+  type ProgActionKey,
+  type RoleKey,
+  type EstadoUsuario,
+  type ServiceState,
+  type ServiceKey,
+  type LogLevel,
+} from "../datos_maquetados/actions/misc";
 
 /* ------------------------------------------------------------------ */
-/* Datos ficticios                                                    */
+/* Mapas presentacionales (iconos, tonos, clases)                     */
+/* Los DATOS viven en datos_maquetados/data/misc.ts y llegan por fetch;*/
+/* aquí solo se enlazan con su presentación mediante claves estables.  */
 /* ------------------------------------------------------------------ */
 
 type AccentKey = keyof typeof accent;
 
-const KPIS: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-  tone: AccentKey;
-}[] = [
-  { label: "Disponibilidad (uptime)", value: "99,9 %", hint: "Últimos 30 días", icon: Activity, tone: "green" },
-  { label: "Usuarios activos", value: "688", hint: "+12 esta semana", icon: Users, tone: "blue" },
-  { label: "Errores 24 h", value: "2", hint: "Ambos resueltos", icon: AlertTriangle, tone: "amber" },
-  { label: "Último respaldo", value: "hace 3 h", hint: "Automático · 02:00", icon: DatabaseBackup, tone: "purple" },
-];
+/** Icono + tono de cada KPI, por clave. */
+const KPI_STYLE: Record<ProgKpiKey, { icon: React.FC<{ style?: React.CSSProperties }>; tone: AccentKey }> = {
+  uptime: { icon: Activity, tone: "green" },
+  usuarios: { icon: Users, tone: "blue" },
+  errores: { icon: AlertTriangle, tone: "amber" },
+  respaldo: { icon: DatabaseBackup, tone: "purple" },
+};
 
-const QUICK_ACTIONS: {
-  label: string;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-  tone: AccentKey;
-}[] = [
-  { label: "Crear usuario", icon: UserPlus, tone: "blue" },
-  { label: "Asignar rol", icon: ShieldCheck, tone: "purple" },
-  { label: "Ejecutar respaldo", icon: PlayCircle, tone: "green" },
-  { label: "Ver registros", icon: ScrollText, tone: "amber" },
-];
-
-type RoleKey =
-  | "Estudiante"
-  | "Docente"
-  | "Coordinador"
-  | "Evaluador"
-  | "Tesorería"
-  | "Director"
-  | "Programador";
+/** Icono + tono de cada acción rápida, por clave. */
+const ACTION_STYLE: Record<ProgActionKey, { icon: React.FC<{ style?: React.CSSProperties }>; tone: AccentKey }> = {
+  "crear-usuario": { icon: UserPlus, tone: "blue" },
+  "asignar-rol": { icon: ShieldCheck, tone: "purple" },
+  "ejecutar-respaldo": { icon: PlayCircle, tone: "green" },
+  "ver-registros": { icon: ScrollText, tone: "amber" },
+};
 
 const ROLE_STYLE: Record<RoleKey, { bg: string; fg: string }> = {
   Estudiante: { bg: color.primary50, fg: color.primary },
@@ -75,33 +76,11 @@ const ROLE_STYLE: Record<RoleKey, { bg: string; fg: string }> = {
   Programador: { bg: "#e2e8f0", fg: color.ink700 },
 };
 
-type EstadoUsuario = "Activo" | "Inactivo" | "Bloqueado";
-
 const STATE_STYLE: Record<EstadoUsuario, { bg: string; fg: string }> = {
   Activo: { bg: color.successBg, fg: color.success },
   Inactivo: { bg: color.subtle, fg: color.ink500 },
   Bloqueado: { bg: color.dangerBg, fg: color.danger },
 };
-
-const USERS: {
-  name: string;
-  initials: string;
-  email: string;
-  role: RoleKey;
-  state: EstadoUsuario;
-  lastAccess: string;
-  avatarTone: AccentKey;
-}[] = [
-  { name: "María Fernández", initials: "MF", email: "m.fernandez@edugestion.edu", role: "Docente", state: "Activo", lastAccess: "hace 8 min", avatarTone: "green" },
-  { name: "Carlos Rivas", initials: "CR", email: "c.rivas@edugestion.edu", role: "Coordinador", state: "Activo", lastAccess: "hace 41 min", avatarTone: "purple" },
-  { name: "Ana Belén Soto", initials: "AS", email: "a.soto@edugestion.edu", role: "Tesorería", state: "Activo", lastAccess: "hace 2 h", avatarTone: "blue" },
-  { name: "Jorge Medina", initials: "JM", email: "j.medina@edugestion.edu", role: "Evaluador", state: "Inactivo", lastAccess: "hace 6 días", avatarTone: "amber" },
-  { name: "Lucía Paredes", initials: "LP", email: "l.paredes@edugestion.edu", role: "Estudiante", state: "Bloqueado", lastAccess: "hace 22 días", avatarTone: "red" },
-  { name: "Roberto Salas", initials: "RS", email: "r.salas@edugestion.edu", role: "Director", state: "Activo", lastAccess: "ayer, 18:40", avatarTone: "red" },
-  { name: "Diana Ortega", initials: "DO", email: "d.ortega@edugestion.edu", role: "Programador", state: "Activo", lastAccess: "hace 3 min", avatarTone: "purple" },
-];
-
-type ServiceState = "Operativo" | "Degradado" | "Caído";
 
 const SERVICE_STATE: Record<ServiceState, { fg: string; label: string }> = {
   Operativo: { fg: color.success, label: "Operativo" },
@@ -109,47 +88,20 @@ const SERVICE_STATE: Record<ServiceState, { fg: string; label: string }> = {
   Caído: { fg: color.danger, label: "Caído" },
 };
 
-const SERVICES: {
-  name: string;
-  icon: React.FC<{ style?: React.CSSProperties }>;
-  state: ServiceState;
-  metric: string;
-  detail: string;
-  tone: AccentKey;
-}[] = [
-  { name: "API principal", icon: Server, state: "Operativo", metric: "142 ms", detail: "Uptime 99,98 %", tone: "blue" },
-  { name: "Base de datos", icon: Database, state: "Operativo", metric: "23 ms", detail: "Uptime 99,99 %", tone: "green" },
-  { name: "Notificaciones WhatsApp", icon: MessageCircle, state: "Degradado", metric: "1,8 s", detail: "Cola con retraso", tone: "green" },
-  { name: "Pasarela de pagos", icon: CreditCard, state: "Operativo", metric: "310 ms", detail: "Uptime 99,90 %", tone: "amber" },
-  { name: "Servicio de correo", icon: Mail, state: "Caído", metric: "—", detail: "Reintentando envío", tone: "red" },
-];
-
-const ROLE_DISTRIBUTION: { role: string; usuarios: number; fill: string }[] = [
-  { role: "Estudiante", usuarios: 512, fill: color.primary },
-  { role: "Docente", usuarios: 96, fill: color.success },
-  { role: "Coordinador", usuarios: 34, fill: color.purple },
-  { role: "Evaluador", usuarios: 28, fill: color.warningStrong },
-  { role: "Tesorería", usuarios: 9, fill: "#0369a1" },
-  { role: "Director", usuarios: 6, fill: color.danger },
-  { role: "Programador", usuarios: 3, fill: color.ink700 },
-];
-
-type LogLevel = "INFO" | "ADVERTENCIA" | "ERROR";
+/** Icono + tono de cada servicio, por clave. */
+const SERVICE_STYLE: Record<ServiceKey, { icon: React.FC<{ style?: React.CSSProperties }>; tone: AccentKey }> = {
+  api: { icon: Server, tone: "blue" },
+  db: { icon: Database, tone: "green" },
+  whatsapp: { icon: MessageCircle, tone: "green" },
+  pagos: { icon: CreditCard, tone: "amber" },
+  correo: { icon: Mail, tone: "red" },
+};
 
 const LOG_STYLE: Record<LogLevel, { bg: string; fg: string }> = {
   INFO: { bg: color.primary50, fg: color.primary },
   ADVERTENCIA: { bg: color.warningBg, fg: color.warning },
   ERROR: { bg: color.dangerBg, fg: color.danger },
 };
-
-const LOGS: { time: string; level: LogLevel; message: string }[] = [
-  { time: "09:42:11", level: "INFO", message: "Pago manual confirmado por Tesorería (folio #F-20496)" },
-  { time: "09:37:58", level: "ERROR", message: "Servicio de correo sin respuesta tras 3 reintentos" },
-  { time: "09:15:02", level: "ADVERTENCIA", message: "Cola de WhatsApp con 128 mensajes pendientes de envío" },
-  { time: "08:54:33", level: "INFO", message: "Nuevo usuario creado: d.ortega (rol Programador)" },
-  { time: "08:31:19", level: "ADVERTENCIA", message: "Intento de acceso fallido para l.paredes (cuenta bloqueada)" },
-  { time: "02:00:04", level: "INFO", message: "Respaldo automático completado (1,8 GB)" },
-];
 
 /* ------------------------------------------------------------------ */
 /* Subcomponentes                                                     */
@@ -180,15 +132,31 @@ function Pill({ bg, fg, children }: { bg: string; fg: string; children: React.Re
 /* ------------------------------------------------------------------ */
 
 export function ProgramadorDashboard() {
-  const totalUsuarios = ROLE_DISTRIBUTION.reduce((acc, r) => acc + r.usuarios, 0);
+  const { data: kpis, loading: loadingKpis } = useFetch(getProgKpis, []);
+  const { data: quickActions } = useFetch(getProgQuickActions, []);
+  const { data: users } = useFetch(getProgUsers, []);
+  const { data: services } = useFetch(getProgServices, []);
+  const { data: roleDistribution } = useFetch(getProgRoleDistribution, []);
+  const { data: logs } = useFetch(getProgLogs, []);
+
+  const totalUsuarios = roleDistribution.reduce((acc, r) => acc + r.usuarios, 0);
+
+  if (loadingKpis) {
+    return (
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+        Cargando…
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
       {/* Fila de KPIs */}
-      <div className="grid grid-cols-4 gap-4">
-        {KPIS.map((kpi) => {
-          const Icon = kpi.icon;
-          const tone = accent[kpi.tone];
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpis.map((kpi) => {
+          const style = KPI_STYLE[kpi.key];
+          const Icon = style.icon;
+          const tone = accent[style.tone];
           return (
             <div key={kpi.label} className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-3">
               <div className="flex justify-between items-start">
@@ -216,10 +184,11 @@ export function ProgramadorDashboard() {
         <p className="text-edu-ink-500 text-[0.72rem] font-semibold mb-3 uppercase tracking-[0.05em]">
           Acciones rápidas
         </p>
-        <div className="grid grid-cols-4 gap-3">
-          {QUICK_ACTIONS.map((action) => {
-            const Icon = action.icon;
-            const tone = accent[action.tone];
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {quickActions.map((action) => {
+            const style = ACTION_STYLE[action.key];
+            const Icon = style.icon;
+            const tone = accent[style.tone];
             return (
               <button
                 key={action.label}
@@ -241,19 +210,21 @@ export function ProgramadorDashboard() {
       {/* Gestión de usuarios y roles */}
       <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
         <SectionHeader title="Gestión de usuarios y roles" link="Ver todos los usuarios" />
+        <div className="overflow-x-auto">
+        <div className="min-w-[680px]">
         <div className="grid grid-cols-[2fr_1.1fr_1fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
           {["Usuario", "Rol", "Estado", "Último acceso", ""].map((h, i) => (
             <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
           ))}
         </div>
-        {USERS.map((u, i) => {
+        {users.map((u, i) => {
           const avatar = accent[u.avatarTone];
           const roleStyle = ROLE_STYLE[u.role];
           const stateStyle = STATE_STYLE[u.state];
           return (
             <div
               key={u.email}
-              className={`grid grid-cols-[2fr_1.1fr_1fr_1fr_0.6fr] px-5 py-3 items-center transition-colors hover:bg-edu-subtle ${i < USERS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+              className={`grid grid-cols-[2fr_1.1fr_1fr_1fr_0.6fr] px-5 py-3 items-center transition-colors hover:bg-edu-subtle ${i < users.length - 1 ? "border-b border-edu-border-soft" : ""}`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div
@@ -279,6 +250,8 @@ export function ProgramadorDashboard() {
             </div>
           );
         })}
+        </div>
+        </div>
       </div>
 
       {/* Estado de servicios / integraciones */}
@@ -288,9 +261,10 @@ export function ProgramadorDashboard() {
           className="grid gap-3 px-5 py-4"
           style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}
         >
-          {SERVICES.map((svc) => {
-            const Icon = svc.icon;
-            const tone = accent[svc.tone];
+          {services.map((svc) => {
+            const style = SERVICE_STYLE[svc.key];
+            const Icon = style.icon;
+            const tone = accent[style.tone];
             const st = SERVICE_STATE[svc.state];
             return (
               <div key={svc.name} className="border border-edu-border rounded-edu-control p-3.5 flex flex-col gap-3">
@@ -331,7 +305,7 @@ export function ProgramadorDashboard() {
         <SectionHeader title="Distribución de usuarios por rol" link={`${totalUsuarios} usuarios en total`} />
         <div className="px-5 py-[18px] h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={ROLE_DISTRIBUTION} layout="vertical" margin={{ top: 4, right: 24, bottom: 4, left: 12 }} barCategoryGap="28%">
+            <BarChart data={roleDistribution} layout="vertical" margin={{ top: 4, right: 24, bottom: 4, left: 12 }} barCategoryGap="28%">
               <CartesianGrid horizontal={false} stroke={color.borderSoft} />
               <XAxis type="number" tick={{ fontSize: 11, fill: color.ink400 }} axisLine={{ stroke: color.border }} tickLine={false} />
               <YAxis
@@ -349,7 +323,7 @@ export function ProgramadorDashboard() {
                 formatter={(value: number) => [`${value} usuarios`, "Cantidad"]}
               />
               <Bar dataKey="usuarios" radius={[0, 6, 6, 0]} maxBarSize={22}>
-                {ROLE_DISTRIBUTION.map((entry) => (
+                {roleDistribution.map((entry) => (
                   <Cell key={entry.role} fill={entry.fill} />
                 ))}
               </Bar>
@@ -362,12 +336,12 @@ export function ProgramadorDashboard() {
       <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
         <SectionHeader title="Registros recientes (logs)" link="Ver todos los registros" />
         <div>
-          {LOGS.map((log, i) => {
+          {logs.map((log, i) => {
             const lvl = LOG_STYLE[log.level];
             return (
               <div
                 key={i}
-                className={`flex items-center gap-3.5 px-5 py-[11px] ${i < LOGS.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                className={`flex items-center gap-3.5 px-5 py-[11px] ${i < logs.length - 1 ? "border-b border-edu-border-soft" : ""}`}
               >
                 <span className="font-mono text-[0.78rem] text-edu-ink-400 shrink-0 w-[68px]">{log.time}</span>
                 <span className="shrink-0 w-[104px]">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
     PlusCircle,
@@ -13,7 +13,9 @@ import {
     ArrowLeft,
     Wrench,
 } from "lucide-react";
-import { LAPSO, MIN_REP, getReparacionById, saveReparacion, type ReparacionEval } from "../data/reparaciones";
+import { LAPSO, MIN_REP } from "../datos_maquetados/data/reparaciones";
+import { useFetch } from "../datos_maquetados";
+import { getReparacionById, guardarReparacion, type ReparacionEval } from "../datos_maquetados/actions/reparaciones";
 
 const emptyRow = (id: number): ReparacionEval => ({
     id,
@@ -27,12 +29,16 @@ const emptyRow = (id: number): ReparacionEval => ({
 export function DocenteReparacionFormPage() {
     const navigate = useNavigate();
     const { id } = useParams();
-    const reparacion = getReparacionById(id);
+    const { data: reparacion, loading } = useFetch(() => getReparacionById(id ?? ""), undefined, [id]);
 
-    const [rows, setRows] = useState<ReparacionEval[]>(() => {
-        if (reparacion?.evaluations && reparacion.evaluations.length) return reparacion.evaluations.map((e) => ({ ...e, files: [...e.files] }));
-        return Array.from({ length: MIN_REP }, (_, i) => ({ ...emptyRow(i + 1), content: `Evaluación ${i + 1}` }));
-    });
+    const [rows, setRows] = useState<ReparacionEval[]>([]);
+    useEffect(() => {
+        if (reparacion?.evaluations && reparacion.evaluations.length) {
+            setRows(reparacion.evaluations.map((e) => ({ ...e, files: [...e.files] })));
+        } else {
+            setRows(Array.from({ length: MIN_REP }, (_, i) => ({ ...emptyRow(i + 1), content: `Evaluación ${i + 1}` })));
+        }
+    }, [reparacion]);
     const [activeTab, setActiveTab] = useState<number | "review">(0);
 
     const updateRow = (rid: number, field: keyof ReparacionEval, value: string) => {
@@ -75,6 +81,8 @@ export function DocenteReparacionFormPage() {
         "border-[1.5px] border-edu-border rounded-edu-control px-3.5 py-2.5 text-edu-ink outline-none bg-edu-subtle text-[0.9375rem] w-full focus:border-edu-primary";
     const labelCls = "text-edu-ink-700 text-sm font-medium";
 
+    if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
     // Reparación inexistente
     if (!reparacion) {
         return (
@@ -95,9 +103,9 @@ export function DocenteReparacionFormPage() {
 
     const yaCreada = reparacion.status === "creada";
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        saveReparacion(reparacion.id, rows);
+        await guardarReparacion(reparacion.id, rows);
         navigate("/docente/reparaciones", {
             state: { feedback: yaCreada ? "La reparación fue actualizada." : "Reparación creada correctamente." },
         });
@@ -214,7 +222,7 @@ export function DocenteReparacionFormPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex flex-col gap-1.5">
                                 <label className={labelCls}>Fecha</label>
                                 <input
@@ -278,7 +286,7 @@ export function DocenteReparacionFormPage() {
                 {/* Pestaña "Datos colocados" (revisión) */}
                 {activeTab === "review" && (
                     <div className="flex flex-col gap-4">
-                        <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-3">
+                        <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Materia</div>
                                 <div className="text-[0.875rem] text-edu-ink font-medium">{reparacion.subject}</div>
@@ -290,6 +298,8 @@ export function DocenteReparacionFormPage() {
                         </div>
 
                         <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <div className="min-w-[680px]">
                             <div className="grid grid-cols-[0.4fr_1.6fr_1fr_1.2fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
                                 {["#", "Evaluación", "Fecha", "Horario", "Archivos"].map((h, idx) => (
                                     <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">{h}</span>
@@ -309,6 +319,8 @@ export function DocenteReparacionFormPage() {
                                     <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
                                 </div>
                             ))}
+                            </div>
+                          </div>
                         </div>
 
                         {/* Verificación */}

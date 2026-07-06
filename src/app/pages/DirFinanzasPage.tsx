@@ -23,6 +23,8 @@ import {
   Tooltip,
 } from "recharts";
 import { color, accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import { getIngresos, getDeudores, getPagosPendientes } from "../datos_maquetados/actions/director";
 
 /* ------------------------------------------------------------------ */
 /* Datos ficticios                                                     */
@@ -47,45 +49,6 @@ const PAGOS_MONEDA = [
   { name: "USD", value: 46, fill: color.success },
   { name: "Bs.", value: 33, fill: color.warning },
   { name: "COP", value: 21, fill: color.primary },
-];
-
-const MONTHLY = [
-  { mes: "Feb", ingresos: 6800 },
-  { mes: "Mar", ingresos: 7250 },
-  { mes: "Abr", ingresos: 7020 },
-  { mes: "May", ingresos: 7980 },
-  { mes: "Jun", ingresos: 8210 },
-  { mes: "Jul", ingresos: 8450 },
-];
-
-interface Debtor {
-  id: number;
-  name: string;
-  student: string;
-  months: number;
-  amount: string;
-  phone: string;
-}
-
-const DEBTORS: Debtor[] = [
-  { id: 1, name: "Carmen Rojas", student: "Luis Fernández — 4.º B", months: 3, amount: "600 USD", phone: "0414-123..." },
-  { id: 2, name: "Pedro Malavé", student: "Andrea Malavé — 2.º A", months: 2, amount: "400 USD", phone: "0424-556..." },
-  { id: 3, name: "Yolanda Pérez", student: "Diego Pérez — 5.º C", months: 4, amount: "800 USD", phone: "0416-778..." },
-  { id: 4, name: "José Guerra", student: "Marta Guerra — 1.º B", months: 1, amount: "200 USD", phone: "0412-990..." },
-];
-
-interface PendingPayment {
-  id: number;
-  rep: string;
-  amount: string;
-  method: string;
-  date: string;
-}
-
-const PENDING: PendingPayment[] = [
-  { id: 1, rep: "Ana Beltrán", amount: "200 USD", method: "Zelle", date: "2 jul 2026" },
-  { id: 2, rep: "Luis Contreras", amount: "7.300 Bs.", method: "Pago Móvil", date: "1 jul 2026" },
-  { id: 3, rep: "María Salcedo", amount: "780.000 COP", method: "Nequi", date: "1 jul 2026" },
 ];
 
 interface InventoryItem {
@@ -168,6 +131,13 @@ export function DirFinanzasPage() {
   const [contacted, setContacted] = useState<number[]>([]);
   const [confirmed, setConfirmed] = useState<number[]>([]);
 
+  const { data: MONTHLY, loading: loadingIngresos } = useFetch(getIngresos, []);
+  const { data: DEBTORS, loading: loadingDeudores } = useFetch(getDeudores, []);
+  const { data: PENDING, loading: loadingPendientes } = useFetch(getPagosPendientes, []);
+
+  if (loadingIngresos || loadingDeudores || loadingPendientes)
+    return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
   const pendingList = PENDING.filter((p) => !confirmed.includes(p.id));
 
   return (
@@ -181,7 +151,7 @@ export function DirFinanzasPage() {
       </div>
 
       {/* Fila de KPIs de ingresos */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {INCOME_KPIS.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -202,7 +172,7 @@ export function DirFinanzasPage() {
       </div>
 
       {/* Ingresos mensuales + pagos por moneda + inventario */}
-      <div className="grid grid-cols-[1.5fr_0.9fr_1fr] gap-4 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.5fr_0.9fr_1fr] gap-4 items-stretch">
         <SectionCard title="Ingresos mensuales" hint="Equivalente en USD · últimos 6 meses">
           <div className="px-3 pt-[18px] pb-3 flex-1">
             <ResponsiveContainer width="100%" height={230}>
@@ -264,7 +234,8 @@ export function DirFinanzasPage() {
 
       {/* Representantes deudores */}
       <SectionCard title="Representantes deudores" hint={`${DEBTORS.length} sin solvencia`}>
-        <div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[680px]">
           <div className="grid grid-cols-[1.2fr_1.4fr_0.7fr_0.8fr_0.9fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
             {["Representante", "Estudiante", "Meses", "Monto", "Acción"].map((h) => (
               <Th key={h}>{h}</Th>
@@ -294,6 +265,7 @@ export function DirFinanzasPage() {
               </div>
             );
           })}
+          </div>
         </div>
       </SectionCard>
 
@@ -305,7 +277,8 @@ export function DirFinanzasPage() {
             <span className="text-sm text-edu-ink-500">No hay pagos pendientes por confirmar.</span>
           </div>
         ) : (
-          <div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[680px]">
             <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
               {["Representante", "Monto", "Método", "Fecha", "Acción"].map((h) => (
                 <Th key={h}>{h}</Th>
@@ -330,6 +303,7 @@ export function DirFinanzasPage() {
                 </button>
               </div>
             ))}
+            </div>
           </div>
         )}
       </SectionCard>

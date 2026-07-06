@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import {
     ChevronDown,
@@ -15,7 +15,8 @@ import {
     MessageCircle,
 } from "lucide-react";
 import { color } from "../theme/tokens";
-import { getCourseById, EXTRA_COURSES, type CourseEvaluation } from "../data/courses";
+import { useFetch } from "../datos_maquetados";
+import { getCursoExtraById, type CourseEvaluation } from "../datos_maquetados/actions/courses";
 
 const TYPE_META: Record<CourseEvaluation["type"], { icon: React.FC<{ style?: React.CSSProperties }>; bg: string; color: string; label: string }> = {
     presentation: { icon: Presentation, bg: color.primary50, color: color.primary, label: "Exposición" },
@@ -127,9 +128,27 @@ function EvaluationCard({ evaluation, defaultOpen, preview }: { evaluation: Cour
 export function CourseDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const course = getCourseById(id) ?? EXTRA_COURSES[0];
-    const isEnrolled = !!course.enrollment;
+    const fetchCourse = useCallback(() => getCursoExtraById(id ?? ""), [id]);
+    const { data: course, loading } = useFetch(fetchCourse, undefined, [id]);
     const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
+
+    if (loading) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                Cargando curso…
+            </div>
+        );
+    }
+
+    if (!course) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                No se encontró el curso.
+            </div>
+        );
+    }
+
+    const isEnrolled = !!course.enrollment;
 
     const evaluations = course.evaluations;
     const pendingCount = evaluations.filter((e) => e.status === "pending").length;
@@ -155,9 +174,9 @@ export function CourseDetailPage() {
                 Volver a cursos
             </button>
 
-            <div className="grid grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-                <div className="col-span-2 space-y-2">
+                <div className="lg:col-span-2 space-y-2">
                     {/* Banner del curso */}
                     <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
                         <div>
@@ -199,7 +218,7 @@ export function CourseDetailPage() {
 
                     {isEnrolled ? (
                         /* Resumen — solo para cursos en los que participo */
-                        <div className="grid grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 bg-edu-surface rounded-edu-card border border-edu-border-soft px-[22px] py-4 gap-0">
                             {[
                                 { label: "Evaluaciones", value: `${gradedEvals.length}/${evaluations.length}`, color: color.success },
                                 { label: "Promedio", value: avg !== null ? `${avg.toFixed(1).replace(".", ",")}/20` : "—", color: color.primary },
@@ -235,7 +254,7 @@ export function CourseDetailPage() {
                 </div>
 
                 {/* Plan de evaluación */}
-                <div className="col-span-3">
+                <div className="lg:col-span-3">
                     <div className="flex justify-between items-center mb-3">
                         <div>
                             <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación</h3>

@@ -1,10 +1,10 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
-import { Bell, ChevronDown, LogOut, User, Repeat, X, ArrowLeft, CalendarRange } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, Repeat, X, ArrowLeft, CalendarRange, Menu } from "lucide-react";
 import { ROLES, ROLE_ORDER, roleFromPath, type NavItem, type RoleConfig } from "../roles";
-import { SOLVENT, DEBT_LEVEL, DEBT_MESSAGE, DEBT_STYLES } from "../data/solvency";
-import { CONVERSATIONS } from "../data/chats";
-import { CURRENT_LAPSO } from "../data/lapsos";
+import { SOLVENT, DEBT_LEVEL, DEBT_MESSAGE, DEBT_STYLES } from "../datos_maquetados/data/solvency";
+import { CONVERSATIONS } from "../datos_maquetados/data/chats";
+import { CURRENT_LAPSO } from "../datos_maquetados/data/lapsos";
 import { FloatingChat } from "./FloatingChat";
 
 export function AppLayout() {
@@ -18,6 +18,7 @@ export function AppLayout() {
   // Vistas "a pantalla completa": ocultan la barra lateral y el chat flotante.
   const chromeless = onMessagesPage || onPresentacionPage;
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showRoleSwitch, setShowRoleSwitch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   // Se reinicia en cada recarga: si el estudiante es moroso, el banner reaparece.
@@ -56,7 +57,13 @@ export function AppLayout() {
     <div className="flex min-h-screen bg-edu-bg">
       {/* Barra lateral — oculta en las vistas a pantalla completa (Mensajes, Presentación) */}
       {!chromeless && (
-        <aside className="w-56 h-screen sticky top-0 bg-edu-surface border-r border-edu-border flex flex-col shrink-0 overflow-hidden">
+        <>
+          {/* Backdrop para cerrar el menú en móvil */}
+          <div
+            className={`fixed inset-0 bg-black/40 z-30 md:hidden transition-opacity duration-300 ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+            onClick={() => setSidebarOpen(false)}
+          />
+        <aside className={`fixed top-0 left-0 h-screen z-40 w-56 bg-edu-surface border-r border-edu-border flex flex-col shrink-0 overflow-hidden transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:sticky md:top-0 md:translate-x-0`}>
           {/* Logo */}
           <div className="px-5 pt-5 pb-4 border-b border-edu-border-soft flex items-center gap-2.5">
             <div className="w-[34px] h-[34px] rounded-edu-control bg-edu-primary flex items-center justify-center shrink-0">
@@ -73,7 +80,7 @@ export function AppLayout() {
           </div>
 
           {/* Navegación — se re-monta al cambiar de rol (key) para reiniciar el acordeón */}
-          <SidebarNav key={role.id} role={role} isActive={isActive} fullPath={fullPath} />
+          <SidebarNav key={role.id} role={role} isActive={isActive} fullPath={fullPath} onNavigate={() => setSidebarOpen(false)} />
 
           {/* Usuario */}
           <div className="px-2.5 py-3 border-t border-edu-border-soft flex items-center gap-2.5">
@@ -97,6 +104,7 @@ export function AppLayout() {
             </button>
           </div>
         </aside>
+        </>
       )}
 
       {/* Columna principal */}
@@ -104,6 +112,15 @@ export function AppLayout() {
         {/* Encabezado */}
         <header className="h-[60px] bg-edu-surface border-b border-edu-border flex items-center justify-between px-6 gap-4 sticky top-0 z-20">
           <div className="flex items-center gap-3 min-w-0">
+            {!chromeless && (
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label="Menú"
+                className="md:hidden w-9 h-9 rounded-full border-[1.5px] border-edu-border bg-edu-subtle cursor-pointer flex items-center justify-center text-edu-ink-500 shrink-0"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
             {chromeless && (
               <button
                 onClick={() => navigate(-1)}
@@ -114,8 +131,8 @@ export function AppLayout() {
               </button>
             )}
             <div className="min-w-0">
-              <h2 className="text-edu-ink font-semibold text-base m-0">{currentTitle}</h2>
-              <p className="text-edu-ink-400 text-xs m-0">
+              <h2 className="text-edu-ink font-semibold text-base m-0 truncate">{currentTitle}</h2>
+              <p className="text-edu-ink-400 text-xs m-0 hidden sm:block truncate">
                 {today.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </p>
             </div>
@@ -248,7 +265,7 @@ export function AppLayout() {
         )}
 
         {/* Contenido de la página */}
-        <main className={chromeless ? "flex-1 flex flex-col min-h-0" : "flex-1 p-6 flex flex-col gap-5"}>
+        <main className={chromeless ? "flex-1 flex flex-col min-h-0" : "flex-1 p-3 sm:p-6 flex flex-col gap-5"}>
           <Outlet />
         </main>
       </div>
@@ -283,10 +300,12 @@ function SidebarNav({
   role,
   isActive,
   fullPath,
+  onNavigate,
 }: {
   role: RoleConfig;
   isActive: (item: NavItem) => boolean;
   fullPath: (item: NavItem) => string;
+  onNavigate?: () => void;
 }) {
   const navigate = useNavigate();
 
@@ -379,7 +398,7 @@ function SidebarNav({
     return (
       <button
         key={item.label}
-        onClick={() => ready && navigate(fullPath(item))}
+        onClick={() => { if (ready) { navigate(fullPath(item)); onNavigate?.(); } }}
         disabled={!ready}
         title={ready ? item.label : `${item.label} · próximamente`}
         className={`flex items-center gap-2.5 px-3 py-[9px] rounded-edu-chip border-none w-full text-left text-sm transition-colors

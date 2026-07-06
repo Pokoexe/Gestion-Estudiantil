@@ -6,7 +6,7 @@ import {
   Save,
 } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import { LAPSOS, CURRENT_LAPSO_ID, type Lapso } from "../data/lapsos";
+import { LAPSOS, CURRENT_LAPSO_ID, type Lapso } from "../datos_maquetados/data/lapsos";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
@@ -191,6 +191,8 @@ export function LapsosPage() {
         </div>
 
         {/* Cabecera */}
+        <div className="overflow-x-auto">
+        <div className="min-w-[760px]">
         <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
           {HEADERS.map((h) => (
             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
@@ -248,6 +250,8 @@ export function LapsosPage() {
             </div>
           );
         })}
+        </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">
@@ -263,7 +267,7 @@ export function LapsosPage() {
           onClick={() => setEditTarget(null)}
         >
           <div
-            className="bg-edu-surface rounded-edu-card w-full max-w-sm shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
+            className="bg-edu-surface rounded-edu-card w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
@@ -288,7 +292,7 @@ export function LapsosPage() {
               <div className="px-3.5 py-2.5 rounded-edu-control bg-edu-subtle border border-edu-border-soft text-[0.8125rem] text-edu-ink-700">
                 {lapsos.find((l) => l.id === editTarget)?.fullLabel}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Inicio</label>
                   <input
@@ -339,7 +343,7 @@ export function LapsosPage() {
           onClick={() => setShowNuevo(false)}
         >
           <div
-            className="bg-edu-surface rounded-edu-card w-full max-w-sm shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
+            className="bg-edu-surface rounded-edu-card w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
@@ -361,7 +365,7 @@ export function LapsosPage() {
               </button>
             </div>
             <form onSubmit={agregarLapso} className="p-5 flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Numeral (romano)</label>
                   <input
@@ -385,7 +389,7 @@ export function LapsosPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-edu-ink-700 text-sm font-medium">Inicio</label>
                   <input

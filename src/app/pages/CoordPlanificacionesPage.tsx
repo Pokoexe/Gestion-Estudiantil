@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     ClipboardList,
     CheckCircle2,
@@ -9,31 +9,16 @@ import {
     MessageSquareWarning,
 } from "lucide-react";
 import { accent } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import {
+    getPlanificacionesCoord,
+    type Planificacion,
+    type EstadoPlan,
+} from "../datos_maquetados/actions/coordinador";
 
 /* ------------------------------------------------------------------ */
-/* Tipos y datos ficticios                                             */
+/* Presentación                                                        */
 /* ------------------------------------------------------------------ */
-
-type EstadoPlan = "Pendiente" | "Aprobada" | "Rechazada";
-
-interface Planificacion {
-    id: number;
-    docente: string;
-    materia: string;
-    seccion: string;
-    entrega: string;
-    estado: EstadoPlan;
-    observacion?: string;
-}
-
-const PLANES_INICIALES: Planificacion[] = [
-    { id: 1, docente: "Prof. María Herrera", materia: "Ciencias Naturales", seccion: "4.º Año B", entrega: "1 jul 2026", estado: "Pendiente" },
-    { id: 2, docente: "Prof. Luis Rondón", materia: "Educación Física", seccion: "3.º Año A", entrega: "30 jun 2026", estado: "Pendiente" },
-    { id: 3, docente: "Prof. Carla Yépez", materia: "Castellano", seccion: "5.º Año A", entrega: "28 jun 2026", estado: "Aprobada" },
-    { id: 4, docente: "Prof. José Bracho", materia: "Matemática", seccion: "4.º Año C", entrega: "27 jun 2026", estado: "Rechazada", observacion: "Falta el cronograma de evaluaciones del lapso." },
-    { id: 5, docente: "Prof. Ana Salazar", materia: "Historia de Venezuela", seccion: "2.º Año B", entrega: "26 jun 2026", estado: "Aprobada" },
-    { id: 6, docente: "Prof. Pedro Uzcátegui", materia: "Química", seccion: "5.º Año B", entrega: "25 jun 2026", estado: "Pendiente" },
-];
 
 const ESTADO_META: Record<EstadoPlan, { cls: string }> = {
     Pendiente: { cls: "bg-edu-warning-bg text-edu-warning" },
@@ -49,7 +34,9 @@ const HEADERS = ["Docente", "Materia", "Sección", "Entrega", "Estado", "Accione
 /* ------------------------------------------------------------------ */
 
 export function CoordPlanificacionesPage() {
-    const [planes, setPlanes] = useState<Planificacion[]>(PLANES_INICIALES);
+    const { data: planesFetched } = useFetch(getPlanificacionesCoord, []);
+    const [planes, setPlanes] = useState<Planificacion[]>([]);
+    useEffect(() => setPlanes(planesFetched), [planesFetched]);
     const [modal, setModal] = useState<{ id: number; docente: string } | null>(null);
     const [observacion, setObservacion] = useState("");
 
@@ -88,7 +75,7 @@ export function CoordPlanificacionesPage() {
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {kpis.map((kpi) => {
                     const Icon = kpi.icon;
                     return (
@@ -111,7 +98,8 @@ export function CoordPlanificacionesPage() {
                     <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Planificaciones entregadas</h3>
                     <span className="text-[0.8rem] text-edu-ink-400 font-medium">{planes.length} registros</span>
                 </div>
-                <div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[760px]">
                     <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {HEADERS.map((h) => (
                             <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
@@ -152,13 +140,14 @@ export function CoordPlanificacionesPage() {
                             </div>
                         );
                     })}
+                    </div>
                 </div>
             </div>
 
             {/* Modal de observación al rechazar */}
             {modal && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setModal(null)}>
-                    <div className="bg-edu-surface rounded-edu-card w-full max-w-md shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-edu-surface rounded-edu-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
                         <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-edu-control bg-edu-danger-bg flex items-center justify-center">

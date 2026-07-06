@@ -2,171 +2,21 @@ import { useState } from "react";
 import { Search, Users, CircleAlert, ChevronRight, X, User, CheckCircle2, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Pagination } from "../components/Pagination";
+import { useFetch } from "../datos_maquetados";
+import { getEstudiantesReparacion, type StudentRow, type MatStatus } from "../datos_maquetados/actions/evaluador-discusion";
 
 const TEAL = "#0d9488";
 const TEAL_BG = "#ccfbf1";
 const PER_PAGE = 8;
-
-type MatStatus = "aprobada" | "reprobada" | "pendiente" | "reparando";
-
-interface Materia {
-  name: string;
-  status: MatStatus;
-}
-
-interface StudentRow {
-  id: number;
-  name: string;
-  cedula: string;
-  anio: string;
-  seccion: string;
-  materias: Materia[];
-}
 
 const DONUT_COLORS = [
   "#f43f5e", "#f97316", "#eab308", "#22c55e",
   "#06b6d4", "#8b5cf6", "#ec4899", "#64748b",
 ];
 
-const ESTUDIANTES: StudentRow[] = [
-  {
-    id: 1, name: "Carlos Mendoza", cedula: "V-28.451.200", anio: "4to", seccion: "A",
-    materias: [
-      { name: "Matemática", status: "reprobada" },
-      { name: "Física", status: "pendiente" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Inglés", status: "aprobada" },
-      { name: "Química", status: "reprobada" },
-    ],
-  },
-  {
-    id: 2, name: "Ana González", cedula: "V-29.102.334", anio: "4to", seccion: "B",
-    materias: [
-      { name: "Matemática", status: "pendiente" },
-      { name: "Historia", status: "reprobada" },
-      { name: "Inglés", status: "aprobada" },
-      { name: "Química", status: "aprobada" },
-      { name: "Literatura", status: "pendiente" },
-    ],
-  },
-  {
-    id: 3, name: "Miguel Torres", cedula: "V-30.200.111", anio: "5to", seccion: "A",
-    materias: [
-      { name: "Física", status: "reprobada" },
-      { name: "Química", status: "reprobada" },
-      { name: "Biología", status: "reprobada" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Inglés", status: "aprobada" },
-    ],
-  },
-  {
-    id: 4, name: "Sofía Ramírez", cedula: "V-28.700.220", anio: "3ro", seccion: "C",
-    materias: [
-      { name: "Matemática", status: "reprobada" },
-      { name: "Geografía", status: "pendiente" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Inglés", status: "aprobada" },
-      { name: "Literatura", status: "aprobada" },
-    ],
-  },
-  {
-    id: 5, name: "Luis Herrera", cedula: "V-31.050.405", anio: "5to", seccion: "B",
-    materias: [
-      { name: "Matemática", status: "pendiente" },
-      { name: "Física", status: "pendiente" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Inglés", status: "reprobada" },
-      { name: "Química", status: "aprobada" },
-    ],
-  },
-  {
-    id: 6, name: "Valentina Díaz", cedula: "V-29.900.876", anio: "4to", seccion: "A",
-    materias: [
-      { name: "Literatura", status: "reprobada" },
-      { name: "Inglés", status: "pendiente" },
-      { name: "Matemática", status: "aprobada" },
-      { name: "Física", status: "aprobada" },
-      { name: "Química", status: "aprobada" },
-    ],
-  },
-  {
-    id: 7, name: "Pedro Castillo", cedula: "V-30.445.120", anio: "3ro", seccion: "A",
-    materias: [
-      { name: "Biología", status: "reprobada" },
-      { name: "Geografía", status: "reprobada" },
-      { name: "Historia", status: "pendiente" },
-      { name: "Inglés", status: "aprobada" },
-      { name: "Matemática", status: "aprobada" },
-    ],
-  },
-  {
-    id: 8, name: "Camila Flores", cedula: "V-28.312.990", anio: "3ro", seccion: "B",
-    materias: [
-      { name: "Química", status: "pendiente" },
-      { name: "Física", status: "aprobada" },
-      { name: "Matemática", status: "aprobada" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Literatura", status: "reprobada" },
-    ],
-  },
-  {
-    id: 9, name: "Andrés Morales", cedula: "V-31.200.654", anio: "5to", seccion: "C",
-    materias: [
-      { name: "Matemática", status: "reprobada" },
-      { name: "Física", status: "reprobada" },
-      { name: "Química", status: "reprobada" },
-      { name: "Inglés", status: "pendiente" },
-      { name: "Historia", status: "aprobada" },
-    ],
-  },
-  {
-    id: 10, name: "Isabella Ruiz", cedula: "V-29.567.008", anio: "4to", seccion: "C",
-    materias: [
-      { name: "Geografía", status: "pendiente" },
-      { name: "Biología", status: "pendiente" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Literatura", status: "aprobada" },
-      { name: "Inglés", status: "aprobada" },
-    ],
-  },
-  {
-    id: 11, name: "Sebastián Vega", cedula: "V-30.890.230", anio: "3ro", seccion: "C",
-    materias: [
-      { name: "Matemática", status: "reprobada" },
-      { name: "Historia", status: "reprobada" },
-      { name: "Inglés", status: "aprobada" },
-      { name: "Literatura", status: "aprobada" },
-      { name: "Geografía", status: "aprobada" },
-    ],
-  },
-  {
-    id: 12, name: "Mariana López", cedula: "V-28.150.440", anio: "5to", seccion: "A",
-    materias: [
-      { name: "Inglés", status: "reprobada" },
-      { name: "Literatura", status: "pendiente" },
-      { name: "Matemática", status: "aprobada" },
-      { name: "Historia", status: "aprobada" },
-      { name: "Biología", status: "aprobada" },
-    ],
-  },
-];
-
-const RIESGO_STUDENTS = ESTUDIANTES.filter(
-  (s) => s.materias.some((m) => m.status === "reprobada" || m.status === "pendiente"),
-);
-
-const pendienteCount = RIESGO_STUDENTS.filter(
-  (s) => s.materias.some((m) => m.status === "pendiente"),
-).length;
-
-const totalReprobadas = RIESGO_STUDENTS.reduce(
-  (acc, s) => acc + s.materias.filter((m) => m.status === "reprobada").length,
-  0,
-);
-
-function buildDonutData() {
+function buildDonutData(riesgo: StudentRow[]) {
   const map = new Map<string, number>();
-  for (const s of RIESGO_STUDENTS) {
+  for (const s of riesgo) {
     for (const m of s.materias) {
       if (m.status === "reprobada" || m.status === "pendiente") {
         map.set(m.name, (map.get(m.name) ?? 0) + 1);
@@ -177,8 +27,6 @@ function buildDonutData() {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 }
-
-const DONUT_DATA = buildDonutData();
 
 function studentStatus(s: StudentRow): { label: string; cls: string } {
   const rep = s.materias.filter((m) => m.status === "reprobada").length;
@@ -202,6 +50,23 @@ export function EvalReparacionesPage() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<StudentRow | null>(null);
 
+  const { data: estudiantes, loading } = useFetch(getEstudiantesReparacion, []);
+
+  const RIESGO_STUDENTS = estudiantes.filter(
+    (s) => s.materias.some((m) => m.status === "reprobada" || m.status === "pendiente"),
+  );
+
+  const pendienteCount = RIESGO_STUDENTS.filter(
+    (s) => s.materias.some((m) => m.status === "pendiente"),
+  ).length;
+
+  const totalReprobadas = RIESGO_STUDENTS.reduce(
+    (acc, s) => acc + s.materias.filter((m) => m.status === "reprobada").length,
+    0,
+  );
+
+  const DONUT_DATA = buildDonutData(RIESGO_STUDENTS);
+
   const rows = RIESGO_STUDENTS.filter(
     (s) =>
       !query.trim() ||
@@ -213,10 +78,12 @@ export function EvalReparacionesPage() {
   const currentPage = Math.min(page, totalPages);
   const paged = rows.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
+  if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
+
   return (
     <div className="flex flex-col gap-5">
       {/* Top: 2-column grid */}
-      <div className="grid grid-cols-2 gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         {/* Left: 2 KPIs stacked */}
         <div className="flex flex-col gap-4">
           <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 flex-1">
@@ -271,7 +138,7 @@ export function EvalReparacionesPage() {
               Incluye materias pendientes
             </p>
           </div>
-          <div className="flex gap-5 items-center flex-1">
+          <div className="flex flex-col sm:flex-row gap-5 items-center flex-1">
             <div className="shrink-0" style={{ width: 150, height: 150 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -340,67 +207,71 @@ export function EvalReparacionesPage() {
           </div>
         </div>
 
-        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-          {HEADERS.map((h) => (
-            <span
-              key={h}
-              className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-            >
-              {h}
-            </span>
-          ))}
-        </div>
-
-        {rows.length === 0 && (
-          <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-            No hay estudiantes que coincidan con la búsqueda.
-          </div>
-        )}
-
-        {paged.map((s, i) => {
-          const repCount = s.materias.filter((m) => m.status === "reprobada").length;
-          const penCount = s.materias.filter((m) => m.status === "pendiente").length;
-          const st = studentStatus(s);
-          return (
-            <div
-              key={s.id}
-              onClick={() => setSelected(s)}
-              className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${
-                i < paged.length - 1 ? "border-b border-edu-border-soft" : ""
-              }`}
-            >
-              <div>
-                <div className="text-[0.875rem] text-edu-ink font-medium">{s.name}</div>
-                <div className="text-[0.75rem] text-edu-ink-400 mt-0.5">{s.cedula}</div>
-              </div>
-              <span className="text-[0.875rem] text-edu-ink-700">
-                {s.anio} {s.seccion}
-              </span>
-              <span
-                className={`text-[0.875rem] font-semibold ${
-                  repCount > 0 ? "text-edu-danger" : "text-edu-ink-400"
-                }`}
-              >
-                {repCount}
-              </span>
-              <span
-                className={`text-[0.875rem] font-semibold ${
-                  penCount > 0 ? "text-edu-warning" : "text-edu-ink-400"
-                }`}
-              >
-                {penCount}
-              </span>
-              <span
-                className={`inline-flex items-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
-              >
-                {st.label}
-              </span>
-              <div className="flex justify-end">
-                <ChevronRight className="w-4 h-4 text-edu-ink-300" />
-              </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[760px]">
+            <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+              {HEADERS.map((h) => (
+                <span
+                  key={h}
+                  className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                >
+                  {h}
+                </span>
+              ))}
             </div>
-          );
-        })}
+
+            {rows.length === 0 && (
+              <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                No hay estudiantes que coincidan con la búsqueda.
+              </div>
+            )}
+
+            {paged.map((s, i) => {
+              const repCount = s.materias.filter((m) => m.status === "reprobada").length;
+              const penCount = s.materias.filter((m) => m.status === "pendiente").length;
+              const st = studentStatus(s);
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setSelected(s)}
+                  className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${
+                    i < paged.length - 1 ? "border-b border-edu-border-soft" : ""
+                  }`}
+                >
+                  <div>
+                    <div className="text-[0.875rem] text-edu-ink font-medium">{s.name}</div>
+                    <div className="text-[0.75rem] text-edu-ink-400 mt-0.5">{s.cedula}</div>
+                  </div>
+                  <span className="text-[0.875rem] text-edu-ink-700">
+                    {s.anio} {s.seccion}
+                  </span>
+                  <span
+                    className={`text-[0.875rem] font-semibold ${
+                      repCount > 0 ? "text-edu-danger" : "text-edu-ink-400"
+                    }`}
+                  >
+                    {repCount}
+                  </span>
+                  <span
+                    className={`text-[0.875rem] font-semibold ${
+                      penCount > 0 ? "text-edu-warning" : "text-edu-ink-400"
+                    }`}
+                  >
+                    {penCount}
+                  </span>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
+                  >
+                    {st.label}
+                  </span>
+                  <div className="flex justify-end">
+                    <ChevronRight className="w-4 h-4 text-edu-ink-300" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-5 py-4 border-t border-edu-border-soft">

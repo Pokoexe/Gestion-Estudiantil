@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     CreditCard,
+    Search,
     CheckCircle2,
     AlertTriangle,
     Info,
@@ -20,30 +21,11 @@ import {
     MONTHS_LABEL as monthsLabel,
     BILLING_DAY,
     FEE_CURRENCY,
-} from "../data/solvency";
+} from "../datos_maquetados/data/solvency";
 import { BaucheModal } from "../components/BaucheModal";
-
-type PayType = "efectivo" | "manual";
-type PayStatus = "confirmed" | "review" | "rejected";
-
-interface Payment {
-    id: number;
-    amount: number;
-    currency: string;
-    date: string;
-    type: PayType;
-    status: PayStatus;
-    voucher: string;
-    receiptUrl?: string; // foto del comprobante subida por el estudiante
-}
-
-const PAYMENTS: Payment[] = [
-    { id: 1, amount: 200, currency: "USD", date: "5 jun 2026", type: "efectivo", status: "confirmed", voucher: "" },
-    { id: 2, amount: 3000, currency: "Bs.", date: "5 may 2026", type: "manual", status: "confirmed", voucher: "A-1024" },
-    { id: 3, amount: 200, currency: "USD", date: "5 abr 2026", type: "manual", status: "confirmed", voucher: "A-0987" },
-    { id: 4, amount: 200, currency: "USD", date: "6 mar 2026", type: "manual", status: "rejected", voucher: "A-0955" },
-    { id: 5, amount: 780000, currency: "COP", date: "5 feb 2026", type: "efectivo", status: "confirmed", voucher: "" },
-];
+import { useFetch } from "../datos_maquetados";
+import { getPagos, type Payment, type PayStatus } from "../datos_maquetados/actions/estudiante";
+import { Pagination } from "../components/Pagination";
 
 const STATUS_META: Record<PayStatus, { label: string; cls: string }> = {
     confirmed: { label: "Confirmado", cls: "bg-edu-success-bg text-edu-success" },
@@ -104,9 +86,14 @@ const formatDate = (d: Date) => `${d.getDate()} ${MONTHS_ES[d.getMonth()]} ${d.g
 
 const PAY_COLS = "grid-cols-[1fr_0.8fr_1fr_1fr_1.1fr_1fr]";
 const PAY_HEADERS = ["Monto", "Moneda", "Fecha", "Tipo", "Estado", "Bauche"];
+const PER_PAGE = 5;
 
 export function PagosPage() {
-    const [payments, setPayments] = useState<Payment[]>(PAYMENTS);
+    const { data: fetchedPayments } = useFetch(getPagos, []);
+    const [payments, setPayments] = useState<Payment[]>([]);
+    useEffect(() => setPayments(fetchedPayments), [fetchedPayments]);
+    const [query, setQuery] = useState("");
+    const [page, setPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
@@ -115,6 +102,22 @@ export function PagosPage() {
     const [copied, setCopied] = useState<string | null>(null);
     const [photo, setPhoto] = useState<{ name: string; url: string } | null>(null);
     const [photoError, setPhotoError] = useState(false);
+
+    const filteredPayments = payments.filter((p) => {
+        if (!query.trim()) return true;
+        const q = query.trim().toLowerCase();
+        return (
+            p.voucher.toLowerCase().includes(q) ||
+            p.type.toLowerCase().includes(q) ||
+            p.currency.toLowerCase().includes(q) ||
+            p.date.toLowerCase().includes(q) ||
+            STATUS_META[p.status].label.toLowerCase().includes(q)
+        );
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredPayments.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const pagedPayments = filteredPayments.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     const account = ACCOUNTS_BY_CURRENCY[form.currency];
     const amountToPay = owed * (RATES[form.currency] ?? 1);
@@ -242,9 +245,22 @@ export function PagosPage() {
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
                     <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Historial de pagos</h3>
-                    <span className="text-[0.8rem] text-edu-ink-400 font-medium">{payments.length} pagos</span>
+                    <span className="text-[0.8rem] text-edu-ink-400 font-medium">{filteredPayments.length} pagos</span>
                 </div>
-                <div>
+                <div className="px-5 py-3 border-b border-edu-border-soft">
+                    <div className="relative">
+                        <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                            placeholder="Buscar por bauche, tipo, moneda o estado…"
+                            className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
+                        />
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[720px]">
                     <div className={`grid ${PAY_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {PAY_HEADERS.map((h) => (
                             <span
@@ -255,13 +271,18 @@ export function PagosPage() {
                             </span>
                         ))}
                     </div>
-                    {payments.map((p, i) => {
+                    {filteredPayments.length === 0 && (
+                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                            No hay pagos que coincidan con la búsqueda.
+                        </div>
+                    )}
+                    {pagedPayments.map((p, i) => {
                         const st = STATUS_META[p.status];
                         return (
                             <div
                                 key={p.id}
                                 onClick={() => setSelectedPayment(p)}
-                                className={`grid ${PAY_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < payments.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                className={`grid ${PAY_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedPayments.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <span className="text-[0.875rem] text-edu-ink font-semibold">{money(p.amount)}</span>
                                 <span className="text-[0.875rem] text-edu-ink-700">{p.currency}</span>
@@ -295,7 +316,13 @@ export function PagosPage() {
                             </div>
                         );
                     })}
+                    </div>
                 </div>
+                {totalPages > 1 && (
+                    <div className="px-5 py-4 border-t border-edu-border-soft">
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+                    </div>
+                )}
             </div>
 
             {/* Modal bauche de historial */}

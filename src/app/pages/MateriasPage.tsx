@@ -2,213 +2,11 @@ import { useState } from "react";
 import { Award, TrendingDown, AlertCircle, ChevronRight, Search } from "lucide-react";
 import { useNavigate } from "react-router";
 import { color } from "../theme/tokens";
+import { useFetch } from "../datos_maquetados";
+import { getMaterias, type SubjectStatus } from "../datos_maquetados/actions/estudiante";
+import { Pagination } from "../components/Pagination";
 
-const SCHEDULE: {
-    day: string;
-    classes: { time: string; subject: string; teacher: string; color: string }[];
-}[] = [
-        {
-            day: "Lun",
-            classes: [
-                {
-                    time: "07:00",
-                    subject: "Matemática",
-                    teacher: "Prof. Ramírez",
-                    color: "#dbeafe",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-            ],
-        },
-        {
-            day: "Mar",
-            classes: [
-                {
-                    time: "07:00",
-                    subject: "Literatura",
-                    teacher: "Prof. García",
-                    color: "#dcfce7",
-                },
-                {
-                    time: "10:00",
-                    subject: "Historia",
-                    teacher: "Prof. Flores",
-                    color: "#fce7f3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-            ],
-        },
-        {
-            day: "Mié",
-            classes: [
-                {
-                    time: "08:00",
-                    subject: "Química",
-                    teacher: "Prof. Méndez",
-                    color: "#ede9fe",
-                },
-                {
-                    time: "11:00",
-                    subject: "Matemática",
-                    teacher: "Prof. Ramírez",
-                    color: "#dbeafe",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-            ],
-        },
-        {
-            day: "Jue",
-            classes: [
-                {
-                    time: "07:00",
-                    subject: "Inglés",
-                    teacher: "Prof. Collins",
-                    color: "#ffedd5",
-                },
-                {
-                    time: "09:00",
-                    subject: "Biología",
-                    teacher: "Prof. Ruiz",
-                    color: "#dcfce7",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-            ],
-        },
-        {
-            day: "Vie",
-            classes: [
-                {
-                    time: "08:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "10:00",
-                    subject: "Arte",
-                    teacher: "Prof. Vega",
-                    color: "#fce7f3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-                {
-                    time: "09:00",
-                    subject: "Física",
-                    teacher: "Prof. Torres",
-                    color: "#fef9c3",
-                },
-            ],
-        },
-    ];
-
-type SubjectStatus = "aprobado" | "reprobado" | "por_reprobar";
-
-interface Subject {
-    id: number;
-    name: string;
-    teacher: string;
-    evaluations: number;
-    attendance: string;
-    average: number;
-    rank: number; // posición del estudiante dentro de la materia
-    failedEvals: number; // evaluaciones no aprobadas
-    status: SubjectStatus;
-    dot: string;
-}
-
-const SUBJECTS: Subject[] = [
-    { id: 1, name: "Física", teacher: "Prof. Torres", evaluations: 8, attendance: "96 %", average: 19, rank: 1, failedEvals: 0, status: "aprobado", dot: color.warningStrong },
-    { id: 2, name: "Biología", teacher: "Prof. Ruiz", evaluations: 6, attendance: "94 %", average: 17, rank: 3, failedEvals: 0, status: "aprobado", dot: color.success },
-    { id: 3, name: "Matemática", teacher: "Prof. Ramírez", evaluations: 7, attendance: "92 %", average: 16, rank: 5, failedEvals: 0, status: "aprobado", dot: color.primary },
-    { id: 4, name: "Literatura", teacher: "Prof. García", evaluations: 5, attendance: "90 %", average: 15, rank: 6, failedEvals: 0, status: "aprobado", dot: color.success },
-    { id: 5, name: "Química", teacher: "Prof. Méndez", evaluations: 6, attendance: "88 %", average: 13, rank: 8, failedEvals: 1, status: "aprobado", dot: color.purple },
-    { id: 6, name: "Arte", teacher: "Prof. Vega", evaluations: 4, attendance: "85 %", average: 12, rank: 10, failedEvals: 1, status: "aprobado", dot: color.purple },
-    { id: 7, name: "Historia", teacher: "Prof. Flores", evaluations: 6, attendance: "78 %", average: 10, rank: 15, failedEvals: 2, status: "por_reprobar", dot: color.danger },
-    { id: 8, name: "Inglés", teacher: "Prof. Collins", evaluations: 5, attendance: "70 %", average: 8, rank: 22, failedEvals: 4, status: "reprobado", dot: color.warning },
-];
+const PER_PAGE = 6;
 
 const STATUS_META: Record<SubjectStatus, { label: string; cls: string }> = {
     aprobado: { label: "Aprobado", cls: "bg-edu-success-bg text-edu-success" },
@@ -219,33 +17,45 @@ const STATUS_META: Record<SubjectStatus, { label: string; cls: string }> = {
 const SUBJECT_COLS = "grid-cols-[1.4fr_1.3fr_1fr_1fr_1.1fr_1fr]";
 const SUBJECT_HEADERS = ["Materia", "Profesor", "Evaluaciones", "Asistencia", "Estado", "Promedio"];
 
-
-
 const SUBJECT_COLS_FAILS = "grid-cols-[1.4fr_1fr_1fr]";
 const SUBJECT_HEADERS_FAILS = ["Materia", "Promedio", "Estado"];
 
 export function MateriasPage() {
     const navigate = useNavigate();
     const [query, setQuery] = useState("");
+    const [page, setPage] = useState(1);
+    const { data: subjects, loading } = useFetch(getMaterias, []);
 
-    const best = SUBJECTS.reduce((a, b) => (b.average > a.average ? b : a));
-    const worst = SUBJECTS.reduce((a, b) => (b.average < a.average ? b : a));
-    const failing = SUBJECTS.filter((s) => s.status !== "aprobado");
+    const best = subjects.length ? subjects.reduce((a, b) => (b.average > a.average ? b : a)) : undefined;
+    const worst = subjects.length ? subjects.reduce((a, b) => (b.average < a.average ? b : a)) : undefined;
+    const failing = subjects.filter((s) => s.status !== "aprobado");
 
-    const filteredSubjects = SUBJECTS.filter((s) =>
+    const filteredSubjects = subjects.filter((s) =>
         !query.trim() ||
         s.name.toLowerCase().includes(query.trim().toLowerCase()) ||
         s.teacher.toLowerCase().includes(query.trim().toLowerCase()),
     );
 
+    const totalPages = Math.max(1, Math.ceil(filteredSubjects.length / PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const pagedSubjects = filteredSubjects.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
     const goToSubject = (id: number) => navigate(`/estudiante/materias/${id}`);
+
+    if (loading) {
+        return (
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+                Cargando materias…
+            </div>
+        );
+    }
 
     return (
         <>
-            <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-2 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                <div className="col-span-1 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {/* Asistencia promedio */}
-                    <div className="col-span-2 bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <div className="col-span-1 sm:col-span-2 bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
@@ -280,7 +90,7 @@ export function MateriasPage() {
                                     Materia con más promedio
                                 </p>
                                 <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
-                                    {best.name}
+                                    {best?.name}
                                 </p>
                             </div>
                             <div className="w-10 h-10 rounded-edu-control bg-edu-success-bg flex items-center justify-center shrink-0">
@@ -288,14 +98,14 @@ export function MateriasPage() {
                             </div>
                         </div>
                         <p className="text-edu-ink-700 text-[0.8rem] m-0">
-                            Eres el estudiante n.º {best.rank} de la materia
+                            Eres el estudiante n.º {best?.rank} de la materia
                         </p>
                         <div className="flex items-center justify-between gap-2 mt-auto">
                             <p className="text-edu-ink-400 text-xs m-0">
-                                {best.teacher}
+                                {best?.teacher}
                             </p>
                             <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-success shrink-0">
-                                Promedio de {best.average}
+                                Promedio de {best?.average}
                             </span>
                         </div>
                     </div>
@@ -308,7 +118,7 @@ export function MateriasPage() {
                                     Materia con peor promedio
                                 </p>
                                 <p className="text-edu-ink text-[1.1rem] font-bold mt-1">
-                                    {worst.name}
+                                    {worst?.name}
                                 </p>
                             </div>
                             <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
@@ -316,15 +126,15 @@ export function MateriasPage() {
                             </div>
                         </div>
                         <p className="text-edu-ink-700 text-[0.8rem] m-0">
-                            No aprobaste {worst.failedEvals}{" "}
-                            {worst.failedEvals === 1 ? "evaluación" : "evaluaciones"}
+                            No aprobaste {worst?.failedEvals}{" "}
+                            {worst?.failedEvals === 1 ? "evaluación" : "evaluaciones"}
                         </p>
                         <div className="flex items-center justify-between gap-2 mt-auto">
                             <p className="text-edu-ink-400 text-xs m-0">
-                                {worst.teacher}
+                                {worst?.teacher}
                             </p>
                             <span className="font-semibold text-[0.8rem] px-2.5 py-[3px] rounded-[6px] text-white bg-edu-danger shrink-0">
-                                Promedio de {worst.average}
+                                Promedio de {worst?.average}
                             </span>
                         </div>
                     </div>
@@ -399,13 +209,14 @@ export function MateriasPage() {
                         <input
                             type="text"
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
                             placeholder="Buscar materia o profesor…"
                             className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
                         />
                     </div>
                 </div>
-                <div>
+                <div className="overflow-x-auto">
+                    <div className="min-w-[720px]">
                     <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
                         {SUBJECT_HEADERS.map((h) => (
                             <span
@@ -421,13 +232,13 @@ export function MateriasPage() {
                             No hay materias que coincidan con la búsqueda.
                         </div>
                     )}
-                    {filteredSubjects.map((s, i) => {
+                    {pagedSubjects.map((s, i) => {
                         const st = STATUS_META[s.status];
                         return (
                             <div
                                 key={s.id}
                                 onClick={() => goToSubject(s.id)}
-                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < filteredSubjects.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedSubjects.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                             >
                                 <div className="flex items-center gap-2">
                                     <span
@@ -461,7 +272,13 @@ export function MateriasPage() {
                             </div>
                         );
                     })}
+                    </div>
                 </div>
+                {totalPages > 1 && (
+                    <div className="px-5 py-4 border-t border-edu-border-soft">
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+                    </div>
+                )}
             </div>
         </>
     );

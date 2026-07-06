@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   LayoutTemplate,
@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   Download,
 } from "lucide-react";
-import { CAMPOS_DEFAULT, TIPOS, type Campo, type CampoTipo } from "../data/plantilla";
+import { useFetch } from "../datos_maquetados";
+import { getCampos, getTipos, type Campo, type CampoTipo } from "../datos_maquetados/actions/plantilla";
 
 /* ------------------------------------------------------------------ */
 /* Constantes                                                          */
@@ -36,9 +37,13 @@ const SAMPLE: Record<CampoTipo, string[]> = {
 
 export function EvalPlantillasPage() {
   const navigate = useNavigate();
-  const [campos, setCampos] = useState<Campo[]>(CAMPOS_DEFAULT);
+  const [campos, setCampos] = useState<Campo[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [nuevo, setNuevo] = useState<{ nombre: string; tipo: CampoTipo }>({ nombre: "", tipo: "Texto" });
+
+  const { data: camposDefault } = useFetch(getCampos, []);
+  const { data: TIPOS } = useFetch(getTipos, []);
+  useEffect(() => setCampos(camposDefault), [camposDefault]);
 
   const fileUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
 
@@ -60,7 +65,7 @@ export function EvalPlantillasPage() {
   return (
     <div className="flex flex-col gap-5">
       {/* Encabezado */}
-      <div className="flex justify-between bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 ">
+      <div className="flex justify-between items-center gap-4 flex-wrap bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 ">
 
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-edu-card flex items-center justify-center shrink-0" style={{ backgroundColor: TEAL_BG }}>
@@ -87,7 +92,7 @@ export function EvalPlantillasPage() {
 
 
       {/* Campos (izquierda) + Previsualización del archivo (derecha) */}
-      <div className="grid grid-cols-2 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         {/* Campos que usarán los docentes */}
         <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
           <div className="px-5 py-4 border-b border-edu-border-soft flex items-center gap-2">

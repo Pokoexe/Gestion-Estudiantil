@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from "react-router";
 import { PlusCircle, Pencil, X, CheckCircle2, AlertTriangle, Search } from "lucide-react";
 import { color } from "../theme/tokens";
 import { PlanStats } from "../components/PlanStats";
-import { PLANS, LAPSO, type Plan, type PlanEstado } from "../data/plans";
+import { LAPSO } from "../datos_maquetados/data/plans";
+import { useFetch } from "../datos_maquetados";
+import { getPlanes, type Plan, type PlanEstado } from "../datos_maquetados/actions/plans";
 import { Pagination } from "../components/Pagination";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
-import { CURRENT_LAPSO_ID } from "../data/lapsos";
+import { CURRENT_LAPSO_ID } from "../datos_maquetados/data/lapsos";
 
 const PER_PAGE = 5;
 
@@ -34,7 +36,7 @@ function PlanReviewModal({ plan, onClose }: { plan: Plan; onClose: () => void })
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
             onClick={onClose}
         >
             <div
@@ -51,7 +53,7 @@ function PlanReviewModal({ plan, onClose }: { plan: Plan; onClose: () => void })
                     </button>
                 </div>
 
-                <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-2 gap-3">
+                <div className="rounded-edu-control border border-edu-border-soft p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Materia</div>
                         <div className="text-[0.875rem] text-edu-ink font-medium">{plan.subject || "—"}</div>
@@ -64,30 +66,34 @@ function PlanReviewModal({ plan, onClose }: { plan: Plan; onClose: () => void })
 
                 {rows.length > 0 ? (
                     <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
-                        <div className="grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
-                            {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h, idx) => (
-                                <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
-                                    {h}
-                                </span>
-                            ))}
-                        </div>
-                        {rows.map((r, i) => (
-                            <div
-                                key={r.id}
-                                className={`grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 items-center ${i < rows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-[0.8rem] text-edu-ink-500 font-semibold">{i + 1}</span>
-                                <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
-                                    {r.content || <span className="text-edu-danger">Sin nombre</span>}
-                                </span>
-                                <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.weight || "—"} %</span>
-                                <span className="text-[0.78rem] text-edu-ink-500">{r.date || "—"}</span>
-                                <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[680px]">
+                                <div className="grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 bg-edu-subtle border-b border-edu-border-soft">
+                                    {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h, idx) => (
+                                        <span key={idx} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">
+                                            {h}
+                                        </span>
+                                    ))}
+                                </div>
+                                {rows.map((r, i) => (
+                                    <div
+                                        key={r.id}
+                                        className={`grid grid-cols-[0.4fr_1.6fr_0.5fr_1fr_0.7fr] px-3 py-2 items-center ${i < rows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <span className="text-[0.8rem] text-edu-ink-500 font-semibold">{i + 1}</span>
+                                        <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
+                                            {r.content || <span className="text-edu-danger">Sin nombre</span>}
+                                        </span>
+                                        <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.weight || "—"} %</span>
+                                        <span className="text-[0.78rem] text-edu-ink-500">{r.date || "—"}</span>
+                                        <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
+                                    </div>
+                                ))}
+                                <div className="px-3 py-2 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
+                                    <span className="text-edu-ink-500">Ponderación total</span>
+                                    <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight} %</span>
+                                </div>
                             </div>
-                        ))}
-                        <div className="px-3 py-2 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
-                            <span className="text-edu-ink-500">Ponderación total</span>
-                            <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight} %</span>
                         </div>
                     </div>
                 ) : (
@@ -131,8 +137,9 @@ export function DocentePlanesPage() {
     const [statusFilter, setStatusFilter] = useState<"todos" | PlanEstado>("todos");
     const [page, setPage] = useState(1);
 
+    const { data: plans } = useFetch(getPlanes, []);
     const { selectedId } = useLapso();
-    const lapsoPlans = PLANS.filter((p) => (p.lapso ?? CURRENT_LAPSO_ID) === selectedId);
+    const lapsoPlans = plans.filter((p) => (p.lapso ?? CURRENT_LAPSO_ID) === selectedId);
 
     const subidos = lapsoPlans.filter((p) => p.status !== "draft").length;
     const porRevisar = lapsoPlans.filter((p) => p.status === "review").length;
@@ -212,51 +219,55 @@ export function DocentePlanesPage() {
                         <option value="changes">Cambios solicitados</option>
                     </select>
                 </div>
-                <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                    {["Materia", "Sección", "Evaluaciones", "Estado", "Acción"].map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
-                            {h}
-                        </span>
-                    ))}
-                </div>
-                {filteredPlans.length === 0 && (
-                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay planes que coincidan con el filtro.</div>
-                )}
-                {paged.map((plan, i) => {
-                    const st = STATUS_META[plan.status];
-                    return (
-                        <div
-                            key={plan.id}
-                            onClick={() => setSelectedPlan(plan)}
-                            className={`px-5 py-[13px] transition-colors hover:bg-edu-subtle cursor-pointer ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                        >
-                            <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] items-center">
-                                <span className="text-sm text-edu-ink font-medium">{plan.subject}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{plan.section}</span>
-                                <span className="text-sm text-edu-ink-700 font-semibold">{plan.count} evaluaciones</span>
-                                <span
-                                    className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
-                                    style={{ backgroundColor: st.bg, color: st.fg }}
-                                >
-                                    {st.label}
+                <div className="overflow-x-auto">
+                    <div className="min-w-[680px]">
+                        <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                            {["Materia", "Sección", "Evaluaciones", "Estado", "Acción"].map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
+                                    {h}
                                 </span>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); navigate(`/docente/planes/${plan.id}/editar`); }}
-                                    className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold cursor-pointer w-fit bg-transparent border-none p-0"
-                                >
-                                    <Pencil style={{ width: "13px", height: "13px" }} />
-                                    Modificar
-                                </button>
-                            </div>
-                            {plan.note && (
-                                <div className={`mt-2 flex items-center gap-1.5 text-xs w-fit rounded-edu-chip px-2.5 py-1.5 ${plan.status === "changes" ? "text-edu-danger bg-edu-danger-bg" : "text-edu-ink-500 bg-edu-primary-50"}`}>
-                                    <AlertTriangle className="shrink-0" style={{ width: "12px", height: "12px" }} />
-                                    {plan.note}
-                                </div>
-                            )}
+                            ))}
                         </div>
-                    );
-                })}
+                        {filteredPlans.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay planes que coincidan con el filtro.</div>
+                        )}
+                        {paged.map((plan, i) => {
+                            const st = STATUS_META[plan.status];
+                            return (
+                                <div
+                                    key={plan.id}
+                                    onClick={() => setSelectedPlan(plan)}
+                                    className={`px-5 py-[13px] transition-colors hover:bg-edu-subtle cursor-pointer ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="grid grid-cols-[1.4fr_0.8fr_0.9fr_1fr_0.6fr] items-center">
+                                        <span className="text-sm text-edu-ink font-medium">{plan.subject}</span>
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{plan.section}</span>
+                                        <span className="text-sm text-edu-ink-700 font-semibold">{plan.count} evaluaciones</span>
+                                        <span
+                                            className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
+                                            style={{ backgroundColor: st.bg, color: st.fg }}
+                                        >
+                                            {st.label}
+                                        </span>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/docente/planes/${plan.id}/editar`); }}
+                                            className="inline-flex items-center gap-1 text-[0.8rem] text-edu-primary font-semibold cursor-pointer w-fit bg-transparent border-none p-0"
+                                        >
+                                            <Pencil style={{ width: "13px", height: "13px" }} />
+                                            Modificar
+                                        </button>
+                                    </div>
+                                    {plan.note && (
+                                        <div className={`mt-2 flex items-center gap-1.5 text-xs w-fit rounded-edu-chip px-2.5 py-1.5 ${plan.status === "changes" ? "text-edu-danger bg-edu-danger-bg" : "text-edu-ink-500 bg-edu-primary-50"}`}>
+                                            <AlertTriangle className="shrink-0" style={{ width: "12px", height: "12px" }} />
+                                            {plan.note}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
                 {totalPages > 1 && (
                     <div className="px-5 py-4 border-t border-edu-border-soft">
                         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />

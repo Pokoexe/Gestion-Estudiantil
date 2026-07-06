@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from "react-router";
 import { ArrowLeft, FileSpreadsheet, User } from "lucide-react";
-import { BOLETINES, MATERIAS, promedio, notaColor, desglose, notasDe } from "../data/boletines";
+import { useFetch } from "../datos_maquetados";
+import { getBoletines, getMaterias } from "../datos_maquetados/actions/boletines";
+import { promedio, notaColor, desglose, notasDe } from "../datos_maquetados/data/boletines";
 import { LapsoFilter } from "../components/LapsoFilter";
 import { useLapso } from "../context/LapsoContext";
 
@@ -14,7 +16,17 @@ export function EvalSabanaEstudiantePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { selectedId } = useLapso();
-  const b = BOLETINES.find((x) => String(x.id) === id);
+  const { data: boletines, loading } = useFetch(getBoletines, []);
+  const { data: MATERIAS } = useFetch(getMaterias, []);
+  const b = boletines.find((x) => String(x.id) === id);
+
+  if (loading) {
+    return (
+      <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">
+        Cargando…
+      </div>
+    );
+  }
 
   if (!b) {
     return (
@@ -91,6 +103,8 @@ export function EvalSabanaEstudiantePage() {
               </span>
             </div>
 
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
             <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
               {["Evaluación", "Tipo", "%", "Nota"].map((h, j) => (
                 <span key={h} className={`text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em] ${j >= 2 ? "text-right" : ""}`}>{h}</span>
@@ -104,6 +118,8 @@ export function EvalSabanaEstudiantePage() {
                 <span className={`text-[0.9rem] font-bold text-right ${notaColor(e.nota)}`}>{e.nota}</span>
               </div>
             ))}
+              </div>
+            </div>
           </div>
         );
       })}
