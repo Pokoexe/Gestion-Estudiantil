@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gestión Estudiantil</title>
+    <!--
+      GitHub Pages sirve este 404.html para cualquier ruta que no exista como
+      archivo físico (p. ej. /Gestion-Estudiantil/estudiante). Aquí redirigimos
+      a index.html codificando la ruta en la query string, y un script en
+      index.html la decodifica para que React Router la resuelva.
+
+      pathSegmentsToKeep = 1  ->  se conserva el primer segmento (/Gestion-Estudiantil)
+      porque el sitio vive en un subdirectorio de GitHub Pages.
+    -->
+    <script type="text/javascript">
+      var pathSegmentsToKeep = 1;
+
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
