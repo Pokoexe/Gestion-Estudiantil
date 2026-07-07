@@ -95,7 +95,6 @@ export function DirInscripcionesPage() {
         { label: "Total inscritos", value: String(total), icon: Users, ac: accent.blue },
         { label: "Nuevos ingresos", value: String(nuevos), icon: UserPlus, ac: accent.green },
         { label: "Reinscritos", value: String(reinscritos), icon: TrendingUp, ac: accent.purple },
-        { label: "Por revisar", value: String(porRevisar), icon: Clock, ac: { bg: "#fef3c7", fg: "#d97706" } },
     ];
 
     /* ---- Filtrado y paginación ---- */
@@ -228,7 +227,7 @@ export function DirInscripcionesPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-3">
                     {KPIS.map((kpi) => {
                         const Icon = kpi.icon;
                         return (
@@ -289,51 +288,51 @@ export function DirInscripcionesPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                <div className="min-w-[680px]">
-                <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                    {HEADERS.map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                    ))}
-                </div>
-
-                {filtered.length === 0 && (
-                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay inscripciones que coincidan con el filtro.</div>
-                )}
-
-                {paged.map((item, i) => {
-                    const tipo = TIPO_META[item.tipo];
-                    const estado = ESTADO_META[item.estado];
-                    return (
-                        <div
-                            key={item.id}
-                            onClick={() => navigate(`/director/inscripciones/${item.id}`)}
-                            className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                        >
-                            <div className="min-w-0 pr-3">
-                                <div className="text-sm text-edu-ink font-semibold truncate">{item.estNombre} {item.estApellido}</div>
-                                <div className="text-[0.75rem] text-edu-ink-400">{item.gradoSolicitado}</div>
-                            </div>
-                            <span className="text-[0.8125rem] text-edu-ink-500 truncate pr-3">{item.repNombre} {item.repApellido}</span>
-                            <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${tipo.cls}`}>
-                                {tipo.label}
-                            </span>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setBaucheItem(item); }}
-                                className="inline-flex items-center gap-1.5 text-[0.8125rem] text-edu-primary font-medium bg-transparent border-none cursor-pointer p-0 w-fit hover:underline"
-                            >
-                                <Receipt className="w-3.5 h-3.5 shrink-0" />
-                                {item.bauche}
-                            </button>
-                            <div className="flex items-center justify-between gap-2">
-                                <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${estado.cls}`}>
-                                    {estado.label}
-                                </span>
-                                <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                            </div>
+                    <div className="min-w-[680px]">
+                        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {HEADERS.map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                            ))}
                         </div>
-                    );
-                })}
-                </div>
+
+                        {filtered.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay inscripciones que coincidan con el filtro.</div>
+                        )}
+
+                        {paged.map((item, i) => {
+                            const tipo = TIPO_META[item.tipo];
+                            const estado = ESTADO_META[item.estado];
+                            return (
+                                <div
+                                    key={item.id}
+                                    onClick={() => navigate(`/director/inscripciones/${item.id}`)}
+                                    className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="min-w-0 pr-3">
+                                        <div className="text-sm text-edu-ink font-semibold truncate">{item.estNombre} {item.estApellido}</div>
+                                        <div className="text-[0.75rem] text-edu-ink-400">{item.gradoSolicitado}</div>
+                                    </div>
+                                    <span className="text-[0.8125rem] text-edu-ink-500 truncate pr-3">{item.repNombre} {item.repApellido}</span>
+                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${tipo.cls}`}>
+                                        {tipo.label}
+                                    </span>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setBaucheItem(item); }}
+                                        className="inline-flex items-center gap-1.5 text-[0.8125rem] text-edu-primary font-medium bg-transparent border-none cursor-pointer p-0 w-fit hover:underline"
+                                    >
+                                        <Receipt className="w-3.5 h-3.5 shrink-0" />
+                                        {item.bauche}
+                                    </button>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${estado.cls}`}>
+                                            {estado.label}
+                                        </span>
+                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {totalPages > 1 && (
