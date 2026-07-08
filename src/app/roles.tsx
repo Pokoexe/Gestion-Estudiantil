@@ -38,6 +38,7 @@ import {
   Award,
   Clock,
   UserPlus,
+  Tag,
 } from "lucide-react";
 import { color } from "./theme/tokens";
 
@@ -278,6 +279,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
         items: [
           { icon: GraduationCap, label: "Académico", to: "academico", ready: true },
           { icon: Landmark, label: "Finanzas", to: "finanzas", ready: true },
+          { icon: Tag, label: "Precios", to: "precios", ready: true },
           { icon: Calendar, label: "Lapsos", to: "lapsos", ready: true },
         ],
       },

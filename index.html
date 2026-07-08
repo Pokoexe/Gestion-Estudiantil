@@ -8,6 +8,22 @@
       <title>EduGestión · Sistema de Gestión Escolar</title>
       <meta name="description" content="Maqueta del Sistema de Gestión Escolar: acceso, y paneles para Estudiante, Docente, Coordinador, Evaluador, Tesorería, Director y Programador." />
       <meta name="robots" content="noindex, nofollow" />
+      <!--
+        Decodifica la ruta que 404.html guardó en la query string
+        (truco SPA para GitHub Pages). Debe ir ANTES de cargar la app.
+      -->
+      <script type="text/javascript">
+        (function (l) {
+          if (l.search[1] === '/') {
+            var decoded = l.search.slice(1).split('&').map(function (s) {
+              return s.replace(/~and~/g, '&');
+            }).join('?');
+            window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+            );
+          }
+        }(window.location));
+      </script>
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
       
     </head>

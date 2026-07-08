@@ -27,7 +27,9 @@ function redirectRootToBase() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url || '/'
-        if (url === '/' || url === '/index.html') {
+        // "/", "/index.html" o "/Gestion-Estudiantil" (sin barra final)
+        // -> redirige a la base con barra para que Vite y el router resuelvan.
+        if (url === '/' || url === '/index.html' || url === BASE.slice(0, -1)) {
           res.statusCode = 302
           res.setHeader('Location', BASE)
           res.end()

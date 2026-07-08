@@ -74,6 +74,7 @@ import { DirFinanzasPage } from "./pages/DirFinanzasPage";
 import { DirActividadesPage } from "./pages/DirActividadesPage";
 import { DirInscripcionesPage } from "./pages/DirInscripcionesPage";
 import { DirInscripcionDetallePage } from "./pages/DirInscripcionDetallePage";
+import { DirPreciosPage } from "./pages/DirPreciosPage";
 import { DirectorPresentacionPage } from "./pages/DirectorPresentacionPage";
 import { ConfiguracionPage } from "./pages/ConfiguracionPage";
 
@@ -191,6 +192,7 @@ export const router = createBrowserRouter([
       { path: "inscripciones", Component: DirInscripcionesPage },
       { path: "inscripciones/:id", Component: DirInscripcionDetallePage },
       { path: "finanzas", Component: DirFinanzasPage },
+      { path: "precios", Component: DirPreciosPage },
       { path: "cursos", Component: DirActividadesPage },
       { path: "actividades", Component: CoordActividadesPage },
       { path: "presentacion", Component: DirectorPresentacionPage },

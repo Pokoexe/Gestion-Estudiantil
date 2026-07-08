@@ -83,7 +83,7 @@ export function MateriasPage() {
                     </div>
 
                     {/* Materia con más promedio */}
-                    <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <button type="button" onClick={() => best && goToSubject(best.id)} className="text-left bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-primary-200">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
@@ -108,10 +108,10 @@ export function MateriasPage() {
                                 Promedio de {best?.average}
                             </span>
                         </div>
-                    </div>
+                    </button>
 
                     {/* Materia con peor promedio */}
-                    <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <button type="button" onClick={() => worst && goToSubject(worst.id)} className="text-left bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-primary-200">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
@@ -137,7 +137,7 @@ export function MateriasPage() {
                                 Promedio de {worst?.average}
                             </span>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
                 {/* Materias reprobadas*/}

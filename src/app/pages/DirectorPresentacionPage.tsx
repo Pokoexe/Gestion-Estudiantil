@@ -41,6 +41,7 @@ import {
   CalendarDays,
   GraduationCap,
   UserPlus,
+  Menu,
 } from "lucide-react";
 import { LandingView } from "../landing/LandingView";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -57,20 +58,20 @@ import {
   makeDefaultConfig,
   DEFAULT_TEMPLATE,
   SECTION_META,
-  MAX_ENABLED_SECTIONS,
   type LandingConfig,
   type ThemeId,
   type Teacher,
   type GalleryImage,
 } from "../landing/types";
 
-type Tab = "plantillas" | "galeria" | "contacto" | "orden";
+type Tab = "plantillas" | "docentes" | "galeria" | "contacto" | "orden";
 type Device = "desktop" | "mobile";
 type Flash = { tone: "ok" | "warn"; msg: string } | null;
 type Confirm = { title: string; tone?: "success" | "danger" | "warning"; icon?: React.FC<{ className?: string }>; confirmLabel?: string; onConfirm: () => void } | null;
 
 const TABS: { key: Tab; label: string; icon: typeof Type }[] = [
   { key: "plantillas", label: "Plantillas", icon: Type },
+  { key: "docentes", label: "Docentes", icon: Users },
   { key: "galeria", label: "Galería", icon: Images },
   { key: "contacto", label: "Contacto", icon: PhoneIcon },
   { key: "orden", label: "Orden", icon: ListOrdered },
@@ -94,6 +95,7 @@ export function DirectorPresentacionPage() {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [galleryDragIdx, setGalleryDragIdx] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const firstRender = useRef(true);
 
   /* Autoguardado del borrador en cada cambio (omite el montaje inicial). */
@@ -143,17 +145,12 @@ export function DirectorPresentacionPage() {
   const toggleCifras = () => {
     const ids = ["students", "experience"] as const;
     const anyOn = ids.some((id) => isSectionEnabled(id));
-    setConfig((c) => {
-      const arr = [...c.sections];
-      if (!anyOn) {
-        const needed = ids.filter((id) => !arr.find((s) => s.id === id)?.enabled).length;
-        if (arr.filter((s) => s.enabled).length + needed > MAX_ENABLED_SECTIONS) {
-          setFlash({ tone: "warn", msg: `Máximo ${MAX_ENABLED_SECTIONS} secciones visibles.` });
-          return c;
-        }
-      }
-      return { ...c, sections: arr.map((s) => ids.includes(s.id as typeof ids[number]) ? { ...s, enabled: !anyOn } : s) };
-    });
+    setConfig((c) => ({
+      ...c,
+      sections: c.sections.map((s) =>
+        ids.includes(s.id as typeof ids[number]) ? { ...s, enabled: !anyOn } : s
+      ),
+    }));
   };
 
   /* Drag-and-drop para el orden de secciones */
@@ -168,14 +165,22 @@ export function DirectorPresentacionPage() {
   /* Profesores */
   const addTeacher = () =>
     setConfig((c) =>
-      c.teachers.list.length >= 8
+      c.teachers.list.length >= 12
         ? c
-        : { ...c, teachers: { ...c.teachers, list: [...c.teachers.list, { id: newId("t"), name: "Nuevo docente", role: "Materia", photo: "https://i.pravatar.cc/300?img=8" }] } },
+        : { ...c, teachers: { ...c.teachers, list: [...c.teachers.list, { id: newId("t"), name: "Nuevo docente", role: "Materia", photo: `https://i.pravatar.cc/300?img=${(c.teachers.list.length % 70) + 1}` }] } },
     );
   const updateTeacher = (id: string, p: Partial<Teacher>) =>
     setConfig((c) => ({ ...c, teachers: { ...c.teachers, list: c.teachers.list.map((t) => (t.id === id ? { ...t, ...p } : t)) } }));
   const removeTeacher = (id: string) =>
     setConfig((c) => ({ ...c, teachers: { ...c.teachers, list: c.teachers.list.filter((t) => t.id !== id) } }));
+  const moveTeacher = (i: number, dir: -1 | 1) =>
+    setConfig((c) => {
+      const arr = [...c.teachers.list];
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return c;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...c, teachers: { ...c.teachers, list: arr } };
+    });
 
   /* Galería */
   const addImage = () =>
@@ -217,12 +222,7 @@ export function DirectorPresentacionPage() {
   const toggleSection = (i: number) =>
     setConfig((c) => {
       const arr = [...c.sections];
-      const cur = arr[i];
-      if (!cur.enabled && arr.filter((s) => s.enabled).length >= MAX_ENABLED_SECTIONS) {
-        setFlash({ tone: "warn", msg: `Máximo ${MAX_ENABLED_SECTIONS} secciones visibles. Oculta una para activar otra.` });
-        return c;
-      }
-      arr[i] = { ...cur, enabled: !cur.enabled };
+      arr[i] = { ...arr[i], enabled: !arr[i].enabled };
       return { ...c, sections: arr };
     });
 
@@ -244,12 +244,26 @@ export function DirectorPresentacionPage() {
   const previewEnroll = () => setFlash({ tone: "ok", msg: "En la página real, este botón lleva al formulario de inscripción." });
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col">
+    <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
       {/* ── Editor: preview (izq 2fr) + opciones (der 1.5fr) ── */}
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+      <div className="relative flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+        {/* Backdrop móvil para cerrar el panel de opciones */}
+        <div
+          className={`absolute inset-0 z-20 bg-black/40 transition-opacity duration-300 lg:hidden ${optionsOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+          onClick={() => setOptionsOpen(false)}
+        />
+
         {/* Panel de previsualización — 2fr (izquierda) */}
-        <div className="flex flex-[2] flex-col overflow-hidden border-r border-edu-border bg-[#0e1424]" style={{ height: "calc(100vh - 60px)" }}>
-          <div className="flex-1 overflow-y-auto bg-[#0b1020] p-3">
+        <div className="relative flex flex-[2] flex-col overflow-hidden border-r border-edu-border bg-[#0e1424]" style={{ height: "calc(100vh - 60px)" }}>
+          {/* Botón flotante de opciones (solo móvil) */}
+          <button
+            onClick={() => setOptionsOpen(true)}
+            aria-label="Abrir opciones de presentación"
+            className={`fixed bottom-4 right-4 z-[49] w-9 h-9 rounded-full border-[1.5px] border-edu-border bg-edu-subtle cursor-pointer flex items-center justify-center text-edu-ink-500 shrink-0 shadow-md transition-opacity duration-200 lg:hidden ${optionsOpen ? "pointer-events-none opacity-0" : "opacity-100"}`}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="flex-1 overflow-y-auto lp-noscrollbar bg-[#0b1020] p-3 isolate">
             <PreviewSurface device={device}>
               <LandingView config={config} onLogin={previewLogin} onEnroll={previewEnroll} />
             </PreviewSurface>
@@ -257,7 +271,7 @@ export function DirectorPresentacionPage() {
         </div>
 
         {/* Panel de opciones — 1.5fr (derecha) */}
-        <div className="flex flex-[1.5] flex-col overflow-hidden bg-edu-surface" style={{ height: "calc(100vh - 60px)" }}>
+        <div className={`absolute inset-y-0 right-0 z-30 flex w-[88vw] max-w-[420px] flex-col overflow-hidden bg-edu-surface transition-transform duration-300 ${optionsOpen ? "translate-x-0" : "translate-x-full"} lg:relative lg:inset-auto lg:z-auto lg:max-w-none lg:translate-x-0 lg:flex-[1.5] lg:w-auto`}>
           {/* ── Header ── */}
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-edu-border bg-edu-surface px-4 py-2">
             <div className="flex items-center gap-2.5">
@@ -355,6 +369,35 @@ export function DirectorPresentacionPage() {
               </div>
             )}
 
+            {tab === "docentes" && (
+              <div className="flex flex-col gap-3">
+                <TextField label="Título de la sección" value={config.teachers.heading} onChange={(v) => patchTeachers({ heading: v })} />
+                <TextField label="Subtítulo" value={config.teachers.subtitle} onChange={(v) => patchTeachers({ subtitle: v })} />
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.75rem] font-semibold text-edu-ink-500">Docentes ({config.teachers.list.length}/12)</span>
+                  <span className="text-[0.68rem] text-edu-ink-400">Se ven de 4 en 4</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {config.teachers.list.map((t, i) => (
+                    <div key={t.id} className="flex gap-2 rounded-edu-control border border-edu-border-soft bg-edu-subtle p-2">
+                      <img src={t.photo} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover border border-edu-border" />
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        <input className={INPUT} value={t.name} onChange={(e) => updateTeacher(t.id, { name: e.target.value })} placeholder="Nombre del docente" />
+                        <input className={INPUT} value={t.role} onChange={(e) => updateTeacher(t.id, { role: e.target.value })} placeholder="Materia o cargo" />
+                        <input className={INPUT} value={t.photo} onChange={(e) => updateTeacher(t.id, { photo: e.target.value })} placeholder="URL de la foto" />
+                      </div>
+                      <div className="flex shrink-0 flex-col gap-1">
+                        <IconBtn onClick={() => moveTeacher(i, -1)} disabled={i === 0} label="Subir"><ArrowUp className="h-3.5 w-3.5" /></IconBtn>
+                        <IconBtn onClick={() => moveTeacher(i, 1)} disabled={i === config.teachers.list.length - 1} label="Bajar"><ArrowDown className="h-3.5 w-3.5" /></IconBtn>
+                        <IconBtn onClick={() => removeTeacher(t.id)} label="Eliminar" danger><Trash2 className="h-3.5 w-3.5" /></IconBtn>
+                      </div>
+                    </div>
+                  ))}
+                  <AddButton disabled={config.teachers.list.length >= 12} onClick={addTeacher} label={config.teachers.list.length >= 12 ? "Máximo 12 docentes" : "Agregar docente"} />
+                </div>
+              </div>
+            )}
+
             {tab === "galeria" && (
               <div className="flex flex-col gap-3">
                 <TextField label="Título de la galería" value={config.gallery.heading} onChange={(v) => patchGallery({ heading: v })} />
@@ -381,7 +424,7 @@ export function DirectorPresentacionPage() {
                       <button
                         type="button"
                         draggable
-                        onDragStart={() => setGalleryDragIdx(i)}
+                        onDragStart={(e) => { e.dataTransfer.setDragImage(e.currentTarget, 10, 10); setGalleryDragIdx(i); }}
                         onDragEnd={() => setGalleryDragIdx(null)}
                         aria-label="Arrastrar para reordenar"
                         title="Arrastrar para reordenar"
@@ -426,11 +469,11 @@ export function DirectorPresentacionPage() {
                 <div className="rounded-edu-control border border-edu-border-soft bg-edu-subtle p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[0.8rem] font-semibold text-edu-ink">Secciones visibles</span>
-                    <span className={`rounded-edu-pill px-2.5 py-0.5 text-[0.72rem] font-bold ${enabledCount >= MAX_ENABLED_SECTIONS ? "bg-edu-warning-bg text-edu-warning" : "bg-edu-primary-50 text-edu-primary"}`}>
-                      {enabledCount}/{MAX_ENABLED_SECTIONS}
+                    <span className="rounded-edu-pill bg-edu-primary-50 px-2.5 py-0.5 text-[0.72rem] font-bold text-edu-primary">
+                      {enabledCount}/{config.sections.length}
                     </span>
                   </div>
-                  <p className="m-0 mt-1 text-[0.72rem] text-edu-ink-400">Activa hasta {MAX_ENABLED_SECTIONS} secciones. Arrastra o usa las flechas para reordenar.</p>
+                  <p className="m-0 mt-1 text-[0.72rem] text-edu-ink-400">Activa las secciones que desees. Arrastra o usa las flechas para reordenar.</p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {config.sections.map((s, i) => {
@@ -440,8 +483,6 @@ export function DirectorPresentacionPage() {
                     return (
                       <div
                         key={s.id}
-                        draggable
-                        onDragStart={() => setDragIdx(i)}
                         onDragEnter={() => {
                           if (dragIdx !== null && dragIdx !== i) {
                             moveSectionToIndex(dragIdx, i);
@@ -451,13 +492,23 @@ export function DirectorPresentacionPage() {
                         onDragOver={(e) => e.preventDefault()}
                         onDragEnd={() => setDragIdx(null)}
                         className={`flex items-center gap-2 rounded-edu-control border p-2 pl-2.5 transition-colors select-none ${isDragging
-                          ? "cursor-grabbing border-edu-primary-200 bg-edu-primary-50 opacity-50"
+                          ? "border-edu-primary-200 bg-edu-primary-50 opacity-50"
                           : s.enabled
-                            ? "cursor-grab border-edu-border bg-edu-surface hover:border-edu-primary-200"
-                            : "cursor-grab border-edu-border-soft bg-edu-subtle opacity-70"
+                            ? "border-edu-border bg-edu-surface hover:border-edu-primary-200"
+                            : "border-edu-border-soft bg-edu-subtle opacity-70"
                           }`}
                       >
-                        <GripVertical className="h-4 w-4 shrink-0 text-edu-ink-300" />
+                        <button
+                          type="button"
+                          draggable
+                          onDragStart={(e) => { e.dataTransfer.setDragImage(e.currentTarget, 10, 10); setDragIdx(i); }}
+                          onDragEnd={() => setDragIdx(null)}
+                          aria-label="Arrastrar para reordenar"
+                          title="Arrastrar para reordenar"
+                          className="flex shrink-0 cursor-grab items-center justify-center border-none bg-transparent p-0.5 text-edu-ink-300 hover:text-edu-ink-500 active:cursor-grabbing"
+                        >
+                          <GripVertical className="h-4 w-4" />
+                        </button>
                         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-edu-chip ${s.enabled ? "bg-edu-primary-50" : "bg-edu-border-soft"}`}>
                           <Icon className={`h-4 w-4 ${s.enabled ? "text-edu-primary" : "text-edu-ink-400"}`} />
                         </span>
@@ -498,7 +549,7 @@ export function DirectorPresentacionPage() {
               </button>
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-hidden bg-[#0b1020] p-4">
+          <div className="min-h-0 flex-1 overflow-y-auto lp-noscrollbar bg-[#0b1020] p-4">
             <PreviewSurface device={device}>
               <LandingView config={config} onLogin={previewLogin} onEnroll={previewEnroll} />
             </PreviewSurface>

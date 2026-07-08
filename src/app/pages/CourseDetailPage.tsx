@@ -178,8 +178,8 @@ export function CourseDetailPage() {
 
                 <div className="lg:col-span-2 space-y-2">
                     {/* Banner del curso */}
-                    <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
-                        <div>
+                    <div className="bg-edu-purple rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
+                        <div className="w-full">
                             <div className="flex items-center gap-2 mb-1">
                                 <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
                                 <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
@@ -193,7 +193,7 @@ export function CourseDetailPage() {
                                 ))}
 
                                 {isEnrolled && (
-                                    <Link to="/estudiante/mensajes" className="h-7 rounded-[7px] bg-edu-success-bg flex items-center gap-2 justify-center w-full">
+                                    <Link to="/estudiante/mensajes" className="w-full h-7 rounded-[7px] bg-edu-success-bg flex items-center gap-2 justify-center">
                                         <MessageCircle style={{ width: "13px", height: "13px" }} className="text-edu-success" />
                                         <span className="text-[0.8rem] text-edu-success">Chat grupal del curso</span>
                                     </Link>

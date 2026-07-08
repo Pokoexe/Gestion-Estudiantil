@@ -186,32 +186,34 @@ export function StudentDataPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                     {/* Materias reprobadas*/}
-                    <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
-                        <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <TrendingDown className="w-4 h-4 text-edu-danger" />
-                                <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias reprobadas</h3>
-                            </div>
-                            <span className="text-[0.72rem] text-edu-danger font-medium">{reprobadas.length} en riesgo</span>
-                        </div>
-                        <div className="flex flex-col">
-                            {reprobadas.map((m, i) => (
-                                <div
-                                    key={m.id}
-                                    onClick={() => navigate(`/estudiante/materias/${m.id}`)}
-                                    className={`px-5 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors hover:bg-edu-subtle ${i < reprobadas.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                >
-                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color.danger }} />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[0.85rem] font-medium text-edu-ink truncate">{m.subject}</div>
-                                        <div className="text-[0.75rem] text-edu-ink-400 truncate">{m.teacher}</div>
-                                    </div>
-                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold shrink-0 ${REPRO_META[m.status].cls}`}>
-                                        {REPRO_META[m.status].label}
-                                    </span>
-                                    <span className="text-[0.85rem] font-bold text-edu-danger shrink-0 w-6 text-right">{m.average}</span>
+                    <div>
+                        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
+                            <div className="px-5 py-3.5 border-b border-edu-border-soft flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <TrendingDown className="w-4 h-4 text-edu-danger" />
+                                    <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Materias reprobadas</h3>
                                 </div>
-                            ))}
+                                <span className="text-[0.72rem] text-edu-danger font-medium">{reprobadas.length} en riesgo</span>
+                            </div>
+                            <div className="flex flex-col">
+                                {reprobadas.map((m, i) => (
+                                    <div
+                                        key={m.id}
+                                        onClick={() => navigate(`/estudiante/materias/${m.id}`)}
+                                        className={`px-5 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors hover:bg-edu-subtle ${i < reprobadas.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color.danger }} />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[0.85rem] font-medium text-edu-ink truncate">{m.subject}</div>
+                                            <div className="text-[0.75rem] text-edu-ink-400 truncate">{m.teacher}</div>
+                                        </div>
+                                        <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold shrink-0 ${REPRO_META[m.status].cls}`}>
+                                            {REPRO_META[m.status].label}
+                                        </span>
+                                        <span className="text-[0.85rem] font-bold text-edu-danger shrink-0 w-6 text-right">{m.average}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

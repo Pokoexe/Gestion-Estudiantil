@@ -7,7 +7,7 @@ memoria. Ninguna petición sale a la red: el `adapter` de axios resuelve cada
 llamada contra una tabla de rutas local. Así el código de las páginas es idéntico
 al que se usaría contra un backend real y migrar a uno de verdad es trivial.
 
-- **125 endpoints** en **20 dominios**.
+- **126 endpoints** en **21 dominios**.
 - **1 sesión maquetada** (token Bearer adjuntado en cada petición, sin lógica de auth).
 
 ---
@@ -318,6 +318,13 @@ Síncronos: `INSCRIPCION_FEE`, `TIPO_META`, `ESTADO_META`.
 |---|---|---|
 | GET | `/inscripciones` | Inscripciones del panel del Director. |
 | GET | `/inscripciones/serie` | Serie mensual: nuevos vs. reinscritos. |
+
+### Precios — `data/precios.ts` · `actions/precios.ts`
+Síncrono: `PRECIO_ESTADO_META`.
+
+| Método | Path | Descripción |
+|---|---|---|
+| GET | `/precios` | Historial de cuadros de precios del panel del Director (mensualidad, morosidad y descuentos). |
 
 ### Chats — `data/chats.ts` · `actions/chats.ts`
 Síncrono: `nowTime`.

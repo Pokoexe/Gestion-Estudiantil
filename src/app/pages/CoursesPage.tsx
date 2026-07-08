@@ -15,7 +15,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { color } from "../theme/tokens";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useFetch } from "../datos_maquetados";
 import {
   getMateriaActual,
@@ -153,6 +153,9 @@ function AssignmentCard({ assignment }: { assignment: Assignment }) {
 }
 
 export function CoursesPage() {
+  const [searchParams] = useSearchParams();
+  const isPendiente = searchParams.get("pendiente") === "true";
+
   const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
   const { data: course, loading: loadingCourse } = useFetch(getMateriaActual, null);
   const { data: teacher, loading: loadingTeacher } = useFetch(getMateriaActualDocente, null);
@@ -179,15 +182,22 @@ export function CoursesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
         <div className="lg:col-span-2 space-y-2">
-          <div className="bg-edu-primary rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3">
-            <div>
+          <div className={`${isPendiente ? "bg-edu-danger" : "bg-edu-primary"} rounded-edu-card px-6 py-[22px] flex justify-between items-center flex-wrap gap-3`}>
+            <div className="w-full">
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.8)" }} />
                 <span className="text-xs text-[rgba(255,255,255,0.75)] font-medium uppercase tracking-[0.06em]">
                   {course!.code} · {course!.section}
                 </span>
               </div>
-              <h2 className="text-white mb-1.5 text-xl font-bold m-0">{course!.name}</h2>
+              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                <h2 className="text-white text-xl font-bold m-0">{course!.name}</h2>
+                {isPendiente && (
+                  <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded-edu-pill bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.35)]">
+                    Materia pendiente
+                  </span>
+                )}
+              </div>
               <div className="flex gap-4 flex-wrap">
                 {[course!.schedule, course!.room, `Período ${course!.term}`].map((item) => (
                   <span key={item} className="text-[0.8rem] text-[rgba(255,255,255,0.75)]">{item}</span>

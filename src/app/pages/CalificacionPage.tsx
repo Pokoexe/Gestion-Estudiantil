@@ -141,53 +141,53 @@ export function CalificacionPage() {
 
                 <div className="overflow-x-auto">
                     <div className="min-w-[640px]">
-                    <div className={`grid ${GRADE_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {GRADE_HEADERS.map((h) => (
-                            <span
-                                key={h}
-                                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                            >
-                                {h}
-                            </span>
-                        ))}
-                    </div>
-                    {paged.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                            No hay evaluaciones que coincidan con el filtro.
+                        <div className={`grid ${GRADE_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {GRADE_HEADERS.map((h) => (
+                                <span
+                                    key={h}
+                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                                >
+                                    {h}
+                                </span>
+                            ))}
                         </div>
-                    )}
-                    {paged.map((g, i) => {
-                        const t = TYPE_META[g.type];
-                        const passed = g.grade >= PASS_MARK;
-                        return (
-                            <div
-                                key={g.id}
-                                onClick={() => setSelected(g)}
-                                className={`grid ${GRADE_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-[0.875rem] text-edu-ink font-medium truncate pr-2">{g.subject}</span>
-                                <div className="min-w-0 pr-2">
-                                    <div className="text-[0.875rem] text-edu-ink-700 truncate">{g.title}</div>
+                        {paged.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay evaluaciones que coincidan con el filtro.
+                            </div>
+                        )}
+                        {paged.map((g, i) => {
+                            const t = TYPE_META[g.type];
+                            const passed = g.grade >= PASS_MARK;
+                            return (
+                                <div
+                                    key={g.id}
+                                    onClick={() => setSelected(g)}
+                                    className={`grid ${GRADE_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-[0.875rem] text-edu-ink font-medium truncate pr-2">{g.subject}</span>
+                                    <div className="min-w-0 pr-2">
+                                        <div className="text-[0.875rem] text-edu-ink-700 truncate">{g.title}</div>
+                                        <span
+                                            className="inline-flex mt-0.5 text-[0.62rem] font-semibold px-1.5 py-px rounded-edu-pill"
+                                            style={{ backgroundColor: t.bg, color: t.color }}
+                                        >
+                                            {t.label}
+                                        </span>
+                                    </div>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{g.date}</span>
+                                    <span className={`text-[0.9rem] font-bold ${passed ? "text-edu-ink" : "text-edu-danger"}`}>
+                                        {g.grade}
+                                        <span className="text-edu-ink-400 font-normal text-[0.75rem]">/20</span>
+                                    </span>
                                     <span
-                                        className="inline-flex mt-0.5 text-[0.62rem] font-semibold px-1.5 py-px rounded-edu-pill"
-                                        style={{ backgroundColor: t.bg, color: t.color }}
+                                        className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${passed ? "bg-edu-success-bg text-edu-success" : "bg-edu-danger-bg text-edu-danger"}`}
                                     >
-                                        {t.label}
+                                        {passed ? "Aprobada" : "Reprobada"}
                                     </span>
                                 </div>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{g.date}</span>
-                                <span className={`text-[0.9rem] font-bold ${passed ? "text-edu-ink" : "text-edu-danger"}`}>
-                                    {g.grade}
-                                    <span className="text-edu-ink-400 font-normal text-[0.75rem]">/20</span>
-                                </span>
-                                <span
-                                    className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${passed ? "bg-edu-success-bg text-edu-success" : "bg-edu-danger-bg text-edu-danger"}`}
-                                >
-                                    {passed ? "Aprobada" : "Reprobada"}
-                                </span>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
                     </div>
                 </div>
                 {totalPages > 1 && (

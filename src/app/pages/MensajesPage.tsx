@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Send, Phone, Video, MoreVertical } from "lucide-react";
+import { Search, Send, Menu } from "lucide-react";
 import { nowTime } from "../datos_maquetados/data/chats";
 import { getChats, type Conversation } from "../datos_maquetados/actions/chats";
 
@@ -8,6 +8,7 @@ export function MensajesPage() {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [query, setQuery] = useState("");
     const [input, setInput] = useState("");
+    const [chatListOpen, setChatListOpen] = useState(false);
     const messagesEnd = useRef<HTMLDivElement>(null);
 
     // Siembra las conversaciones desde el endpoint maquetado (patrón async).
@@ -47,10 +48,21 @@ export function MensajesPage() {
         setInput("");
     };
 
+    const selectConvo = (id: number) => {
+        setSelectedId(id);
+        setChatListOpen(false);
+    };
+
     return (
-        <div className="flex-1 min-h-0 flex flex-col md:flex-row bg-edu-surface overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row bg-edu-surface overflow-hidden relative">
+            {/* Backdrop para cerrar la lista en móvil */}
+            <div
+                className={`absolute inset-0 bg-black/40 z-20 md:hidden transition-opacity duration-300 ${chatListOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+                onClick={() => setChatListOpen(false)}
+            />
+
             {/* Lista de conversaciones */}
-            <div className="w-full md:w-[320px] max-h-[38vh] md:max-h-none border-b md:border-b-0 md:border-r border-edu-border-soft flex flex-col shrink-0">
+            <div className={`absolute inset-y-0 left-0 z-30 w-[300px] bg-edu-surface flex flex-col shrink-0 border-r border-edu-border-soft transition-transform duration-300 ${chatListOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:inset-auto md:z-auto md:translate-x-0 md:w-[320px]`}>
                 <div className="px-4 py-4 border-b border-edu-border-soft">
                     <h3 className="m-0 mb-3 text-edu-ink font-bold text-base">Mensajes</h3>
                     <div className="relative">
@@ -71,7 +83,7 @@ export function MensajesPage() {
                         return (
                             <button
                                 key={c.id}
-                                onClick={() => setSelectedId(c.id)}
+                                onClick={() => selectConvo(c.id)}
                                 className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-edu-border-soft transition-colors cursor-pointer ${active ? "bg-edu-primary-50" : "bg-transparent hover:bg-edu-subtle"}`}
                             >
                                 <div className="relative shrink-0">
@@ -128,7 +140,13 @@ export function MensajesPage() {
                                     {selected.online ? "En línea" : selected.subtitle}
                                 </div>
                             </div>
-
+                            <button
+                                onClick={() => setChatListOpen(true)}
+                                aria-label="Ver conversaciones"
+                                className="md:hidden w-9 h-9 rounded-full border-[1.5px] border-edu-border bg-edu-subtle cursor-pointer flex items-center justify-center text-edu-ink-500 shrink-0"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
                         </div>
 
                         {/* Mensajes */}

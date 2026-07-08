@@ -18,7 +18,6 @@ import {
   makeDefaultConfig,
   DEFAULT_TEMPLATE,
   SECTION_ORDER,
-  MAX_ENABLED_SECTIONS,
   type LandingConfig,
   type SectionEntry,
   type SectionId,
@@ -85,7 +84,7 @@ function removeStore(name: string) {
 /* Normalización                                                    */
 /* ---------------------------------------------------------------- */
 
-/** Garantiza que estén las 9 secciones, sin duplicados y respetando el tope. */
+/** Garantiza que estén todas las secciones, sin duplicados ni pérdidas. */
 function normalizeSections(raw: unknown): SectionEntry[] {
   const arr = Array.isArray(raw) ? (raw as Partial<SectionEntry>[]) : [];
   const seen = new Set<SectionId>();
@@ -103,13 +102,7 @@ function normalizeSections(raw: unknown): SectionEntry[] {
     if (!seen.has(id)) result.push({ id, enabled: false });
   }
 
-  // Respeta el máximo de secciones activas.
-  let active = 0;
-  return result.map((s) => {
-    if (s.enabled && active >= MAX_ENABLED_SECTIONS) return { ...s, enabled: false };
-    if (s.enabled) active += 1;
-    return s;
-  });
+  return result;
 }
 
 /** Mezcla una config parcial (de cookie) sobre el default de su plantilla. */

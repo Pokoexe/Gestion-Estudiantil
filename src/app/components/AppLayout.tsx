@@ -110,7 +110,7 @@ export function AppLayout() {
       {/* Columna principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Encabezado */}
-        <header className="h-[60px] bg-edu-surface border-b border-edu-border flex items-center justify-between px-6 gap-4 sticky top-0 z-20">
+        <header className="h-[60px] bg-edu-surface border-b border-edu-border flex items-center justify-between px-6 gap-4 sticky top-0 z-[50]">
           <div className="flex items-center gap-3 min-w-0">
             {!chromeless && (
               <button
@@ -251,7 +251,7 @@ export function AppLayout() {
 
         {/* Aviso de morosidad — pegado al header, visible en todas las páginas */}
         {showDebt && (
-          <div className={`sticky top-[60px] z-10 flex items-center gap-2.5 px-6 py-2.5 text-sm font-medium border-b border-edu-border-soft ${DEBT_STYLES[DEBT_LEVEL].banner}`}>
+          <div className={`sticky top-[60px] z-[45] flex items-center gap-2.5 px-6 py-2.5 text-sm font-medium border-b border-edu-border-soft ${DEBT_STYLES[DEBT_LEVEL].banner}`}>
             <DebtIcon className="w-4 h-4 shrink-0" />
             <span className="flex-1">{DEBT_MESSAGE}</span>
             <button

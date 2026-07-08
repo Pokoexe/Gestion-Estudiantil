@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { User, CalendarDays, CheckCircle2, Clock, ListChecks, Search, Users } from "lucide-react";
+import { User, CalendarDays, CheckCircle2, Clock, ListChecks, Search, Users, X, Trophy } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Pagination } from "../components/Pagination";
 import { useFetch } from "../datos_maquetados";
@@ -175,6 +175,7 @@ export function CoursesActivitiesPage() {
     const [activityQuery, setActivityQuery] = useState("");
     const [activityStatusFilter, setActivityStatusFilter] = useState<"todas" | ActivityStatus>("todas");
     const [activityPage, setActivityPage] = useState(1);
+    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
     const myCourses = extraCourses.filter((c) => c.enrollment);
     const newCourses = extraCourses.filter((c) => !c.enrollment);
@@ -225,258 +226,313 @@ export function CoursesActivitiesPage() {
     };
 
     return (
-        <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-            {/* Pestañas */}
-            <div className="px-5 pt-3 border-b border-edu-border-soft">
-                <div className="flex gap-1">
-                    {TABS.map((t) => (
-                        <button
-                            key={t.key}
-                            onClick={() => changeTab(t.key)}
-                            className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${
-                                tab === t.key
-                                    ? "border-edu-primary text-edu-primary"
-                                    : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
-                            }`}
-                        >
-                            {t.label}
-                        </button>
-                    ))}
+        <>
+            {/* KPIs — siempre visibles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                Actividades realizadas
+                            </p>
+                            <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
+                                {doneCount}
+                            </p>
+                        </div>
+                        <div className="w-10 h-10 rounded-edu-control bg-edu-success-bg flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="w-5 h-5 text-edu-success" />
+                        </div>
+                    </div>
+                    <p className="text-edu-ink-400 text-xs m-0">
+                        Actividades en las que ya participaste
+                    </p>
+                </div>
+
+                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                Actividades por realizar
+                            </p>
+                            <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
+                                {upcomingCount}
+                            </p>
+                        </div>
+                        <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center shrink-0">
+                            <Clock className="w-5 h-5 text-edu-primary" />
+                        </div>
+                    </div>
+                    <p className="text-edu-ink-400 text-xs m-0">
+                        Actividades programadas próximamente
+                    </p>
                 </div>
             </div>
 
-            {/* ── Cursos (los que participo) ── */}
-            {tab === "cursos" && (
-                <>
-                    <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                        <select
-                            value={myTopicFilter}
-                            onChange={(e) => { setMyTopicFilter(e.target.value); setMyPage(1); }}
-                            className={SELECT_CLS}
-                        >
-                            <option value="todos">Todos los temas</option>
-                            {myTopics.map((t) => (
-                                <option key={t} value={t}>{TOPIC_LABELS[t] ?? t}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={myDateSort}
-                            onChange={(e) => { setMyDateSort(e.target.value as "asc" | "desc"); setMyPage(1); }}
-                            className={SELECT_CLS}
-                        >
-                            <option value="asc">Fecha: más cercana</option>
-                            <option value="desc">Fecha: más lejana</option>
-                        </select>
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                {/* Pestañas */}
+                <div className="px-5 pt-3 border-b border-edu-border-soft">
+                    <div className="flex gap-1">
+                        {TABS.map((t) => (
+                            <button
+                                key={t.key}
+                                onClick={() => changeTab(t.key)}
+                                className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${tab === t.key
+                                    ? "border-edu-primary text-edu-primary"
+                                    : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
+                                    }`}
+                            >
+                                {t.label}
+                            </button>
+                        ))}
                     </div>
-                    <CoursesGrid
-                        courses={filteredMyCourses}
-                        page={myPage}
-                        onPageChange={setMyPage}
-                        onOpen={openCourse}
-                        emptyText="Aún no participas en ningún curso. Explora los nuevos cursos disponibles."
-                    />
-                </>
-            )}
+                </div>
 
-            {/* ── Nuevos cursos (catálogo) ── */}
-            {tab === "nuevos" && (
-                <>
-                    <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                        <div className="relative flex-1 min-w-[180px]">
-                            <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input
-                                type="text"
-                                value={newQuery}
-                                onChange={(e) => { setNewQuery(e.target.value); setNewPage(1); }}
-                                placeholder="Buscar curso…"
-                                className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
-                            />
+                {/* ── Cursos (los que participo) ── */}
+                {tab === "cursos" && (
+                    <>
+                        <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
+                            <select
+                                value={myTopicFilter}
+                                onChange={(e) => { setMyTopicFilter(e.target.value); setMyPage(1); }}
+                                className={SELECT_CLS}
+                            >
+                                <option value="todos">Todos los temas</option>
+                                {myTopics.map((t) => (
+                                    <option key={t} value={t}>{TOPIC_LABELS[t] ?? t}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={myDateSort}
+                                onChange={(e) => { setMyDateSort(e.target.value as "asc" | "desc"); setMyPage(1); }}
+                                className={SELECT_CLS}
+                            >
+                                <option value="asc">Fecha: más cercana</option>
+                                <option value="desc">Fecha: más lejana</option>
+                            </select>
                         </div>
-                        <select
-                            value={newTeacherFilter}
-                            onChange={(e) => { setNewTeacherFilter(e.target.value); setNewPage(1); }}
-                            className={SELECT_CLS}
-                        >
-                            <option value="todos">Todos los profesores</option>
-                            {newCourseTeachers.map((t) => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={newDateSort}
-                            onChange={(e) => { setNewDateSort(e.target.value); setNewPage(1); }}
-                            className={SELECT_CLS}
-                        >
-                            <option value="">Ordenar por fecha</option>
-                            <option value="asc">Fecha: más cercana</option>
-                            <option value="desc">Fecha: más lejana</option>
-                        </select>
-                        <select
-                            value={newPriceSort}
-                            onChange={(e) => { setNewPriceSort(e.target.value); setNewPage(1); }}
-                            className={SELECT_CLS}
-                        >
-                            <option value="">Ordenar por precio</option>
-                            <option value="asc">Precio: menor primero</option>
-                            <option value="desc">Precio: mayor primero</option>
-                        </select>
-                        <select
-                            value={newSpotsFilter}
-                            onChange={(e) => { setNewSpotsFilter(e.target.value as "todos" | "disponible"); setNewPage(1); }}
-                            className={SELECT_CLS}
-                        >
-                            <option value="todos">Todos los cupos</option>
-                            <option value="disponible">Con cupo disponible</option>
-                        </select>
-                    </div>
-                    <CoursesGrid
-                        courses={filteredNewCourses}
-                        page={newPage}
-                        onPageChange={setNewPage}
-                        onOpen={openCourse}
-                        emptyText="No hay nuevos cursos disponibles por ahora."
-                        showSpots
-                    />
-                </>
-            )}
+                        <CoursesGrid
+                            courses={filteredMyCourses}
+                            page={myPage}
+                            onPageChange={setMyPage}
+                            onOpen={openCourse}
+                            emptyText="Aún no participas en ningún curso. Explora los nuevos cursos disponibles."
+                        />
+                    </>
+                )}
 
-            {/* ── Actividades ── */}
-            {tab === "actividades" && (
-                <>
-                    {/* Bloques resumen */}
-                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-edu-subtle rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                        Actividades realizadas
-                                    </p>
-                                    <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
-                                        {doneCount}
-                                    </p>
-                                </div>
-                                <div className="w-10 h-10 rounded-edu-control bg-edu-success-bg flex items-center justify-center shrink-0">
-                                    <CheckCircle2 className="w-5 h-5 text-edu-success" />
-                                </div>
-                            </div>
-                            <p className="text-edu-ink-400 text-xs m-0">
-                                Actividades en las que ya participaste
-                            </p>
-                        </div>
-
-                        <div className="bg-edu-subtle rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                        Actividades por realizar
-                                    </p>
-                                    <p className="text-edu-ink text-[1.4rem] font-bold mt-1">
-                                        {upcomingCount}
-                                    </p>
-                                </div>
-                                <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center shrink-0">
-                                    <Clock className="w-5 h-5 text-edu-primary" />
-                                </div>
-                            </div>
-                            <p className="text-edu-ink-400 text-xs m-0">
-                                Actividades programadas próximamente
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Tabla de actividades */}
-                    <div className="border-t border-edu-border-soft">
-                        <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
-                            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
-                                Historial de actividades
-                            </h3>
-                            <span className="text-[0.8rem] text-edu-ink-400 font-medium">
-                                {filteredActivities.length} actividad{filteredActivities.length === 1 ? "" : "es"}
-                            </span>
-                        </div>
-
-                        {/* Buscador y filtro */}
+                {/* ── Nuevos cursos (catálogo) ── */}
+                {tab === "nuevos" && (
+                    <>
                         <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
                             <div className="relative flex-1 min-w-[180px]">
                                 <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                 <input
                                     type="text"
-                                    value={activityQuery}
-                                    onChange={(e) => { setActivityQuery(e.target.value); setActivityPage(1); }}
-                                    placeholder="Buscar actividad o profesor…"
+                                    value={newQuery}
+                                    onChange={(e) => { setNewQuery(e.target.value); setNewPage(1); }}
+                                    placeholder="Buscar curso…"
                                     className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
                                 />
                             </div>
                             <select
-                                value={activityStatusFilter}
-                                onChange={(e) => { setActivityStatusFilter(e.target.value as "todas" | ActivityStatus); setActivityPage(1); }}
+                                value={newTeacherFilter}
+                                onChange={(e) => { setNewTeacherFilter(e.target.value); setNewPage(1); }}
                                 className={SELECT_CLS}
                             >
-                                <option value="todas">Todas</option>
-                                <option value="completed">Realizadas</option>
-                                <option value="upcoming">Por realizar</option>
+                                <option value="todos">Todos los profesores</option>
+                                {newCourseTeachers.map((t) => (
+                                    <option key={t} value={t}>{t}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={newDateSort}
+                                onChange={(e) => { setNewDateSort(e.target.value); setNewPage(1); }}
+                                className={SELECT_CLS}
+                            >
+                                <option value="">Ordenar por fecha</option>
+                                <option value="asc">Fecha: más cercana</option>
+                                <option value="desc">Fecha: más lejana</option>
+                            </select>
+                            <select
+                                value={newPriceSort}
+                                onChange={(e) => { setNewPriceSort(e.target.value); setNewPage(1); }}
+                                className={SELECT_CLS}
+                            >
+                                <option value="">Ordenar por precio</option>
+                                <option value="asc">Precio: menor primero</option>
+                                <option value="desc">Precio: mayor primero</option>
+                            </select>
+                            <select
+                                value={newSpotsFilter}
+                                onChange={(e) => { setNewSpotsFilter(e.target.value as "todos" | "disponible"); setNewPage(1); }}
+                                className={SELECT_CLS}
+                            >
+                                <option value="todos">Todos los cupos</option>
+                                <option value="disponible">Con cupo disponible</option>
                             </select>
                         </div>
+                        <CoursesGrid
+                            courses={filteredNewCourses}
+                            page={newPage}
+                            onPageChange={setNewPage}
+                            onOpen={openCourse}
+                            emptyText="No hay nuevos cursos disponibles por ahora."
+                            showSpots
+                        />
+                    </>
+                )}
 
-                        <div className="overflow-x-auto">
-                            <div className="min-w-[600px]">
-                            <div className={`grid ${ACTIVITY_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                                {ACTIVITY_HEADERS.map((h) => (
-                                    <span
-                                        key={h}
-                                        className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                                    >
-                                        {h}
-                                    </span>
-                                ))}
+                {/* ── Actividades ── */}
+                {tab === "actividades" && (
+                    <>
+                        {/* Tabla de actividades */}
+                        <div>
+                            <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+                                <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
+                                    Historial de actividades
+                                </h3>
+                                <span className="text-[0.8rem] text-edu-ink-400 font-medium">
+                                    {filteredActivities.length} actividad{filteredActivities.length === 1 ? "" : "es"}
+                                </span>
                             </div>
 
-                            {filteredActivities.length === 0 && (
-                                <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                                    No hay actividades que coincidan con el filtro.
+                            {/* Buscador y filtro */}
+                            <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
+                                <div className="relative flex-1 min-w-[180px]">
+                                    <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        value={activityQuery}
+                                        onChange={(e) => { setActivityQuery(e.target.value); setActivityPage(1); }}
+                                        placeholder="Buscar actividad o profesor…"
+                                        className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
+                                    />
                                 </div>
-                            )}
+                                <select
+                                    value={activityStatusFilter}
+                                    onChange={(e) => { setActivityStatusFilter(e.target.value as "todas" | ActivityStatus); setActivityPage(1); }}
+                                    className={SELECT_CLS}
+                                >
+                                    <option value="todas">Todas</option>
+                                    <option value="completed">Realizadas</option>
+                                    <option value="upcoming">Por realizar</option>
+                                </select>
+                            </div>
 
-                            {pagedActivities.map((a, i) => {
-                                const meta = ACTIVITY_META[a.status];
-                                return (
-                                    <div
-                                        key={a.id}
-                                        className={`grid ${ACTIVITY_COLS} px-5 py-[13px] items-center ${i < pagedActivities.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                    >
-                                        <div className="flex items-center gap-2">
+                            <div className="overflow-x-auto">
+                                <div className="min-w-[600px]">
+                                    <div className={`grid ${ACTIVITY_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                        {ACTIVITY_HEADERS.map((h) => (
                                             <span
-                                                className="w-2 h-2 rounded-full shrink-0"
-                                                style={{ backgroundColor: meta.dot }}
-                                            />
-                                            <span className="text-[0.875rem] text-edu-ink font-medium">
-                                                {a.name}
+                                                key={h}
+                                                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                                            >
+                                                {h}
                                             </span>
+                                        ))}
+                                    </div>
+
+                                    {filteredActivities.length === 0 && (
+                                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                            No hay actividades que coincidan con el filtro.
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <CalendarDays className="w-3 h-3 text-edu-ink-400 shrink-0" />
-                                            <span className="text-[0.8125rem] text-edu-ink-500">{a.date}</span>
-                                        </div>
-                                        <span className="text-[0.875rem] text-edu-ink-700">{a.teacher}</span>
-                                        <span
-                                            className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${meta.cls}`}
-                                        >
+                                    )}
+
+                                    {pagedActivities.map((a, i) => {
+                                        const meta = ACTIVITY_META[a.status];
+                                        return (
+                                            <div
+                                                key={a.id}
+                                                onClick={() => setSelectedActivity(a)}
+                                                className={`grid ${ACTIVITY_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedActivities.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className="w-2 h-2 rounded-full shrink-0"
+                                                        style={{ backgroundColor: meta.dot }}
+                                                    />
+                                                    <span className="text-[0.875rem] text-edu-ink font-medium">
+                                                        {a.name}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <CalendarDays className="w-3 h-3 text-edu-ink-400 shrink-0" />
+                                                    <span className="text-[0.8125rem] text-edu-ink-500">{a.date}</span>
+                                                </div>
+                                                <span className="text-[0.875rem] text-edu-ink-700">{a.teacher}</span>
+                                                <span
+                                                    className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${meta.cls}`}
+                                                >
+                                                    {meta.label}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {activityTotalPages > 1 && (
+                                    <div className="px-5 py-4 border-t border-edu-border-soft">
+                                        <Pagination currentPage={activityCurrentPage} totalPages={activityTotalPages} onPageChange={setActivityPage} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Modal detalle de actividad */}
+            {selectedActivity && (() => {
+                const meta = ACTIVITY_META[selectedActivity.status];
+                return (
+                    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setSelectedActivity(null)}>
+                        <div className="bg-edu-surface rounded-edu-card w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-[0_8px_24px_rgba(0,0,0,0.15)]" onClick={(e) => e.stopPropagation()}>
+                            {/* Encabezado */}
+                            <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-start gap-3">
+                                <div className="flex items-start gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0 bg-edu-primary-100">
+                                        <Trophy style={{ width: 18, height: 18 }} className="text-edu-primary" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="m-0 text-edu-ink font-semibold text-[0.95rem] leading-snug">{selectedActivity.name}</h3>
+                                        <div className="text-[0.8rem] text-edu-ink-500 mt-0.5">Actividad extracurricular</div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedActivity(null)} aria-label="Cerrar" className="text-edu-ink-400 bg-transparent border-none cursor-pointer p-1 flex items-center hover:text-edu-ink-700 shrink-0">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="p-5 flex flex-col gap-4">
+
+                                {/* Datos */}
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                    <div>
+                                        <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Fecha</div>
+                                        <div className="text-[0.875rem] text-edu-ink font-medium">{selectedActivity.date}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Lugar</div>
+                                        <div className="text-[0.875rem] text-edu-ink font-medium">{selectedActivity.lugar}</div>
+                                    </div>
+                                    <div className="">
+                                        <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Docente asignado</div>
+                                        <div className="text-[0.875rem] text-edu-ink font-medium">{selectedActivity.teacher}</div>
+                                    </div>
+
+
+                                    <div className="">
+                                        <div className="text-[0.68rem] text-edu-ink-400 uppercase tracking-[0.05em] font-medium">Estado</div>
+                                        <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-edu-pill text-[0.8rem] font-semibold ${meta.cls}`}>
                                             {meta.label}
                                         </span>
                                     </div>
-                                );
-                            })}
-                            </div>
-
-                            {activityTotalPages > 1 && (
-                                <div className="px-5 py-4 border-t border-edu-border-soft">
-                                    <Pagination currentPage={activityCurrentPage} totalPages={activityTotalPages} onPageChange={setActivityPage} />
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
-                </>
-            )}
-        </div>
+                );
+            })()}
+        </>
     );
 }

@@ -66,7 +66,13 @@ export function RepairPage() {
     const paged = rows.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     const goToSubject = (s: RepairSubjectRow) =>
-        navigate(s.status === "reparando" ? `/estudiante/reparacion/${s.id}` : `/estudiante/materias/${s.id}`);
+        navigate(
+            s.status === "reparando"
+                ? `/estudiante/reparacion/${s.id}`
+                : s.status === "pendiente"
+                    ? `/estudiante/materias/${s.id}?pendiente=true`
+                    : `/estudiante/materias/${s.id}`
+        );
 
     return (
         <>

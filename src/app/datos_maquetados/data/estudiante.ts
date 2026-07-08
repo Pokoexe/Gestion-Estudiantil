@@ -120,6 +120,8 @@ export interface DashboardClass {
   subject: string;
   teacher: string;
   color: string;
+  fg: string;
+  hasEval: boolean;
 }
 
 export interface DashboardScheduleDay {
@@ -131,51 +133,51 @@ export const HORARIO_DASHBOARD: DashboardScheduleDay[] = [
   {
     day: "Lun",
     classes: [
-      { id: "matematica", time: "07:00", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+      { id: "matematica", time: "07:00", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe", fg: "#1e40af", hasEval: true },
+      { id: "fisica", time: "07:40", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3", fg: "#854d0e", hasEval: false },
+      { id: "literatura", time: "08:20", subject: "Literatura", teacher: "Prof. García", color: "#dcfce7", fg: "#166534", hasEval: false },
+      { id: "historia", time: "09:00", subject: "Historia", teacher: "Prof. Flores", color: "#fce7f3", fg: "#9d174d", hasEval: true },
+      { id: "quimica", time: "09:40", subject: "Química", teacher: "Prof. Méndez", color: "#ede9fe", fg: "#5b21b6", hasEval: false },
     ],
   },
   {
     day: "Mar",
     classes: [
-      { id: "literatura", time: "07:00", subject: "Literatura", teacher: "Prof. García", color: "#dcfce7" },
-      { id: "historia", time: "10:00", subject: "Historia", teacher: "Prof. Flores", color: "#fce7f3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+      { id: "literatura", time: "07:00", subject: "Literatura", teacher: "Prof. García", color: "#dcfce7", fg: "#166534", hasEval: false },
+      { id: "historia", time: "07:40", subject: "Historia", teacher: "Prof. Flores", color: "#fce7f3", fg: "#9d174d", hasEval: false },
+      { id: "ingles", time: "08:20", subject: "Inglés", teacher: "Prof. Collins", color: "#ffedd5", fg: "#9a3412", hasEval: true },
+      { id: "biologia", time: "09:00", subject: "Biología", teacher: "Prof. Ruiz", color: "#dcfce7", fg: "#166534", hasEval: false },
+      { id: "fisica", time: "09:40", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3", fg: "#854d0e", hasEval: false },
     ],
   },
   {
     day: "Mié",
     classes: [
-      { id: "quimica", time: "08:00", subject: "Química", teacher: "Prof. Méndez", color: "#ede9fe" },
-      { id: "matematica", time: "11:00", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+      { id: "quimica", time: "07:00", subject: "Química", teacher: "Prof. Méndez", color: "#ede9fe", fg: "#5b21b6", hasEval: false },
+      { id: "matematica", time: "07:40", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe", fg: "#1e40af", hasEval: false },
+      { id: "fisica", time: "08:20", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3", fg: "#854d0e", hasEval: true },
+      { id: "arte", time: "09:00", subject: "Arte", teacher: "Prof. Vega", color: "#fce7f3", fg: "#9d174d", hasEval: false },
+      { id: "biologia", time: "09:40", subject: "Biología", teacher: "Prof. Ruiz", color: "#dcfce7", fg: "#166534", hasEval: false },
     ],
   },
   {
     day: "Jue",
     classes: [
-      { id: "ingles", time: "07:00", subject: "Inglés", teacher: "Prof. Collins", color: "#ffedd5" },
-      { id: "biologia", time: "09:00", subject: "Biología", teacher: "Prof. Ruiz", color: "#dcfce7" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+      { id: "ingles", time: "07:00", subject: "Inglés", teacher: "Prof. Collins", color: "#ffedd5", fg: "#9a3412", hasEval: false },
+      { id: "biologia", time: "07:40", subject: "Biología", teacher: "Prof. Ruiz", color: "#dcfce7", fg: "#166534", hasEval: false },
+      { id: "matematica", time: "08:20", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe", fg: "#1e40af", hasEval: false },
+      { id: "quimica", time: "09:00", subject: "Química", teacher: "Prof. Méndez", color: "#ede9fe", fg: "#5b21b6", hasEval: true },
+      { id: "historia", time: "09:40", subject: "Historia", teacher: "Prof. Flores", color: "#fce7f3", fg: "#9d174d", hasEval: false },
     ],
   },
   {
     day: "Vie",
     classes: [
-      { id: "fisica", time: "08:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "arte", time: "10:00", subject: "Arte", teacher: "Prof. Vega", color: "#fce7f3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
-      { id: "fisica", time: "09:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3" },
+      { id: "fisica", time: "07:00", subject: "Física", teacher: "Prof. Torres", color: "#fef9c3", fg: "#854d0e", hasEval: false },
+      { id: "arte", time: "07:40", subject: "Arte", teacher: "Prof. Vega", color: "#fce7f3", fg: "#9d174d", hasEval: true },
+      { id: "literatura", time: "08:20", subject: "Literatura", teacher: "Prof. García", color: "#dcfce7", fg: "#166534", hasEval: false },
+      { id: "ingles", time: "09:00", subject: "Inglés", teacher: "Prof. Collins", color: "#ffedd5", fg: "#9a3412", hasEval: false },
+      { id: "matematica", time: "09:40", subject: "Matemática", teacher: "Prof. Ramírez", color: "#dbeafe", fg: "#1e40af", hasEval: false },
     ],
   },
 ];
@@ -557,17 +559,18 @@ export interface Activity {
   name: string;
   date: string;
   teacher: string;
+  lugar: string;
   status: ActivityStatus;
 }
 
 export const ACTIVITIES_ESTUDIANTE: Activity[] = [
-  { id: 1, name: "Feria de ciencias", date: "12 may 2026", teacher: "Prof. Alejandro Morales", status: "completed" },
-  { id: 2, name: "Jornada de reforestación", date: "24 may 2026", teacher: "Prof. Roberto Díaz", status: "completed" },
-  { id: 3, name: "Olimpiada de matemática", date: "3 jun 2026", teacher: "Prof. Ana Ramírez", status: "completed" },
-  { id: 4, name: "Visita al museo de historia", date: "18 jun 2026", teacher: "Prof. Flores", status: "completed" },
-  { id: 5, name: "Torneo interescolar de ajedrez", date: "9 jul 2026", teacher: "Prof. Marco Salcedo", status: "upcoming" },
-  { id: 6, name: "Festival cultural de fin de lapso", date: "26 jul 2026", teacher: "Prof. Camila Ortiz", status: "upcoming" },
-  { id: 7, name: "Campaña de donación de libros", date: "2 ago 2026", teacher: "Prof. Lucía Fernández", status: "upcoming" },
+  { id: 1, name: "Feria de ciencias", date: "12 may 2026", teacher: "Prof. Alejandro Morales", lugar: "Laboratorio de Ciencias", status: "completed" },
+  { id: 2, name: "Jornada de reforestación", date: "24 may 2026", teacher: "Prof. Roberto Díaz", lugar: "Parque Municipal", status: "completed" },
+  { id: 3, name: "Olimpiada de matemática", date: "3 jun 2026", teacher: "Prof. Ana Ramírez", lugar: "Aula Magna", status: "completed" },
+  { id: 4, name: "Visita al museo de historia", date: "18 jun 2026", teacher: "Prof. Flores", lugar: "Museo de Historia Nacional", status: "completed" },
+  { id: 5, name: "Torneo interescolar de ajedrez", date: "9 jul 2026", teacher: "Prof. Marco Salcedo", lugar: "Sala Multiusos", status: "upcoming" },
+  { id: 6, name: "Festival cultural de fin de lapso", date: "26 jul 2026", teacher: "Prof. Camila Ortiz", lugar: "Auditorio Principal", status: "upcoming" },
+  { id: 7, name: "Campaña de donación de libros", date: "2 ago 2026", teacher: "Prof. Lucía Fernández", lugar: "Biblioteca Central", status: "upcoming" },
 ];
 
 /* ------------------------------------------------------------------ */

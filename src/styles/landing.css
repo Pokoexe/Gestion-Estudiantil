@@ -60,9 +60,12 @@
 /* Contenedor raíz de la landing: scroll suave para el nav de anclas. */
 .lp-scope { scroll-behavior: smooth; }
 
-/* Oculta la barra de scroll en el lienzo de previsualización del editor. */
+/* Barra de scroll fina y oscura para el lienzo de previsualización del editor,
+   a juego con el diseño oscuro de la landing (Chrome/Edge + Firefox). */
+.lp-noscrollbar { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.4) transparent; }
 .lp-noscrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .lp-noscrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 99px; }
+.lp-noscrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
 .lp-noscrollbar::-webkit-scrollbar-track { background: transparent; }
 
 @media (prefers-reduced-motion: reduce) {

@@ -28,11 +28,11 @@ const MATERIAS: Materia[] = [
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"] as const;
 
 const BLOQUES = [
-    "07:00 - 08:30",
-    "08:30 - 10:00",
-    "10:15 - 11:45",
-    "11:45 - 13:15",
-    "14:00 - 15:30",
+    "07:00 - 07:40",
+    "07:40 - 08:20",
+    "08:20 - 09:00",
+    "09:00 - 09:40",
+    "09:40 - 10:20",
 ] as const;
 
 const materiaMap: Record<string, Materia> = Object.fromEntries(

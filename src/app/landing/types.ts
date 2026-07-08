@@ -41,8 +41,6 @@ export type SectionId =
   | "experience"
   | "contact";
 
-/** Máximo de secciones visibles simultáneamente. */
-export const MAX_ENABLED_SECTIONS = 9;
 
 export interface Teacher {
   id: string;
@@ -84,7 +82,7 @@ export interface LandingConfig {
   about: { heading: string; body: string };
   courses: { heading: string; subtitle: string };
   activities: { heading: string; subtitle: string };
-  location: { heading: string; address: string; city: string; hours: string };
+  location: { heading: string; address: string; city: string; hours: string; mapQuery?: string };
   gallery: { heading: string; images: GalleryImage[] };
   teachers: { heading: string; subtitle: string; list: Teacher[] };
   students: { number: number; label: string };
@@ -141,6 +139,14 @@ const DEFAULT_TEACHERS: Teacher[] = [
   { id: "t2", name: "Lic. Marta Sánchez", role: "Coordinación Académica", photo: "https://i.pravatar.cc/300?img=45" },
   { id: "t3", name: "Prof. Lucía Fernández", role: "Oratoria y Debate", photo: "https://i.pravatar.cc/300?img=32" },
   { id: "t4", name: "Prof. Javier Núñez", role: "Programación Web", photo: "https://i.pravatar.cc/300?img=15" },
+  { id: "t5", name: "Prof. Daniel Ríos", role: "Robótica y Automatización", photo: "https://i.pravatar.cc/300?img=51" },
+  { id: "t6", name: "Prof. Andrea Gómez", role: "Fotografía Digital", photo: "https://i.pravatar.cc/300?img=20" },
+  { id: "t7", name: "Prof. Marco Salcedo", role: "Ajedrez Estratégico", photo: "https://i.pravatar.cc/300?img=68" },
+  { id: "t8", name: "Prof. Sofía Herrera", role: "Guitarra y Ensamble", photo: "https://i.pravatar.cc/300?img=44" },
+  { id: "t9", name: "Prof. Camila Ortiz", role: "Teatro y Expresión Escénica", photo: "https://i.pravatar.cc/300?img=27" },
+  { id: "t10", name: "Prof. Roberto Díaz", role: "Ecología y Huerto Escolar", photo: "https://i.pravatar.cc/300?img=53" },
+  { id: "t11", name: "Prof. Nieves Cabrera", role: "Educación Física", photo: "https://i.pravatar.cc/300?img=48" },
+  { id: "t12", name: "Prof. Carmen Vargas", role: "Cocina y Nutrición", photo: "https://i.pravatar.cc/300?img=49" },
 ];
 
 const DEFAULT_GALLERY: GalleryImage[] = [
