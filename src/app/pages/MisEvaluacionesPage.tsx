@@ -82,79 +82,79 @@ export function MisEvaluacionesPage() {
                     <p className="text-edu-ink-400 text-xs mt-1 m-0">Cambia de lapso para consultar otras evaluaciones.</p>
                 </div>
             ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Cantidad esta semana */}
-                <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Evaluaciones esta semana
-                            </p>
-                            <p className="text-edu-ink text-[1.4rem] font-bold mt-1">{thisWeek}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Cantidad esta semana */}
+                    <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                    Evaluaciones esta semana
+                                </p>
+                                <p className="text-edu-ink text-[1.4rem] font-bold mt-1">{thisWeek}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center shrink-0">
+                                <CalendarClock className="w-5 h-5 text-edu-primary" />
+                            </div>
                         </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center shrink-0">
-                            <CalendarClock className="w-5 h-5 text-edu-primary" />
+                        <p className="text-edu-ink-400 text-xs m-0">En los próximos 7 días</p>
+                        <div className="flex items-center justify-between gap-2 mt-auto">
+                            <span className="inline-flex items-center gap-1.5 bg-edu-primary-50 text-edu-primary text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
+                                <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                                {WEEK_LABEL}
+                            </span>
                         </div>
                     </div>
-                    <p className="text-edu-ink-400 text-xs m-0">En los próximos 7 días</p>
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                        <span className="inline-flex items-center gap-1.5 bg-edu-primary-50 text-edu-primary text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
-                            <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-                            {WEEK_LABEL}
-                        </span>
-                    </div>
+
+                    {/* La más cercana */}
+                    <button
+                        onClick={() => setSelected(nearest)}
+                        className="text-left bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-primary-200"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div className="min-w-0">
+                                <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                    La más cercana
+                                </p>
+                                <p className="text-edu-ink text-[1.1rem] font-bold mt-1 truncate">{nearest.subject}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center shrink-0">
+                                <Clock className="w-5 h-5 text-edu-primary" />
+                            </div>
+                        </div>
+                        <p className="text-edu-ink-400 text-xs m-0 truncate">{nearest.title}</p>
+                        <div className="flex items-center justify-between gap-2 mt-auto">
+                            <span className="bg-edu-primary-50 text-edu-primary text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
+                                {daysLabel(nearest.daysUntil)} · {nearest.date}
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                        </div>
+                    </button>
+
+                    {/* La más importante — evitar reparación */}
+                    <button
+                        onClick={() => setSelected(mostImportant)}
+                        className="text-left bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-danger"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div className="min-w-0">
+                                <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
+                                    Más importante por hacer
+                                </p>
+                                <p className="text-edu-ink text-[1.1rem] font-bold mt-1 truncate">{mostImportant.subject}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
+                                <AlertTriangle className="w-5 h-5 text-edu-danger" />
+                            </div>
+                        </div>
+                        <p className="text-edu-ink-400 text-xs m-0 truncate">{mostImportant.title}</p>
+                        <div className="flex items-center justify-between gap-2 mt-auto">
+                            <span className="bg-edu-danger-bg text-edu-danger text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
+                                Evita reparación · {mostImportant.currentAverage}/20
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                        </div>
+                    </button>
                 </div>
-
-                {/* La más cercana */}
-                <button
-                    onClick={() => setSelected(nearest)}
-                    className="text-left bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-primary-200"
-                >
-                    <div className="flex justify-between items-start">
-                        <div className="min-w-0">
-                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                La más cercana
-                            </p>
-                            <p className="text-edu-ink text-[1.1rem] font-bold mt-1 truncate">{nearest.subject}</p>
-                        </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-primary-100 flex items-center justify-center shrink-0">
-                            <Clock className="w-5 h-5 text-edu-primary" />
-                        </div>
-                    </div>
-                    <p className="text-edu-ink-400 text-xs m-0 truncate">{nearest.title}</p>
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                        <span className="bg-edu-primary-50 text-edu-primary text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
-                            {daysLabel(nearest.daysUntil)} · {nearest.date}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                    </div>
-                </button>
-
-                {/* La más importante — evitar reparación */}
-                <button
-                    onClick={() => setSelected(mostImportant)}
-                    className="text-left bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5 cursor-pointer transition-colors hover:border-edu-danger"
-                >
-                    <div className="flex justify-between items-start">
-                        <div className="min-w-0">
-                            <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">
-                                Más importante por hacer
-                            </p>
-                            <p className="text-edu-ink text-[1.1rem] font-bold mt-1 truncate">{mostImportant.subject}</p>
-                        </div>
-                        <div className="w-10 h-10 rounded-edu-control bg-edu-danger-bg flex items-center justify-center shrink-0">
-                            <AlertTriangle className="w-5 h-5 text-edu-danger" />
-                        </div>
-                    </div>
-                    <p className="text-edu-ink-400 text-xs m-0 truncate">{mostImportant.title}</p>
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                        <span className="bg-edu-danger-bg text-edu-danger text-[0.72rem] font-semibold px-2.5 py-[3px] rounded-edu-pill">
-                            Evita reparación · {mostImportant.currentAverage}/20
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                    </div>
-                </button>
-            </div>
             )}
 
             {/* Tabla de evaluaciones */}
@@ -165,9 +165,8 @@ export function MisEvaluacionesPage() {
                 </div>
 
                 {/* Buscador y filtros */}
-                <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <LapsoFilter />
-                    <div className="relative flex-1 min-w-[180px]">
+                <div className="px-5 py-3 grid md:grid-cols-4 gap-2 items-center border-b border-edu-border-soft">
+                    <div className="md:col-span-2 relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -180,7 +179,7 @@ export function MisEvaluacionesPage() {
                     <select
                         value={subjectFilter}
                         onChange={(e) => { setSubjectFilter(e.target.value); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="todas">Todas las materias</option>
                         {subjects.map((s) => (
@@ -190,70 +189,74 @@ export function MisEvaluacionesPage() {
                     <select
                         value={order}
                         onChange={(e) => { setOrder(e.target.value as "fecha" | "riesgo"); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full truncate md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="fecha">Por fecha (más cercana)</option>
                         <option value="riesgo">Más cercanas a reprobar</option>
                     </select>
+                    <div className="md:col-span-4 flex justify-end">
+                        <LapsoFilter />
+                    </div>
+
                 </div>
 
                 {/* Tabla */}
                 <div className="overflow-x-auto">
                     <div className="min-w-[680px]">
-                    <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {EVAL_HEADERS.map((h) => (
-                            <span
-                                key={h}
-                                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                            >
-                                {h}
-                            </span>
-                        ))}
-                    </div>
-                    {filtered.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                            No hay evaluaciones que coincidan con el filtro.
+                        <div className={`grid ${EVAL_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {EVAL_HEADERS.map((h) => (
+                                <span
+                                    key={h}
+                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                                >
+                                    {h}
+                                </span>
+                            ))}
                         </div>
-                    )}
-                    {paged.map((e, i) => {
-                        const t = TYPE_META[e.type];
-                        const atRisk = e.currentAverage < RISK_MARK;
-                        return (
-                            <div
-                                key={e.id}
-                                onClick={() => setSelected(e)}
-                                className={`grid ${EVAL_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-[0.875rem] text-edu-ink font-medium truncate pr-2">{e.subject}</span>
-                                <div className="min-w-0 pr-2">
-                                    <div className="text-[0.875rem] text-edu-ink-700 truncate">{e.title}</div>
-                                    <span
-                                        className="inline-flex mt-0.5 text-[0.62rem] font-semibold px-1.5 py-px rounded-edu-pill"
-                                        style={{ backgroundColor: t.bg, color: t.color }}
-                                    >
-                                        {t.label}
-                                    </span>
-                                </div>
-                                <div className="min-w-0 pr-2">
-                                    <div className="text-[0.8125rem] text-edu-ink-700">{e.date}</div>
-                                    <div className="text-[0.7rem] text-edu-ink-400 flex items-center gap-1">
-                                        <Clock className="w-3 h-3 shrink-0" />
-                                        {daysLabel(e.daysUntil)}
+                        {filtered.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay evaluaciones que coincidan con el filtro.
+                            </div>
+                        )}
+                        {paged.map((e, i) => {
+                            const t = TYPE_META[e.type];
+                            const atRisk = e.currentAverage < RISK_MARK;
+                            return (
+                                <div
+                                    key={e.id}
+                                    onClick={() => setSelected(e)}
+                                    className={`grid ${EVAL_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-[0.875rem] text-edu-ink font-medium truncate pr-2">{e.subject}</span>
+                                    <div className="min-w-0 pr-2">
+                                        <div className="text-[0.875rem] text-edu-ink-700 truncate">{e.title}</div>
+                                        <span
+                                            className="inline-flex mt-0.5 text-[0.62rem] font-semibold px-1.5 py-px rounded-edu-pill"
+                                            style={{ backgroundColor: t.bg, color: t.color }}
+                                        >
+                                            {t.label}
+                                        </span>
+                                    </div>
+                                    <div className="min-w-0 pr-2">
+                                        <div className="text-[0.8125rem] text-edu-ink-700">{e.date}</div>
+                                        <div className="text-[0.7rem] text-edu-ink-400 flex items-center gap-1">
+                                            <Clock className="w-3 h-3 shrink-0" />
+                                            {daysLabel(e.daysUntil)}
+                                        </div>
+                                    </div>
+                                    <span className="text-[0.875rem] text-edu-ink-700 font-semibold">{e.weight}</span>
+                                    <div className="flex flex-col">
+                                        <span className={`text-[0.9rem] font-bold ${avgClass(e.currentAverage)}`}>
+                                            {e.currentAverage}
+                                            <span className="text-edu-ink-400 font-normal text-[0.75rem]">/20</span>
+                                        </span>
+                                        {atRisk && (
+                                            <span className="text-[0.62rem] text-edu-danger font-medium">En riesgo</span>
+                                        )}
                                     </div>
                                 </div>
-                                <span className="text-[0.875rem] text-edu-ink-700 font-semibold">{e.weight}</span>
-                                <div className="flex flex-col">
-                                    <span className={`text-[0.9rem] font-bold ${avgClass(e.currentAverage)}`}>
-                                        {e.currentAverage}
-                                        <span className="text-edu-ink-400 font-normal text-[0.75rem]">/20</span>
-                                    </span>
-                                    {atRisk && (
-                                        <span className="text-[0.62rem] text-edu-danger font-medium">En riesgo</span>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
                     </div>
                     {totalPages > 1 && (
                         <div className="px-5 py-4 border-t border-edu-border-soft">

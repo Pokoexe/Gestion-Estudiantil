@@ -42,7 +42,7 @@ const ACTIVITIES_PER_PAGE = 5;
 const ACTIVITY_COLS = "grid-cols-[1.8fr_1fr_1.4fr_1fr]";
 const ACTIVITY_HEADERS = ["Actividad", "Fecha", "Profesor asignado", "Estado"];
 
-const SELECT_CLS = "border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary";
+const SELECT_CLS = "w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary";
 
 function parseSpanishDate(s: string): number {
     const months: Record<string, number> = {

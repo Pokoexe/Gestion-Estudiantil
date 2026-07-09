@@ -25,12 +25,14 @@ export function LapsoFilter({ label = "Lapso", size = "sm", className = "" }: La
   const pad = size === "md" ? "px-3.5 py-2.5 text-[0.9375rem]" : "px-3 py-2 text-[0.8125rem]";
 
   return (
-    <label className={`inline-flex items-center gap-2 shrink-0 ${className}`}>
+    <label className={`flex w-full md:w-auto justify-between md:justify-start items-center gap-2 shrink-0 ${className}`}>
       {label !== null && (
-        <span className="flex items-center gap-1.5 text-edu-ink-500 text-[0.8125rem] font-medium">
-          <CalendarRange className="w-4 h-4 text-edu-primary shrink-0" />
-          {label}
-        </span>
+        <div>
+          <span className="flex items-center gap-1.5 text-edu-ink-500 text-[0.8125rem] font-medium">
+            <CalendarRange className="w-4 h-4 text-edu-primary shrink-0" />
+            {label}
+          </span>
+        </div>
       )}
       <select
         value={selectedId}

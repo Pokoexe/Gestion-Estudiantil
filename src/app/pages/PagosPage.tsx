@@ -210,7 +210,7 @@ export function PagosPage() {
                     </div>
                 </div>
 
-                <div className="flex flex-col justify-center lg:justify-end items-end gap-4 lg:gap-2 mt-4 lg:mt-1 ">
+                <div className="flex items-center lg:flex-col justify-center lg:justify-end lg:items-end gap-4 lg:gap-2 mt-4 lg:mt-1 ">
                     {solvent ? (
                         <>
                             <span className="inline-flex items-center gap-1.5 bg-edu-success-bg text-edu-success text-[0.8rem] font-semibold px-3 py-1.5 rounded-edu-pill">
@@ -220,7 +220,7 @@ export function PagosPage() {
                         </>
                     ) : (
                         <>
-                            <div className="w-full text-center lg:text-right lg:w-auto">
+                            <div className="text-center lg:w-auto">
                                 <div className="text-edu-ink-400 text-[0.72rem] uppercase tracking-[0.05em] font-medium">
                                     Monto adeudado
                                 </div>
@@ -231,7 +231,7 @@ export function PagosPage() {
                             </div>
                             <button
                                 onClick={openModal}
-                                className="w-full justify-center lg:justify-start lg:w-auto inline-flex items-center gap-2 bg-edu-primary text-white text-sm font-semibold px-4 py-2.5 rounded-edu-control border-none cursor-pointer transition-colors hover:bg-edu-primary-hover"
+                                className="justify-center lg:justify-start lg:w-auto inline-flex items-center gap-2 bg-edu-primary text-white text-sm font-semibold px-4 py-2.5 rounded-edu-control border-none cursor-pointer transition-colors hover:bg-edu-primary-hover"
                             >
                                 <CreditCard className="w-4 h-4" />
                                 Pagar por internet

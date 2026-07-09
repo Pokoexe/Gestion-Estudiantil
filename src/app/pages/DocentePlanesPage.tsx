@@ -169,25 +169,16 @@ export function DocentePlanesPage() {
                 </div>
             )}
 
-            {/* Encabezado */}
-            <div className="flex justify-between items-center flex-wrap gap-3">
-                <div>
-                    <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Planes de evaluación</h2>
-                    <p className="text-edu-ink-500 text-sm mt-1 m-0">
-                        Crea y modifica los planes de tus secciones
-                    </p>
-                </div>
-                <button
-                    onClick={() => navigate("/docente/planes/nuevo")}
-                    className="inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
-                >
-                    <PlusCircle className="w-4 h-4" />
-                    Crear plan de evaluación
-                </button>
-            </div>
-
             {/* Bloques de resumen */}
             <PlanStats subidos={subidos} porRevisar={porRevisar} aprobados={aprobados} />
+
+            <button
+                onClick={() => navigate("/docente/planes/nuevo")}
+                className="justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
+            >
+                <PlusCircle className="w-4 h-4" />
+                Crear plan de evaluación
+            </button>
 
             {/* Tabla de planes */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
@@ -195,9 +186,8 @@ export function DocentePlanesPage() {
                     <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Planes de evaluación</h3>
                     <span className="text-[0.8rem] text-edu-ink-400 font-medium">{filteredPlans.length} plan{filteredPlans.length === 1 ? "" : "es"}</span>
                 </div>
-                <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <LapsoFilter />
-                    <div className="relative flex-1 min-w-[180px]">
+                <div className="px-5 py-3 grid md:grid-cols-3 gap-2 items-center flex-wrap border-b border-edu-border-soft">
+                    <div className="md:col-span-2 relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -210,7 +200,7 @@ export function DocentePlanesPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value as "todos" | PlanEstado); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="todos">Todos los estados</option>
                         <option value="approved">Aprobados</option>
@@ -218,6 +208,11 @@ export function DocentePlanesPage() {
                         <option value="draft">Borradores</option>
                         <option value="changes">Cambios solicitados</option>
                     </select>
+
+                    <div className="md:col-span-3 flex justify-end">
+                        <LapsoFilter />
+                    </div>
+
                 </div>
                 <div className="overflow-x-auto">
                     <div className="min-w-[680px]">

@@ -174,7 +174,7 @@ export function RepairPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         {FILTER_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>

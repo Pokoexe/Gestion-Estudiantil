@@ -162,14 +162,6 @@ export function DocenteRevisionesPage() {
 
     return (
         <div className="flex flex-col gap-5">
-            {/* Encabezado */}
-            <div>
-                <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Revisiones</h2>
-                <p className="text-edu-ink-500 text-sm mt-1 m-0">
-                    Aplica los cambios solicitados en exámenes, temas de reparación, planificaciones y planes de evaluación
-                </p>
-            </div>
-
             {/* Bloques por categoría (cantidad que hay) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {KPIS.map((t, index) => {
@@ -194,8 +186,13 @@ export function DocenteRevisionesPage() {
 
             {/* Tarjeta con tabs + tabla */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+                    <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Revisiones</h3>
+                    <span className="text-[0.8rem] text-edu-ink-400 font-medium">{filtered.length} plan{filtered.length === 1 ? "" : "es"}</span>
+                </div>
+
                 {/* Tabs */}
-                <div className="px-5 pt-3 border-b border-edu-border-soft flex gap-1 flex-wrap">
+                <div className="px-5 pt-3 border-b border-edu-border-soft flex gap-1 justify-center md:justify-start flex-wrap">
                     {TABS.map((t) => {
                         const active = tab === t.key;
                         return (
@@ -212,9 +209,8 @@ export function DocenteRevisionesPage() {
                 </div>
 
                 {/* Buscador + filtro estado */}
-                <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <LapsoFilter />
-                    <div className="relative flex-1 min-w-[180px]">
+                <div className="grid md:grid-cols-4 px-5 py-3 gap-2 items-center border-b border-edu-border-soft">
+                    <div className="md:col-span-3 relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -233,7 +229,10 @@ export function DocenteRevisionesPage() {
                         <option value="Por revisar">Por revisar</option>
                         <option value="Cambios enviados">Cambios enviados</option>
                     </select>
-                    <span className="text-[0.8rem] text-edu-ink-400 font-medium shrink-0">{filtered.length} revisión{filtered.length === 1 ? "" : "es"}</span>
+
+                    <div className="md:col-span-4 flex justify-end">
+                        <LapsoFilter />
+                    </div>
                 </div>
 
                 {/* Cabecera de tabla */}

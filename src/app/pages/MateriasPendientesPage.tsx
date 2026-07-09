@@ -106,7 +106,7 @@ export function MateriasPendientesPage() {
                 </div>
 
                 <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <div className="relative flex-1 min-w-[180px]">
+                    <div className="relative flex-1  min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -119,7 +119,7 @@ export function MateriasPendientesPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         {FILTER_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
@@ -130,51 +130,51 @@ export function MateriasPendientesPage() {
                 {/* Cabecera */}
                 <div className="overflow-x-auto">
                     <div className="min-w-[640px]">
-                    <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {HEADERS.map((h, i) => (
-                            <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
-                                {h}
-                            </span>
-                        ))}
-                    </div>
-
-                    {rows.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                            No hay materias que coincidan con el filtro.
+                        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {HEADERS.map((h, i) => (
+                                <span key={i} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
+                                    {h}
+                                </span>
+                            ))}
                         </div>
-                    )}
 
-                    {paged.map((s, i) => {
-                        const meta = STATUS_META[s.status];
-                        return (
-                            <div
-                                key={s.id}
-                                onClick={() => s.status === "reparacion" && navigate("/estudiante/reparacion")}
-                                className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${s.status === "reparacion" ? "cursor-pointer" : ""} ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
-                                    <span className="text-[0.875rem] text-edu-ink font-medium">{s.name}</span>
-                                </div>
-                                <span className="text-[0.875rem] text-edu-ink-700">{s.year}</span>
-                                <span className="text-[0.875rem] font-semibold text-edu-danger">{s.average}</span>
-                                <div className="flex flex-col gap-0.5 items-start">
-                                    <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold ${meta.cls}`}>
-                                        {s.status === "reparacion" && <Wrench className="w-3 h-3" />}
-                                        {meta.label}
-                                    </span>
-                                    {s.status === "reparacion" && s.repairDate && (
-                                        <span className="text-[0.68rem] text-edu-ink-400 pl-0.5">
-                                            {s.repairDate}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex justify-end">
-                                    <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                                </div>
+                        {rows.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay materias que coincidan con el filtro.
                             </div>
-                        );
-                    })}
+                        )}
+
+                        {paged.map((s, i) => {
+                            const meta = STATUS_META[s.status];
+                            return (
+                                <div
+                                    key={s.id}
+                                    onClick={() => s.status === "reparacion" && navigate("/estudiante/reparacion")}
+                                    className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${s.status === "reparacion" ? "cursor-pointer" : ""} ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
+                                        <span className="text-[0.875rem] text-edu-ink font-medium">{s.name}</span>
+                                    </div>
+                                    <span className="text-[0.875rem] text-edu-ink-700">{s.year}</span>
+                                    <span className="text-[0.875rem] font-semibold text-edu-danger">{s.average}</span>
+                                    <div className="flex flex-col gap-0.5 items-start">
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold ${meta.cls}`}>
+                                            {s.status === "reparacion" && <Wrench className="w-3 h-3" />}
+                                            {meta.label}
+                                        </span>
+                                        {s.status === "reparacion" && s.repairDate && (
+                                            <span className="text-[0.68rem] text-edu-ink-400 pl-0.5">
+                                                {s.repairDate}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {totalPages > 1 && (

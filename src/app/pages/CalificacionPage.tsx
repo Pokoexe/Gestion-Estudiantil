@@ -106,9 +106,8 @@ export function CalificacionPage() {
                 </div>
 
                 {/* Buscador y filtros */}
-                <div className="px-5 py-3 flex gap-2 items-center flex-wrap border-b border-edu-border-soft">
-                    <LapsoFilter />
-                    <div className="relative flex-1 min-w-[180px]">
+                <div className="grid md:grid-cols-4 px-5 py-3 gap-2 items-center border-b border-edu-border-soft">
+                    <div className="md:col-span-2 relative flex-1 min-w-[180px]">
                         <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
@@ -137,6 +136,11 @@ export function CalificacionPage() {
                         <option value="aprobada">Aprobadas</option>
                         <option value="reprobada">Reprobadas</option>
                     </select>
+
+                    <div className="md:col-span-4 flex justify-end">
+                        <LapsoFilter />
+                    </div>
+
                 </div>
 
                 <div className="overflow-x-auto">

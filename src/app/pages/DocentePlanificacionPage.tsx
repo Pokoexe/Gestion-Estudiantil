@@ -57,26 +57,15 @@ export function DocentePlanificacionPage() {
                 </div>
             )}
 
-            {/* Encabezado */}
-            <div className="flex justify-between items-center flex-wrap gap-3">
-                <div>
-                    <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Planificación</h2>
-                    <p className="text-edu-ink-500 text-sm mt-1 m-0">
-                        Crea y modifica las planificaciones de tus secciones
-                    </p>
-                </div>
-                <button
-                    onClick={() => navigate("/docente/planificacion/nuevo")}
-                    className="w-full justify-center md:w-auto inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
-                >
-                    <PlusCircle className="w-4 h-4" />
-                    Crear planificación
-                </button>
-            </div>
-
             {/* Bloques de resumen */}
             <PlanStats subidos={subidos} porRevisar={porRevisar} aprobados={aprobados} />
-
+            <button
+                onClick={() => navigate("/docente/planificacion/nuevo")}
+                className="w-full justify-center md:w-auto inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
+            >
+                <PlusCircle className="w-4 h-4" />
+                Crear planificación
+            </button>
             {/* Tabla de planificaciones */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
@@ -97,7 +86,7 @@ export function DocentePlanificacionPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value as "todos" | PlanifEstado); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="todos">Todos los estados</option>
                         <option value="approved">Aprobadas</option>
