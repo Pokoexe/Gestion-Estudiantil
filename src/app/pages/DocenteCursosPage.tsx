@@ -23,14 +23,14 @@ import {
 const PER_PAGE = 5;
 
 const AREAS = [
-    { dataKey: "rob", name: "Robótica",    color: color.primary },
-    { dataKey: "web", name: "Prog. web",   color: color.success },
-    { dataKey: "fot", name: "Fotografía",  color: color.warning },
+    { dataKey: "rob", name: "Robótica", color: color.primary },
+    { dataKey: "web", name: "Prog. web", color: color.success },
+    { dataKey: "fot", name: "Fotografía", color: color.warning },
 ];
 
 const STATUS_META: Record<CursoStatus, { label: string; bg: string; fg: string }> = {
-    aceptado:  { label: "Aceptado",  bg: color.successBg,  fg: color.success },
-    solicitado:{ label: "Solicitado",bg: color.primary100, fg: color.primary },
+    aceptado: { label: "Aceptado", bg: color.successBg, fg: color.success },
+    solicitado: { label: "Solicitado", bg: color.primary100, fg: color.primary },
 };
 
 function ChartTooltip({ active, payload, label }: any) {
@@ -57,39 +57,34 @@ export function DocenteCursosPage() {
     const { data: DOCENTE_CURSOS, loading } = useFetch(getDocenteCursos, []);
     const { data: CHART_DATA } = useFetch(getCursosInscripciones, []);
 
-    const cursosActivos      = DOCENTE_CURSOS.filter((c) => c.status === "aceptado");
+    const cursosActivos = DOCENTE_CURSOS.filter((c) => c.status === "aceptado");
     const estudiantesActivos = cursosActivos.reduce((sum, c) => sum + c.enrolledCount, 0);
 
     const KPIS = [
-        { label: "Estudiantes asignados", value: String(estudiantesActivos), icon: Users,    ac: accent.blue,   hint: "En cursos activos" },
-        { label: "Cursos activos",         value: String(cursosActivos.length), icon: BookOpen, ac: accent.purple, hint: "Período 2026-I" },
+        { label: "Estudiantes asignados", value: String(estudiantesActivos), icon: Users, ac: accent.blue, hint: "En cursos activos" },
+        { label: "Cursos activos", value: String(cursosActivos.length), icon: BookOpen, ac: accent.purple, hint: "Período 2026-I" },
     ];
 
     const filtered = DOCENTE_CURSOS
         .filter((c) => statusFilter === "todos" || c.status === statusFilter)
         .filter((c) => !query.trim() || c.title.toLowerCase().includes(query.trim().toLowerCase()) || c.code.toLowerCase().includes(query.trim().toLowerCase()));
 
-    const totalPages  = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
     const currentPage = Math.min(page, totalPages);
-    const paged       = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    const paged = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     if (loading) return <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-10 text-center text-edu-ink-400 text-sm">Cargando…</div>;
 
     return (
         <div className="flex flex-col gap-5">
-            <div className="flex justify-between items-center flex-wrap gap-3">
+            {/* Encabezado */}
+            {/* <div className="flex justify-between items-center flex-wrap gap-3">
                 <div>
                     <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Mis cursos</h2>
                     <p className="text-edu-ink-500 text-sm mt-1 m-0">Cursos extracurriculares solicitados y aceptados</p>
                 </div>
-                <button
-                    onClick={() => navigate("/docente/cursos/nuevo")}
-                    className="inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
-                >
-                    <PlusCircle className="w-4 h-4" />
-                    Solicitar curso
-                </button>
-            </div>
+             
+            </div> */}
 
             {/* Grid superior */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
@@ -155,6 +150,14 @@ export function DocenteCursosPage() {
                 </div>
             </div>
 
+            <button
+                onClick={() => navigate("/docente/cursos/nuevo")}
+                className="w-full justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
+            >
+                <PlusCircle className="w-4 h-4" />
+                Solicitar curso
+            </button>
+
             {/* Tabla de cursos */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
@@ -185,37 +188,37 @@ export function DocenteCursosPage() {
                     </select>
                 </div>
                 <div className="overflow-x-auto">
-                <div className="min-w-[680px]">
-                <div className="grid grid-cols-[1.8fr_0.8fr_1.3fr_0.9fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                    {["Curso", "Código", "Horario", "Inscritos", "Estado"].map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                    ))}
-                </div>
-                {filtered.length === 0 && (
-                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay cursos que coincidan con el filtro.</div>
-                )}
-                {paged.map((curso, i) => {
-                    const st = STATUS_META[curso.status];
-                    return (
-                        <div
-                            key={curso.id}
-                            onClick={() => navigate(`/docente/cursos/${curso.id}`)}
-                            className={`grid grid-cols-[1.8fr_0.8fr_1.3fr_0.9fr_0.8fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle cursor-pointer ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                        >
-                            <span className="text-sm text-edu-ink font-medium">{curso.title}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-500 font-mono">{curso.code}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-500">{curso.schedule}</span>
-                            <span className="text-sm text-edu-ink-700 font-semibold">{curso.enrolledCount} / {curso.totalSpots}</span>
-                            <span
-                                className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
-                                style={{ backgroundColor: st.bg, color: st.fg }}
-                            >
-                                {st.label}
-                            </span>
+                    <div className="min-w-[680px]">
+                        <div className="grid grid-cols-[1.8fr_0.8fr_1.3fr_0.9fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                            {["Curso", "Código", "Horario", "Inscritos", "Estado"].map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                            ))}
                         </div>
-                    );
-                })}
-                </div>
+                        {filtered.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay cursos que coincidan con el filtro.</div>
+                        )}
+                        {paged.map((curso, i) => {
+                            const st = STATUS_META[curso.status];
+                            return (
+                                <div
+                                    key={curso.id}
+                                    onClick={() => navigate(`/docente/cursos/${curso.id}`)}
+                                    className={`grid grid-cols-[1.8fr_0.8fr_1.3fr_0.9fr_0.8fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle cursor-pointer ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-sm text-edu-ink font-medium">{curso.title}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500 font-mono">{curso.code}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{curso.schedule}</span>
+                                    <span className="text-sm text-edu-ink-700 font-semibold">{curso.enrolledCount} / {curso.totalSpots}</span>
+                                    <span
+                                        className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
+                                        style={{ backgroundColor: st.bg, color: st.fg }}
+                                    >
+                                        {st.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
                 {totalPages > 1 && (
                     <div className="px-5 py-4 border-t border-edu-border-soft">

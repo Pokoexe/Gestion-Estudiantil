@@ -48,12 +48,12 @@ export function DocenteConcejoPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div>
+            {/* <div>
                 <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Concejo de Profesores</h2>
                 <p className="text-edu-ink-500 text-sm mt-1 m-0">
                     Acepta o rechaza las discusiones de notas de los estudiantes postulados por el evaluador
                 </p>
-            </div>
+            </div> */}
 
             {/* Notificación: hay una discusión de notas en curso (clic → detalle) */}
             {activa && (
@@ -102,33 +102,33 @@ export function DocenteConcejoPage() {
 
                 {/* Cabecera de tabla */}
                 <div className="overflow-x-auto">
-                <div className="min-w-[600px]">
-                <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                    {HEADERS.map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                    ))}
-                </div>
-
-                {paged.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                        {historial.length === 0
-                            ? "Aún no hay estudiantes discutidos por el Concejo."
-                            : "No hay registros que coincidan con la búsqueda."}
-                    </div>
-                ) : (
-                    paged.map((p, i) => (
-                        <div
-                            key={p.id}
-                            className={`grid ${COLS} px-5 py-[13px] items-center ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                        >
-                            <span className="text-sm text-edu-ink font-medium">{p.estudiante}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-500">{p.materia}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-500">{p.anio}</span>
-                            <span className="text-sm text-edu-ink-700 font-semibold">{p.nota}</span>
+                    <div className="min-w-[600px]">
+                        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {HEADERS.map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                            ))}
                         </div>
-                    ))
-                )}
-                </div>
+
+                        {paged.length === 0 ? (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                {historial.length === 0
+                                    ? "Aún no hay estudiantes discutidos por el Concejo."
+                                    : "No hay registros que coincidan con la búsqueda."}
+                            </div>
+                        ) : (
+                            paged.map((p, i) => (
+                                <div
+                                    key={p.id}
+                                    className={`grid ${COLS} px-5 py-[13px] items-center ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-sm text-edu-ink font-medium">{p.estudiante}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{p.materia}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{p.anio}</span>
+                                    <span className="text-sm text-edu-ink-700 font-semibold">{p.nota}</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
 
                 {totalPages > 1 && (

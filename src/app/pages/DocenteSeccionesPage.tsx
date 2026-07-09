@@ -199,12 +199,12 @@ export function DocenteSeccionesPage() {
     if (!selected) {
         return (
             <div className="flex flex-col gap-5">
-                <div>
+                {/* <div>
                     <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Mis secciones</h2>
                     <p className="text-edu-ink-500 text-sm mt-1 m-0">
                         Secciones asignadas para el ciclo escolar 2026-I
                     </p>
-                </div>
+                </div> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {SECCIONES.map((sec) => (
@@ -322,11 +322,10 @@ export function DocenteSeccionesPage() {
                             <button
                                 key={t.key}
                                 onClick={() => setTab(t.key)}
-                                className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${
-                                    active
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${active
                                         ? "border-edu-primary text-edu-primary"
                                         : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
-                                }`}
+                                    }`}
                             >
                                 <Icon className="w-3.5 h-3.5" />
                                 {t.label}
@@ -339,26 +338,26 @@ export function DocenteSeccionesPage() {
                 {tab === "estudiantes" && (
                     <div className="overflow-x-auto">
                         <div className="min-w-[600px]">
-                        <div className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Estudiante", "Cédula", "Asistencia", "Promedio"].map((h) => (
-                                <Th key={h}>{h}</Th>
-                            ))}
-                        </div>
-                        {ESTUDIANTES.map((e, i) => (
-                            <div
-                                key={e.id}
-                                onClick={() => setStudentDetail(e)}
-                                className={`grid grid-cols-[2fr_1fr_0.8fr_0.8fr] px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < ESTUDIANTES.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-sm text-edu-ink font-medium">{e.name}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{e.cedula}</span>
-                                <span className={`text-sm font-semibold ${e.attendance >= 90 ? "text-edu-success" : "text-edu-warning"}`}>{e.attendance} %</span>
-                                <div className="flex items-center justify-between gap-1">
-                                    <span className={`text-sm font-bold ${notaColor(e.average)}`}>{e.average.toFixed(1)}</span>
-                                    <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                                </div>
+                            <div className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                {["Estudiante", "Cédula", "Asistencia", "Promedio"].map((h) => (
+                                    <Th key={h}>{h}</Th>
+                                ))}
                             </div>
-                        ))}
+                            {ESTUDIANTES.map((e, i) => (
+                                <div
+                                    key={e.id}
+                                    onClick={() => setStudentDetail(e)}
+                                    className={`grid grid-cols-[2fr_1fr_0.8fr_0.8fr] px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < ESTUDIANTES.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-sm text-edu-ink font-medium">{e.name}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{e.cedula}</span>
+                                    <span className={`text-sm font-semibold ${e.attendance >= 90 ? "text-edu-success" : "text-edu-warning"}`}>{e.attendance} %</span>
+                                    <div className="flex items-center justify-between gap-1">
+                                        <span className={`text-sm font-bold ${notaColor(e.average)}`}>{e.average.toFixed(1)}</span>
+                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -367,50 +366,50 @@ export function DocenteSeccionesPage() {
                 {tab === "plan" && (
                     <div className="overflow-x-auto">
                         <div className="min-w-[680px]">
-                        <div className="grid grid-cols-[2fr_1fr_0.6fr_1fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Evaluación", "Horario", "%", "Fecha", "Estado"].map((h) => (
-                                <Th key={h}>{h}</Th>
-                            ))}
-                        </div>
-                        {PLAN.map((ev, i) => {
-                            const st = EVAL_STATUS[ev.status];
-                            const tm = TYPE_META[ev.type];
-                            return (
-                                <div
-                                    key={ev.id}
-                                    onClick={() => setEvalDetail(ev)}
-                                    className={`grid grid-cols-[2fr_1fr_0.6fr_1fr_1fr] px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < PLAN.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                >
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className="w-8 h-8 rounded-edu-chip flex items-center justify-center shrink-0" style={{ backgroundColor: tm.bg }}>
-                                            <tm.icon style={{ width: "15px", height: "15px", color: tm.color }} />
+                            <div className="grid grid-cols-[2fr_1fr_0.6fr_1fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                {["Evaluación", "Horario", "%", "Fecha", "Estado"].map((h) => (
+                                    <Th key={h}>{h}</Th>
+                                ))}
+                            </div>
+                            {PLAN.map((ev, i) => {
+                                const st = EVAL_STATUS[ev.status];
+                                const tm = TYPE_META[ev.type];
+                                return (
+                                    <div
+                                        key={ev.id}
+                                        onClick={() => setEvalDetail(ev)}
+                                        className={`grid grid-cols-[2fr_1fr_0.6fr_1fr_1fr] px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < PLAN.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-8 h-8 rounded-edu-chip flex items-center justify-center shrink-0" style={{ backgroundColor: tm.bg }}>
+                                                <tm.icon style={{ width: "15px", height: "15px", color: tm.color }} />
+                                            </div>
+                                            <span className="text-sm text-edu-ink font-medium truncate">{ev.name}</span>
                                         </div>
-                                        <span className="text-sm text-edu-ink font-medium truncate">{ev.name}</span>
-                                    </div>
-                                    <span className="text-[0.8125rem] text-edu-ink-500 flex items-center gap-1">
-                                        <Clock className="w-3 h-3 text-edu-ink-400 shrink-0" />
-                                        {ev.horario}
-                                    </span>
-                                    <span className="text-sm text-edu-ink-700 font-semibold">{ev.weight} %</span>
-                                    <span className="text-[0.8125rem] text-edu-ink-500">{ev.date}</span>
-                                    <div className="flex items-center justify-between gap-1">
-                                        <span
-                                            className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
-                                            style={{ backgroundColor: st.bg, color: st.fg }}
-                                        >
-                                            {ev.status}
+                                        <span className="text-[0.8125rem] text-edu-ink-500 flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-edu-ink-400 shrink-0" />
+                                            {ev.horario}
                                         </span>
-                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                        <span className="text-sm text-edu-ink-700 font-semibold">{ev.weight} %</span>
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{ev.date}</span>
+                                        <div className="flex items-center justify-between gap-1">
+                                            <span
+                                                className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit"
+                                                style={{ backgroundColor: st.bg, color: st.fg }}
+                                            >
+                                                {ev.status}
+                                            </span>
+                                            <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
-                        <div className="px-5 py-3 bg-edu-subtle border-t border-edu-border-soft text-[0.8125rem] text-edu-ink-500 flex justify-between">
-                            <span>Total ponderado</span>
-                            <span className="font-semibold text-edu-ink">
-                                {PLAN.reduce((a, e) => a + e.weight, 0)} %
-                            </span>
-                        </div>
+                                );
+                            })}
+                            <div className="px-5 py-3 bg-edu-subtle border-t border-edu-border-soft text-[0.8125rem] text-edu-ink-500 flex justify-between">
+                                <span>Total ponderado</span>
+                                <span className="font-semibold text-edu-ink">
+                                    {PLAN.reduce((a, e) => a + e.weight, 0)} %
+                                </span>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -448,58 +447,58 @@ export function DocenteSeccionesPage() {
                             </div>
 
                             <div className="overflow-x-auto">
-                            <div className="min-w-[520px]">
-                            <div className="grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                                {["Estudiante", "Nota", "Estado", "Subir"].map((h) => (
-                                    <Th key={h}>{h}</Th>
-                                ))}
-                            </div>
-
-                            {filteredStudents.length === 0 && (
-                                <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                                    No hay estudiantes que coincidan con el filtro.
-                                </div>
-                            )}
-
-                            {filteredStudents.map((e, i) => {
-                                const pendiente = porEntregarNames.has(e.name);
-                                const nota = notas[e.id];
-                                return (
-                                    <div
-                                        key={e.id}
-                                        className={`grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-[11px] items-center ${i < filteredStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                    >
-                                        <div className="min-w-0">
-                                            <div className="text-sm text-edu-ink font-medium truncate">{e.name}</div>
-                                            <div className="text-[0.75rem] text-edu-ink-400">{e.cedula}</div>
-                                        </div>
-                                        <span className={`text-sm font-bold ${nota ? notaColor(Number(nota)) : "text-edu-ink-300"}`}>
-                                            {nota ? Number(nota).toFixed(1) : "—"}
-                                        </span>
-                                        {pendiente ? (
-                                            <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-warning-bg text-edu-warning">
-                                                Por entregar
-                                            </span>
-                                        ) : e.average >= 10 ? (
-                                            <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-success-bg text-edu-success">
-                                                Aprobado
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
-                                                Reprobado
-                                            </span>
-                                        )}
-                                        <button
-                                            onClick={() => openGrade(e)}
-                                            aria-label={`Subir nota de ${e.name}`}
-                                            className="w-9 h-9 rounded-edu-control border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary flex items-center justify-center cursor-pointer transition-colors hover:bg-edu-primary-100"
-                                        >
-                                            <Upload className="w-4 h-4" />
-                                        </button>
+                                <div className="min-w-[520px]">
+                                    <div className="grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                        {["Estudiante", "Nota", "Estado", "Subir"].map((h) => (
+                                            <Th key={h}>{h}</Th>
+                                        ))}
                                     </div>
-                                );
-                            })}
-                            </div>
+
+                                    {filteredStudents.length === 0 && (
+                                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                            No hay estudiantes que coincidan con el filtro.
+                                        </div>
+                                    )}
+
+                                    {filteredStudents.map((e, i) => {
+                                        const pendiente = porEntregarNames.has(e.name);
+                                        const nota = notas[e.id];
+                                        return (
+                                            <div
+                                                key={e.id}
+                                                className={`grid grid-cols-[2fr_0.9fr_1fr_0.6fr] px-5 py-[11px] items-center ${i < filteredStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                            >
+                                                <div className="min-w-0">
+                                                    <div className="text-sm text-edu-ink font-medium truncate">{e.name}</div>
+                                                    <div className="text-[0.75rem] text-edu-ink-400">{e.cedula}</div>
+                                                </div>
+                                                <span className={`text-sm font-bold ${nota ? notaColor(Number(nota)) : "text-edu-ink-300"}`}>
+                                                    {nota ? Number(nota).toFixed(1) : "—"}
+                                                </span>
+                                                {pendiente ? (
+                                                    <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-warning-bg text-edu-warning">
+                                                        Por entregar
+                                                    </span>
+                                                ) : e.average >= 10 ? (
+                                                    <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-success-bg text-edu-success">
+                                                        Aprobado
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
+                                                        Reprobado
+                                                    </span>
+                                                )}
+                                                <button
+                                                    onClick={() => openGrade(e)}
+                                                    aria-label={`Subir nota de ${e.name}`}
+                                                    className="w-9 h-9 rounded-edu-control border-[1.5px] border-edu-primary-200 bg-edu-primary-50 text-edu-primary flex items-center justify-center cursor-pointer transition-colors hover:bg-edu-primary-100"
+                                                >
+                                                    <Upload className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 
@@ -542,32 +541,32 @@ export function DocenteSeccionesPage() {
                 {tab === "faltan" && (
                     <div className="overflow-x-auto">
                         <div className="min-w-[520px]">
-                        <div className="grid grid-cols-[1.6fr_1.6fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Estudiante", "Evaluación", "Evidencia"].map((h) => (
-                                <Th key={h}>{h}</Th>
-                            ))}
-                        </div>
-                        {PENDIENTES.map((p, i) => (
-                            <div
-                                key={i}
-                                className={`grid grid-cols-[1.6fr_1.6fr_1fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < PENDIENTES.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-sm text-edu-ink font-medium">{p.student}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{p.evaluation}</span>
-                                {p.hasEvidence ? (
-                                    <button
-                                        onClick={() => setEvidence(p)}
-                                        className="inline-flex items-center gap-1.5 text-edu-primary text-[0.8rem] font-semibold w-fit cursor-pointer bg-transparent border-none p-0 hover:underline"
-                                    >
-                                        <Paperclip className="w-3.5 h-3.5" /> Ver evidencia
-                                    </button>
-                                ) : (
-                                    <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-warning-bg text-edu-warning">
-                                        Sin evidencia
-                                    </span>
-                                )}
+                            <div className="grid grid-cols-[1.6fr_1.6fr_1fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                {["Estudiante", "Evaluación", "Evidencia"].map((h) => (
+                                    <Th key={h}>{h}</Th>
+                                ))}
                             </div>
-                        ))}
+                            {PENDIENTES.map((p, i) => (
+                                <div
+                                    key={i}
+                                    className={`grid grid-cols-[1.6fr_1.6fr_1fr] px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < PENDIENTES.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-sm text-edu-ink font-medium">{p.student}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{p.evaluation}</span>
+                                    {p.hasEvidence ? (
+                                        <button
+                                            onClick={() => setEvidence(p)}
+                                            className="inline-flex items-center gap-1.5 text-edu-primary text-[0.8rem] font-semibold w-fit cursor-pointer bg-transparent border-none p-0 hover:underline"
+                                        >
+                                            <Paperclip className="w-3.5 h-3.5" /> Ver evidencia
+                                        </button>
+                                    ) : (
+                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-warning-bg text-edu-warning">
+                                            Sin evidencia
+                                        </span>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -580,23 +579,23 @@ export function DocenteSeccionesPage() {
                             {raspados.length} estudiante(s) con promedio inferior a 10 puntos
                         </div>
                         <div className="overflow-x-auto">
-                        <div className="min-w-[520px]">
-                        <div className="grid grid-cols-[2fr_1fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Estudiante", "Cédula", "Promedio"].map((h) => (
-                                <Th key={h}>{h}</Th>
-                            ))}
-                        </div>
-                        {raspados.map((e, i) => (
-                            <div
-                                key={e.id}
-                                className={`grid grid-cols-[2fr_1fr_0.8fr] px-5 py-[13px] items-center bg-edu-danger-bg/30 ${i < raspados.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-sm text-edu-danger font-semibold">{e.name}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{e.cedula}</span>
-                                <span className="text-sm font-bold text-edu-danger">{e.average.toFixed(1)}</span>
+                            <div className="min-w-[520px]">
+                                <div className="grid grid-cols-[2fr_1fr_0.8fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                    {["Estudiante", "Cédula", "Promedio"].map((h) => (
+                                        <Th key={h}>{h}</Th>
+                                    ))}
+                                </div>
+                                {raspados.map((e, i) => (
+                                    <div
+                                        key={e.id}
+                                        className={`grid grid-cols-[2fr_1fr_0.8fr] px-5 py-[13px] items-center bg-edu-danger-bg/30 ${i < raspados.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <span className="text-sm text-edu-danger font-semibold">{e.name}</span>
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{e.cedula}</span>
+                                        <span className="text-sm font-bold text-edu-danger">{e.average.toFixed(1)}</span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                        </div>
                         </div>
                     </div>
                 )}

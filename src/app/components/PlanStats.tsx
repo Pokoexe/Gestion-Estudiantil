@@ -21,11 +21,11 @@ export function PlanStats({
     ];
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {items.map((s, index) => {
+        <div className="grid  md:grid-cols-3 gap-4">
+            {items.map((s) => {
                 const Icon = s.icon;
                 return (
-                    <div key={s.label} className={`${index + 1 === items.length && "hidden md:block"} bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5`}>
+                    <div key={s.label} className={`bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5`}>
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-edu-ink-500 text-xs font-medium m-0 uppercase tracking-[0.05em]">{s.label}</p>

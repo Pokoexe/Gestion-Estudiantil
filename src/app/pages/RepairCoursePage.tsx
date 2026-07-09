@@ -397,7 +397,7 @@ export function RepairCoursePage() {
 
                 {/* Plan de evaluación de la etapa */}
                 <div className="lg:col-span-3">
-                    <div className="flex justify-between items-center mb-3">
+                    <div className="flex justify-between items-center mb-3 flex-wrap gap-3">
                         <div>
                             <h3 className="m-0 text-edu-ink font-bold text-base">Plan de evaluación · Etapa {etapa.order}</h3>
                             <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.8rem]">
@@ -416,6 +416,7 @@ export function RepairCoursePage() {
                             ))}
                         </div>
                     </div>
+
 
                     <div className="flex flex-col gap-2.5">
                         {filteredAssignments.length === 0 ? (

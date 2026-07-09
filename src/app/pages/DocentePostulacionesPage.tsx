@@ -106,10 +106,10 @@ export function DocentePostulacionesPage() {
 
     const filteredPostulados = selectedAct
         ? selectedAct.postulados.filter(
-              (p) =>
-                  !modalQuery.trim() ||
-                  `${p.nombre} ${p.seccion} ${p.cedula}`.toLowerCase().includes(modalQuery.trim().toLowerCase()),
-          )
+            (p) =>
+                !modalQuery.trim() ||
+                `${p.nombre} ${p.seccion} ${p.cedula}`.toLowerCase().includes(modalQuery.trim().toLowerCase()),
+        )
         : [];
     const modalTotalPages = Math.max(1, Math.ceil(filteredPostulados.length / MODAL_PER_PAGE));
     const modalCurrentPage = Math.min(modalPage, modalTotalPages);
@@ -164,12 +164,12 @@ export function DocentePostulacionesPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div>
+            {/* <div>
                 <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Mis Postulaciones</h2>
                 <p className="m-0 text-edu-ink-500 text-sm mt-1">
                     Actividades asignadas y estudiantes postulados para participar en ellas
                 </p>
-            </div>
+            </div> */}
 
             {/* KPIs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -212,63 +212,63 @@ export function DocentePostulacionesPage() {
 
                 {/* Cabecera de columnas */}
                 <div className="overflow-x-auto">
-                <div className="min-w-[760px]">
-                <div className={`grid ${TABLE_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                    {TABLE_HEADERS.map((h) => (
-                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                    ))}
-                </div>
+                    <div className="min-w-[760px]">
+                        <div className={`grid ${TABLE_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {TABLE_HEADERS.map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                            ))}
+                        </div>
 
-                {/* Filas */}
-                {filtered.length === 0 ? (
-                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                        No hay actividades que coincidan con la búsqueda.
-                    </div>
-                ) : (
-                    paged.map((act, i) => {
-                        const meta = TIPO_META[act.tipo];
-                        const Icon = meta.icon;
-                        const aprobados = act.postulados.filter((p) => p.estado === "Aprobado").length;
-                        return (
-                            <div
-                                key={act.id}
-                                onClick={() => openDetalle(act.id)}
-                                className={`grid ${TABLE_COLS} px-5 py-[13px] items-center cursor-pointer hover:bg-edu-subtle transition-colors ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                {/* Título */}
-                                <div className="flex items-center gap-2.5 min-w-0 pr-3">
-                                    <div className="w-7 h-7 rounded-edu-chip flex items-center justify-center shrink-0" style={{ backgroundColor: meta.ac.bg }}>
-                                        <Icon style={{ width: 14, height: 14, color: meta.ac.fg }} />
-                                    </div>
-                                    <span className="text-sm text-edu-ink font-semibold truncate">{act.nombre}</span>
-                                </div>
-                                {/* Tipo */}
-                                <span className="inline-flex items-center px-2 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit" style={{ backgroundColor: meta.ac.bg, color: meta.ac.fg }}>
-                                    {act.tipo}
-                                </span>
-                                {/* Fecha */}
-                                <span className="text-[0.8125rem] text-edu-ink-500">{fmtFecha(act.fecha)}</span>
-                                {/* Lugar */}
-                                <span className="text-[0.8125rem] text-edu-ink-500 truncate pr-2">{act.lugar}</span>
-                                {/* Cupos */}
-                                <span className={`text-[0.8125rem] font-semibold ${aprobados >= act.cupo ? "text-edu-danger" : "text-edu-ink"}`}>
-                                    {aprobados}/{act.cupo}
-                                </span>
-                                {/* Postular */}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); abrirPostular(act); }}
-                                    disabled={aprobados >= act.cupo}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-edu-control text-[0.8rem] font-semibold text-white border-none cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                                    style={{ backgroundColor: meta.ac.fg }}
-                                >
-                                    <UserPlus style={{ width: 13, height: 13 }} />
-                                    Postular
-                                </button>
+                        {/* Filas */}
+                        {filtered.length === 0 ? (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay actividades que coincidan con la búsqueda.
                             </div>
-                        );
-                    })
-                )}
-                </div>
+                        ) : (
+                            paged.map((act, i) => {
+                                const meta = TIPO_META[act.tipo];
+                                const Icon = meta.icon;
+                                const aprobados = act.postulados.filter((p) => p.estado === "Aprobado").length;
+                                return (
+                                    <div
+                                        key={act.id}
+                                        onClick={() => openDetalle(act.id)}
+                                        className={`grid ${TABLE_COLS} px-5 py-[13px] items-center cursor-pointer hover:bg-edu-subtle transition-colors ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        {/* Título */}
+                                        <div className="flex items-center gap-2.5 min-w-0 pr-3">
+                                            <div className="w-7 h-7 rounded-edu-chip flex items-center justify-center shrink-0" style={{ backgroundColor: meta.ac.bg }}>
+                                                <Icon style={{ width: 14, height: 14, color: meta.ac.fg }} />
+                                            </div>
+                                            <span className="text-sm text-edu-ink font-semibold truncate">{act.nombre}</span>
+                                        </div>
+                                        {/* Tipo */}
+                                        <span className="inline-flex items-center px-2 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit" style={{ backgroundColor: meta.ac.bg, color: meta.ac.fg }}>
+                                            {act.tipo}
+                                        </span>
+                                        {/* Fecha */}
+                                        <span className="text-[0.8125rem] text-edu-ink-500">{fmtFecha(act.fecha)}</span>
+                                        {/* Lugar */}
+                                        <span className="text-[0.8125rem] text-edu-ink-500 truncate pr-2">{act.lugar}</span>
+                                        {/* Cupos */}
+                                        <span className={`text-[0.8125rem] font-semibold ${aprobados >= act.cupo ? "text-edu-danger" : "text-edu-ink"}`}>
+                                            {aprobados}/{act.cupo}
+                                        </span>
+                                        {/* Postular */}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); abrirPostular(act); }}
+                                            disabled={aprobados >= act.cupo}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-edu-control text-[0.8rem] font-semibold text-white border-none cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            style={{ backgroundColor: meta.ac.fg }}
+                                        >
+                                            <UserPlus style={{ width: 13, height: 13 }} />
+                                            Postular
+                                        </button>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
 
                 {totalPages > 1 && (
@@ -359,36 +359,36 @@ export function DocentePostulacionesPage() {
                             ) : (
                                 <div>
                                     <div className="overflow-x-auto">
-                                    <div className="min-w-[680px]">
-                                    <div className="grid grid-cols-[1.8fr_1.2fr_1fr_0.9fr_2rem] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                                        {["Estudiante", "Sección", "Cédula", "Estado", ""].map((h) => (
-                                            <span key={h} className="text-[0.68rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                                        ))}
-                                    </div>
-                                    {pagedPostulados.map((p, j) => {
-                                        const st = ESTADO_META[p.estado];
-                                        return (
-                                            <div
-                                                key={p.id}
-                                                className={`grid grid-cols-[1.8fr_1.2fr_1fr_0.9fr_2rem] px-5 py-[13px] items-center ${j < pagedPostulados.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                            >
-                                                <span className="text-[0.875rem] text-edu-ink font-medium">{p.nombre}</span>
-                                                <span className="text-[0.8125rem] text-edu-ink-500">{p.seccion}</span>
-                                                <span className="text-[0.8125rem] text-edu-ink-500">{p.cedula}</span>
-                                                <span className={`inline-flex items-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>
-                                                    {p.estado}
-                                                </span>
-                                                <button
-                                                    onClick={() => setConfirmRemove({ postId: p.id, nombre: p.nombre })}
-                                                    aria-label="Quitar postulación"
-                                                    className="w-6 h-6 rounded-edu-chip flex items-center justify-center text-edu-ink-400 bg-transparent border-none cursor-pointer hover:text-edu-danger hover:bg-edu-danger-bg transition-colors"
-                                                >
-                                                    <X style={{ width: 12, height: 12 }} />
-                                                </button>
+                                        <div className="min-w-[680px]">
+                                            <div className="grid grid-cols-[1.8fr_1.2fr_1fr_0.9fr_2rem] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                                {["Estudiante", "Sección", "Cédula", "Estado", ""].map((h) => (
+                                                    <span key={h} className="text-[0.68rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                                                ))}
                                             </div>
-                                        );
-                                    })}
-                                    </div>
+                                            {pagedPostulados.map((p, j) => {
+                                                const st = ESTADO_META[p.estado];
+                                                return (
+                                                    <div
+                                                        key={p.id}
+                                                        className={`grid grid-cols-[1.8fr_1.2fr_1fr_0.9fr_2rem] px-5 py-[13px] items-center ${j < pagedPostulados.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                                    >
+                                                        <span className="text-[0.875rem] text-edu-ink font-medium">{p.nombre}</span>
+                                                        <span className="text-[0.8125rem] text-edu-ink-500">{p.seccion}</span>
+                                                        <span className="text-[0.8125rem] text-edu-ink-500">{p.cedula}</span>
+                                                        <span className={`inline-flex items-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>
+                                                            {p.estado}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setConfirmRemove({ postId: p.id, nombre: p.nombre })}
+                                                            aria-label="Quitar postulación"
+                                                            className="w-6 h-6 rounded-edu-chip flex items-center justify-center text-edu-ink-400 bg-transparent border-none cursor-pointer hover:text-edu-danger hover:bg-edu-danger-bg transition-colors"
+                                                        >
+                                                            <X style={{ width: 12, height: 12 }} />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                     {modalTotalPages > 1 && (
                                         <div className="px-5 py-3 border-t border-edu-border-soft">

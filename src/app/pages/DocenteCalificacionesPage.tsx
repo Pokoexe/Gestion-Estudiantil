@@ -160,17 +160,16 @@ export function DocenteCalificacionesPage() {
         <div className="flex flex-col gap-5">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
+                {/* <div>
                     <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Calificaciones</h2>
                     <p className="text-edu-ink-500 text-sm mt-1 m-0">
                         Sube y actualiza las notas de tus estudiantes por evaluación
                     </p>
-                </div>
-                <LapsoFilter />
+                </div> */}
             </div>
 
             {/* Año y materia */}
-            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex flex-wrap items-end gap-4">
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 grid md:grid-cols-2 items-end gap-4">
                 <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
                     <label className="text-edu-ink-700 text-sm font-medium">Año</label>
                     <select value={anio} onChange={(e) => setAnio(e.target.value)} className={selectCls}>
@@ -182,6 +181,10 @@ export function DocenteCalificacionesPage() {
                     <select value={materia} onChange={(e) => setMateria(e.target.value)} className={selectCls}>
                         {MATERIAS.map((m) => <option key={m} value={m}>{m}</option>)}
                     </select>
+                </div>
+
+                <div className="md:col-span-2 flex justify-end">
+                    <LapsoFilter />
                 </div>
             </div>
 
@@ -239,7 +242,7 @@ export function DocenteCalificacionesPage() {
                     {/* Izquierda: listado de estudiantes */}
                     <div className="lg:col-span-2 border-r border-edu-border-soft">
                         {/* Buscador y filtros */}
-                        <div className="px-5 py-3 border-b border-edu-border-soft flex gap-2 items-center flex-wrap">
+                        <div className="px-5 py-3 border-b border-edu-border-soft grid md:flex gap-2 items-center flex-wrap">
                             <div className="relative flex-1 min-w-[160px]">
                                 <Search className="w-4 h-4 text-edu-ink-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                 <input
@@ -250,91 +253,94 @@ export function DocenteCalificacionesPage() {
                                     className="w-full border-[1.5px] border-edu-border rounded-edu-control pl-9 pr-3 py-2 text-[0.8125rem] text-edu-ink bg-edu-subtle outline-none transition-colors focus:border-edu-primary"
                                 />
                             </div>
-                            {([
-                                { key: "todos", label: "Todos" },
-                                { key: "aprobados", label: "Aprobados" },
-                                { key: "por_entregar", label: "Por entregar" },
-                                { key: "reprobados", label: "Reprobados" },
-                            ] as const).map((f) => (
-                                <button
-                                    key={f.key}
-                                    onClick={() => { setFiltro(f.key); setPage(1); }}
-                                    className={`px-3 py-[7px] rounded-edu-control border-[1.5px] text-[0.775rem] font-medium cursor-pointer transition-colors ${filtro === f.key ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-transparent text-edu-ink-500 hover:text-edu-ink-700"}`}
-                                >
-                                    {f.label}
-                                </button>
-                            ))}
+                            <div className="grid grid-cols-2 md:block gap-2 md:space-x-2">
+                                {([
+                                    { key: "todos", label: "Todos" },
+                                    { key: "aprobados", label: "Aprobados" },
+                                    { key: "por_entregar", label: "Por entregar" },
+                                    { key: "reprobados", label: "Reprobados" },
+                                ] as const).map((f) => (
+                                    <button
+                                        key={f.key}
+                                        onClick={() => { setFiltro(f.key); setPage(1); }}
+                                        className={`px-3 py-[7px] rounded-edu-control border-[1.5px] text-[0.775rem] font-medium cursor-pointer transition-colors ${filtro === f.key ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-transparent text-edu-ink-500 hover:text-edu-ink-700"}`}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
+
 
                         {/* Cabecera tabla */}
                         <div className="overflow-x-auto">
-                        <div className="min-w-[680px]">
-                        <div className="grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                            {["Estudiante", "Promedio", "Realizadas", "Estado", ""].map((h) => (
-                                <Th key={h}>{h}</Th>
-                            ))}
-                        </div>
-
-                        {filteredStudents.length === 0 && (
-                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                                No hay estudiantes que coincidan con el filtro.
-                            </div>
-                        )}
-
-                        {pagedStudents.map((e, i) => {
-                            const realizadas = e.grades.filter(g => g !== null).length;
-                            const isApproved = e.average >= 10;
-                            const isSelected = selectedStudent?.id === e.id;
-                            const firstPendingIdx = e.grades.findIndex(g => g === null);
-                            const firstActionEval = firstPendingIdx >= 0 ? PLAN[firstPendingIdx] : PLAN[0];
-
-                            return (
-                                <div
-                                    key={e.id}
-                                    onClick={() => setSelectedStudent(e)}
-                                    className={`grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-[11px] items-center cursor-pointer transition-colors ${isSelected ? "bg-edu-primary-50 border-l-[3px] border-edu-primary" : "hover:bg-edu-subtle border-l-[3px] border-transparent"} ${i < pagedStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                >
-                                    <div className="min-w-0">
-                                        <div className="text-sm text-edu-ink font-medium truncate">{e.name}</div>
-                                        <div className="text-[0.75rem] text-edu-ink-400">{e.cedula}</div>
-                                    </div>
-                                    <span className={`text-sm font-bold ${e.average > 0 ? notaColor(e.average) : "text-edu-ink-300"}`}>
-                                        {e.average > 0 ? e.average.toFixed(1) : "—"}
-                                    </span>
-                                    <span className="text-sm text-edu-ink-700 font-medium">
-                                        {realizadas}/{PLAN.length}
-                                    </span>
-                                    {e.average <= 0 ? (
-                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-subtle text-edu-ink-400 border border-edu-border-soft">
-                                            Sin notas
-                                        </span>
-                                    ) : isApproved ? (
-                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-success-bg text-edu-success">
-                                            Aprobado
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
-                                            Reprobado
-                                        </span>
-                                    )}
-                                    <button
-                                        onClick={(evt) => {
-                                            evt.stopPropagation();
-                                            setSelectedStudent(e);
-                                            openGrade(e, firstActionEval);
-                                        }}
-                                        aria-label={isApproved ? `Modificar nota de ${e.name}` : `Subir nota de ${e.name}`}
-                                        className={`w-9 h-9 rounded-edu-control border-[1.5px] flex items-center justify-center cursor-pointer transition-colors shrink-0 ${isApproved
-                                            ? "border-edu-border bg-edu-surface text-edu-ink-500 hover:bg-edu-subtle hover:text-edu-ink"
-                                            : "border-edu-primary-200 bg-edu-primary-50 text-edu-primary hover:bg-edu-primary-100"
-                                        }`}
-                                    >
-                                        {isApproved ? <Pencil className="w-[15px] h-[15px]" /> : <Upload className="w-[15px] h-[15px]" />}
-                                    </button>
+                            <div className="min-w-[680px]">
+                                <div className="grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                    {["Estudiante", "Promedio", "Realizadas", "Estado", ""].map((h) => (
+                                        <Th key={h}>{h}</Th>
+                                    ))}
                                 </div>
-                            );
-                        })}
-                        </div>
+
+                                {filteredStudents.length === 0 && (
+                                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                        No hay estudiantes que coincidan con el filtro.
+                                    </div>
+                                )}
+
+                                {pagedStudents.map((e, i) => {
+                                    const realizadas = e.grades.filter(g => g !== null).length;
+                                    const isApproved = e.average >= 10;
+                                    const isSelected = selectedStudent?.id === e.id;
+                                    const firstPendingIdx = e.grades.findIndex(g => g === null);
+                                    const firstActionEval = firstPendingIdx >= 0 ? PLAN[firstPendingIdx] : PLAN[0];
+
+                                    return (
+                                        <div
+                                            key={e.id}
+                                            onClick={() => setSelectedStudent(e)}
+                                            className={`grid grid-cols-[2fr_0.8fr_0.85fr_1fr_0.65fr] px-5 py-[11px] items-center cursor-pointer transition-colors ${isSelected ? "bg-edu-primary-50 border-l-[3px] border-edu-primary" : "hover:bg-edu-subtle border-l-[3px] border-transparent"} ${i < pagedStudents.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                        >
+                                            <div className="min-w-0">
+                                                <div className="text-sm text-edu-ink font-medium truncate">{e.name}</div>
+                                                <div className="text-[0.75rem] text-edu-ink-400">{e.cedula}</div>
+                                            </div>
+                                            <span className={`text-sm font-bold ${e.average > 0 ? notaColor(e.average) : "text-edu-ink-300"}`}>
+                                                {e.average > 0 ? e.average.toFixed(1) : "—"}
+                                            </span>
+                                            <span className="text-sm text-edu-ink-700 font-medium">
+                                                {realizadas}/{PLAN.length}
+                                            </span>
+                                            {e.average <= 0 ? (
+                                                <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-subtle text-edu-ink-400 border border-edu-border-soft">
+                                                    Sin notas
+                                                </span>
+                                            ) : isApproved ? (
+                                                <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-success-bg text-edu-success">
+                                                    Aprobado
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
+                                                    Reprobado
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={(evt) => {
+                                                    evt.stopPropagation();
+                                                    setSelectedStudent(e);
+                                                    openGrade(e, firstActionEval);
+                                                }}
+                                                aria-label={isApproved ? `Modificar nota de ${e.name}` : `Subir nota de ${e.name}`}
+                                                className={`w-9 h-9 rounded-edu-control border-[1.5px] flex items-center justify-center cursor-pointer transition-colors shrink-0 ${isApproved
+                                                    ? "border-edu-border bg-edu-surface text-edu-ink-500 hover:bg-edu-subtle hover:text-edu-ink"
+                                                    : "border-edu-primary-200 bg-edu-primary-50 text-edu-primary hover:bg-edu-primary-100"
+                                                    }`}
+                                            >
+                                                {isApproved ? <Pencil className="w-[15px] h-[15px]" /> : <Upload className="w-[15px] h-[15px]" />}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                         {totalPages > 1 && (
                             <div className="px-5 py-4 border-t border-edu-border-soft">

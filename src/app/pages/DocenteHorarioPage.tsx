@@ -50,12 +50,12 @@ export function DocenteHorarioPage() {
 
     return (
         <div className="flex flex-col gap-5">
-            <div>
+            {/* <div>
                 <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Mi horario semanal</h2>
                 <p className="text-edu-ink-500 text-sm mt-1 m-0">
                     Distribución de clases · Ciclo escolar 2026-I
                 </p>
-            </div>
+            </div> */}
 
             {/* Leyenda de materias */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft px-5 py-4 flex flex-wrap gap-4">
