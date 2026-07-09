@@ -152,7 +152,7 @@ export function CoordPersonasPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div className="flex justify-between items-center flex-wrap gap-3">
+            {/* <div className="flex justify-between items-center flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: accent.purple.bg }}>
                         <Users style={{ width: 22, height: 22, color: accent.purple.fg }} />
@@ -162,10 +162,8 @@ export function CoordPersonasPage() {
                         <p className="m-0 text-edu-ink-500 text-[0.8125rem]">Directorio de estudiantes del plantel</p>
                     </div>
                 </div>
-                <button onClick={() => setEstModal({ mode: "añadir", data: emptyEst })} className="inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
-                    <Plus style={{ width: 16, height: 16 }} /> Añadir estudiante
-                </button>
-            </div>
+                
+            </div> */}
 
             {/* Gráfico y tarjetas */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -241,6 +239,10 @@ export function CoordPersonasPage() {
                 </div>
             </div>
 
+            <button onClick={() => setEstModal({ mode: "añadir", data: emptyEst })} className="w-full justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
+                <Plus style={{ width: 16, height: 16 }} /> Añadir estudiante
+            </button>
+
             {/* Tabla de estudiantes */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
@@ -284,32 +286,32 @@ export function CoordPersonasPage() {
 
                 <div className="overflow-x-auto">
                     <div className="min-w-[680px]">
-                    <div className={`grid ${EST_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {EST_HEADERS.map((h) => (
-                            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                        ))}
-                    </div>
-
-                    {filteredEst.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay estudiantes que coincidan con el filtro.</div>
-                    )}
-
-                    {paged.map((s, i) => (
-                        <div key={s.id} className={`grid ${EST_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-                            <span className="text-sm text-edu-ink font-semibold pr-3">{s.nombre}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-500">{s.cedula}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-700">{s.grado}</span>
-                            <span className="text-[0.8125rem] text-edu-ink-500 pr-3">{s.representante}</span>
-                            <div className="flex gap-3">
-                                <button onClick={() => setEstModal({ mode: "ver", data: s })} className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-ink-500 cursor-pointer bg-transparent border-none p-0 hover:text-edu-ink-700">
-                                    <Eye style={{ width: 14, height: 14 }} /> Ver
-                                </button>
-                                <button onClick={() => setEstModal({ mode: "modificar", data: s })} className="inline-flex items-center gap-1 text-[0.75rem] font-semibold cursor-pointer bg-transparent border-none p-0 hover:underline" style={{ color: accent.purple.fg }}>
-                                    <Pencil style={{ width: 14, height: 14 }} /> Modificar
-                                </button>
-                            </div>
+                        <div className={`grid ${EST_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {EST_HEADERS.map((h) => (
+                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                            ))}
                         </div>
-                    ))}
+
+                        {filteredEst.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay estudiantes que coincidan con el filtro.</div>
+                        )}
+
+                        {paged.map((s, i) => (
+                            <div key={s.id} className={`grid ${EST_COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                                <span className="text-sm text-edu-ink font-semibold pr-3">{s.nombre}</span>
+                                <span className="text-[0.8125rem] text-edu-ink-500">{s.cedula}</span>
+                                <span className="text-[0.8125rem] text-edu-ink-700">{s.grado}</span>
+                                <span className="text-[0.8125rem] text-edu-ink-500 pr-3">{s.representante}</span>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setEstModal({ mode: "ver", data: s })} className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-ink-500 cursor-pointer bg-transparent border-none p-0 hover:text-edu-ink-700">
+                                        <Eye style={{ width: 14, height: 14 }} /> Ver
+                                    </button>
+                                    <button onClick={() => setEstModal({ mode: "modificar", data: s })} className="inline-flex items-center gap-1 text-[0.75rem] font-semibold cursor-pointer bg-transparent border-none p-0 hover:underline" style={{ color: accent.purple.fg }}>
+                                        <Pencil style={{ width: 14, height: 14 }} /> Modificar
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {totalPages > 1 && (

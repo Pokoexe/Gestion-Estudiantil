@@ -21,19 +21,19 @@ import {
 const PER_PAGE = 6;
 
 const AREAS = [
-    { dataKey: "rob", name: "Robótica",  color: color.primary },
+    { dataKey: "rob", name: "Robótica", color: color.primary },
     { dataKey: "web", name: "Prog. web", color: color.success },
-    { dataKey: "ing", name: "Inglés",    color: color.purple },
-    { dataKey: "mus", name: "Guitarra",  color: color.warning },
+    { dataKey: "ing", name: "Inglés", color: color.purple },
+    { dataKey: "mus", name: "Guitarra", color: color.warning },
 ];
 
 const STATUS_META: Record<CursoStatus, { label: string; bg: string; fg: string }> = {
-    creado:     { label: "Creado",     bg: color.borderSoft, fg: color.ink500  },
+    creado: { label: "Creado", bg: color.borderSoft, fg: color.ink500 },
     solicitado: { label: "Solicitado", bg: color.primary100, fg: color.primary },
-    en_espera:  { label: "En espera",  bg: color.warningBg,  fg: color.warning },
-    en_proceso: { label: "En proceso", bg: "#fef3c7",         fg: "#d97706"     },
-    aceptado:   { label: "Aceptado",   bg: color.successBg,  fg: color.success },
-    rechazado:  { label: "Rechazado",  bg: color.dangerBg,   fg: color.danger  },
+    en_espera: { label: "En espera", bg: color.warningBg, fg: color.warning },
+    en_proceso: { label: "En proceso", bg: "#fef3c7", fg: "#d97706" },
+    aceptado: { label: "Aceptado", bg: color.successBg, fg: color.success },
+    rechazado: { label: "Rechazado", bg: color.dangerBg, fg: color.danger },
 };
 
 type PendingAction = { id: number; action: "aceptar" | "rechazar" } | null;
@@ -58,36 +58,36 @@ function ChartTooltip({ active, payload, label }: any) {
 
 export function CoordCursosPage() {
     const navigate = useNavigate();
-    const { data: cursosFetched }   = useFetch(getCoordCursos, []);
-    const { data: CHART_DATA }      = useFetch(getCoordCursosChart, []);
-    const [cursos, setCursos]               = useState<CoordCurso[]>([]);
+    const { data: cursosFetched } = useFetch(getCoordCursos, []);
+    const { data: CHART_DATA } = useFetch(getCoordCursosChart, []);
+    const [cursos, setCursos] = useState<CoordCurso[]>([]);
     useEffect(() => setCursos(cursosFetched), [cursosFetched]);
-    const [query, setQuery]                 = useState("");
-    const [statusFilter, setStatusFilter]   = useState<"todos" | CursoStatus>("todos");
-    const [page, setPage]                   = useState(1);
+    const [query, setQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"todos" | CursoStatus>("todos");
+    const [page, setPage] = useState(1);
     const [selectedCurso, setSelectedCurso] = useState<CoordCurso | null>(null);
-    const [pending, setPending]             = useState<PendingAction>(null);
+    const [pending, setPending] = useState<PendingAction>(null);
 
-    const cursosActivos   = cursos.filter((c) => c.status === "aceptado");
-    const cursosCreados   = cursos.filter((c) => c.status === "creado").length;
+    const cursosActivos = cursos.filter((c) => c.status === "aceptado");
+    const cursosCreados = cursos.filter((c) => c.status === "creado").length;
     const cursosSolicitud = cursos.filter((c) => c.status === "solicitado").length;
-    const cursosEspera    = cursos.filter((c) => c.status === "en_espera").length;
+    const cursosEspera = cursos.filter((c) => c.status === "en_espera").length;
     const estudiantesActivos = cursosActivos.reduce((s, c) => s + c.enrolledCount, 0);
 
     const KPIS = [
-        { label: "Cursos creados",      value: String(cursosCreados),    icon: BookOpen,      ac: accent.blue },
-        { label: "Cursos solicitados",  value: String(cursosSolicitud),  icon: ClipboardList, ac: accent.purple },
-        { label: "En espera confirmar", value: String(cursosEspera),     icon: Clock,         ac: { bg: "#fef3c7", fg: "#d97706" } },
-        { label: "Estudiantes activos", value: String(estudiantesActivos), icon: Users,       ac: accent.green },
+        { label: "Cursos creados", value: String(cursosCreados), icon: BookOpen, ac: accent.blue },
+        { label: "Cursos solicitados", value: String(cursosSolicitud), icon: ClipboardList, ac: accent.purple },
+        { label: "En espera confirmar", value: String(cursosEspera), icon: Clock, ac: { bg: "#fef3c7", fg: "#d97706" } },
+        { label: "Estudiantes activos", value: String(estudiantesActivos), icon: Users, ac: accent.green },
     ];
 
     const filtered = cursos
         .filter((c) => statusFilter === "todos" || c.status === statusFilter)
         .filter((c) => !query.trim() || c.title.toLowerCase().includes(query.trim().toLowerCase()) || c.code.toLowerCase().includes(query.trim().toLowerCase()) || c.profesor.toLowerCase().includes(query.trim().toLowerCase()));
 
-    const totalPages  = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
     const currentPage = Math.min(page, totalPages);
-    const paged       = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    const paged = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     const applyAction = (id: number, action: "aceptar" | "rechazar") => {
         setCursos((prev) =>
@@ -106,7 +106,7 @@ export function CoordCursosPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Header */}
-            <div className="flex justify-between items-center flex-wrap gap-3">
+            {/* <div className="flex justify-between items-center flex-wrap gap-3">
                 <div>
                     <h2 className="m-0 text-edu-ink font-bold text-[1.35rem]">Cursos extracurriculares</h2>
                     <p className="text-edu-ink-500 text-sm mt-1 m-0">Gestión y aprobación de solicitudes de cursos</p>
@@ -118,7 +118,7 @@ export function CoordCursosPage() {
                     <PlusCircle className="w-4 h-4" />
                     Crear curso
                 </button>
-            </div>
+            </div> */}
 
             {/* Grid superior */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
@@ -181,6 +181,14 @@ export function CoordCursosPage() {
                 </div>
             </div>
 
+            <button
+                onClick={() => navigate("/coordinador/cursos/nuevo")}
+                className="w-full justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold bg-edu-primary text-white hover:bg-edu-primary-hover border-none cursor-pointer"
+            >
+                <PlusCircle className="w-4 h-4" />
+                Crear curso
+            </button>
+
             {/* Tarjetas de cursos */}
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
@@ -204,7 +212,7 @@ export function CoordCursosPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setPage(1); }}
-                        className="border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
+                        className="w-full md:w-auto border-[1.5px] border-edu-border rounded-edu-control px-3 py-2 text-[0.8125rem] text-edu-ink-700 bg-edu-subtle outline-none cursor-pointer transition-colors focus:border-edu-primary"
                     >
                         <option value="todos">Todos los estados</option>
                         <option value="creado">Creados</option>
@@ -363,9 +371,9 @@ export function CoordCursosPage() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <InfoField icon={UserSquare2} label="Profesor asignado" value={selectedCurso.profesor} />
-                                <InfoField icon={CalendarDays} label="Fecha de inicio"  value={selectedCurso.fecha} />
-                                <InfoField icon={Clock}        label="Horario"           value={selectedCurso.schedule} />
-                                <InfoField icon={Users}        label="Cupos"             value={`${selectedCurso.enrolledCount} inscritos / ${selectedCurso.cupos} totales`} />
+                                <InfoField icon={CalendarDays} label="Fecha de inicio" value={selectedCurso.fecha} />
+                                <InfoField icon={Clock} label="Horario" value={selectedCurso.schedule} />
+                                <InfoField icon={Users} label="Cupos" value={`${selectedCurso.enrolledCount} inscritos / ${selectedCurso.cupos} totales`} />
                             </div>
 
                             <div>

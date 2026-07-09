@@ -125,7 +125,7 @@ function AttendancePanel({ data, setData, entidad, metaLabel, tablaTitulo, tabla
                 {/* Donut */}
                 <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
                     <div className="px-5 py-4 border-b border-edu-border-soft">
-                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Asistencia de este mes</h3>
+                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Asistencia de este mes · {entidad}s</h3>
                         <p className="mt-0.5 text-edu-ink-400 text-[0.78rem]">Distribución de registros · 22 días hábiles</p>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-4 flex-1 max-sm:flex-col">
@@ -408,7 +408,7 @@ export function CoordAsistenciaPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: accent.purple.bg }}>
                     <ClipboardCheck style={{ width: 22, height: 22, color: accent.purple.fg }} />
                 </div>
@@ -416,7 +416,7 @@ export function CoordAsistenciaPage() {
                     <h2 className="m-0 text-edu-ink font-bold text-[1.15rem]">Control de asistencia</h2>
                     <p className="m-0 text-edu-ink-500 text-[0.8125rem]">Seguimiento mensual de estudiantes y docentes del plantel</p>
                 </div>
-            </div>
+            </div> */}
 
             {/* Pestañas */}
             <div className="flex gap-1 border-b border-edu-border-soft">
@@ -437,7 +437,6 @@ export function CoordAsistenciaPage() {
                     );
                 })}
             </div>
-
             {/* Contenido por pestaña */}
             {tab === "estudiantes" ? (
                 <AttendancePanel

@@ -30,21 +30,21 @@ export function CoordCursosFormPage() {
     const [mainTab, setMainTab] = useState<"info" | "evaluaciones">("info");
 
     /* Información */
-    const [titulo,      setTitulo]      = useState("");
+    const [titulo, setTitulo] = useState("");
     const [descripcion, setDescripcion] = useState("");
-    const [cupos,       setCupos]       = useState("");
-    const [docente,     setDocente]     = useState("");
-    const [imgPreview,  setImgPreview]  = useState<string | null>(null);
+    const [cupos, setCupos] = useState("");
+    const [docente, setDocente] = useState("");
+    const [imgPreview, setImgPreview] = useState<string | null>(null);
     const imgRef = useRef<HTMLInputElement>(null);
 
     /* Evaluaciones */
     const [evalRows, setEvalRows] = useState<EvalRow[]>([emptyEval(1), emptyEval(2)]);
-    const [evalTab,  setEvalTab]  = useState<number | "review">(0);
+    const [evalTab, setEvalTab] = useState<number | "review">(0);
 
     const totalPond = evalRows.reduce((s, r) => s + (parseFloat(r.ponderacion) || 0), 0);
-    const weightOk  = totalPond === 100;
-    const evalsOk   = evalRows.every((r) => r.nombre.trim() && r.ponderacion);
-    const infoOk    = titulo.trim() && cupos && docente;
+    const weightOk = totalPond === 100;
+    const evalsOk = evalRows.every((r) => r.nombre.trim() && r.ponderacion);
+    const infoOk = titulo.trim() && cupos && docente;
 
     /* Imagen */
     const handleImg = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +98,7 @@ export function CoordCursosFormPage() {
             </button>
 
             {/* Encabezado */}
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: "#eff6ff" }}>
                     <PlusCircle className="w-5 h-5 text-edu-primary" />
                 </div>
@@ -106,7 +106,7 @@ export function CoordCursosFormPage() {
                     <h2 className="m-0 text-edu-ink font-bold text-[1.25rem]">Crear curso extracurricular</h2>
                     <p className="text-edu-ink-500 text-sm mt-0.5 m-0">Completa la información del curso y define sus evaluaciones</p>
                 </div>
-            </div>
+            </div> */}
 
             {/* Tarjeta principal */}
             <form onSubmit={handleSubmit} className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden flex flex-col">
@@ -360,38 +360,38 @@ export function CoordCursosFormPage() {
                             <div className="flex flex-col gap-4">
                                 <div className="rounded-edu-control border border-edu-border-soft overflow-hidden">
                                     <div className="overflow-x-auto">
-                                    <div className="min-w-[520px]">
-                                    <div className="grid grid-cols-[0.4fr_1.6fr_0.6fr_1fr_0.7fr] px-3 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
-                                        {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h) => (
-                                            <span key={h} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">{h}</span>
-                                        ))}
-                                    </div>
-                                    {evalRows.map((r, i) => (
-                                        <div
-                                            key={r.id}
-                                            className={`grid grid-cols-[0.4fr_1.6fr_0.6fr_1fr_0.7fr] px-3 py-2.5 items-center ${i < evalRows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                        >
-                                            <span className="text-[0.8rem] text-edu-ink-500 font-semibold">{i + 1}</span>
-                                            <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
-                                                {r.nombre || <span className="text-edu-danger">Sin nombre</span>}
-                                            </span>
-                                            <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.ponderacion || "—"} %</span>
-                                            <span className="text-[0.78rem] text-edu-ink-500">{r.fecha || "—"}</span>
-                                            <span className="text-[0.78rem] text-edu-ink-500">{r.archivos.length} arch.</span>
+                                        <div className="min-w-[520px]">
+                                            <div className="grid grid-cols-[0.4fr_1.6fr_0.6fr_1fr_0.7fr] px-3 py-2.5 bg-edu-subtle border-b border-edu-border-soft">
+                                                {["#", "Evaluación", "%", "Fecha", "Archivos"].map((h) => (
+                                                    <span key={h} className="text-[0.65rem] font-semibold text-edu-ink-400 uppercase tracking-[0.04em]">{h}</span>
+                                                ))}
+                                            </div>
+                                            {evalRows.map((r, i) => (
+                                                <div
+                                                    key={r.id}
+                                                    className={`grid grid-cols-[0.4fr_1.6fr_0.6fr_1fr_0.7fr] px-3 py-2.5 items-center ${i < evalRows.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                                >
+                                                    <span className="text-[0.8rem] text-edu-ink-500 font-semibold">{i + 1}</span>
+                                                    <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
+                                                        {r.nombre || <span className="text-edu-danger">Sin nombre</span>}
+                                                    </span>
+                                                    <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.ponderacion || "—"} %</span>
+                                                    <span className="text-[0.78rem] text-edu-ink-500">{r.fecha || "—"}</span>
+                                                    <span className="text-[0.78rem] text-edu-ink-500">{r.archivos.length} arch.</span>
+                                                </div>
+                                            ))}
+                                            <div className="px-3 py-2.5 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
+                                                <span className="text-edu-ink-500">Ponderación total</span>
+                                                <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalPond} %</span>
+                                            </div>
                                         </div>
-                                    ))}
-                                    <div className="px-3 py-2.5 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
-                                        <span className="text-edu-ink-500">Ponderación total</span>
-                                        <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalPond} %</span>
-                                    </div>
-                                    </div>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-2">
                                     {[
-                                        { ok: infoOk,   text: "Información del curso completa (título, cupos, docente)" },
-                                        { ok: evalsOk,  text: "Todas las evaluaciones tienen nombre y ponderación" },
+                                        { ok: infoOk, text: "Información del curso completa (título, cupos, docente)" },
+                                        { ok: evalsOk, text: "Todas las evaluaciones tienen nombre y ponderación" },
                                         { ok: weightOk, text: `La ponderación total es 100 % (actual: ${totalPond} %)` },
                                     ].map((c, i) => (
                                         <div key={i} className="flex items-center gap-2 text-[0.8125rem]">

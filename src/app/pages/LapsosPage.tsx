@@ -74,12 +74,12 @@ export function LapsosPage() {
       prev.map((l) =>
         l.id === editTarget
           ? {
-              ...l,
-              inicio: editInicio,
-              cierre: editCierre,
-              inicioLabel: fmtFechaLarga(editInicio),
-              cierreLabel: fmtFechaLarga(editCierre),
-            }
+            ...l,
+            inicio: editInicio,
+            cierre: editCierre,
+            inicioLabel: fmtFechaLarga(editInicio),
+            cierreLabel: fmtFechaLarga(editCierre),
+          }
           : l
       )
     );
@@ -117,17 +117,17 @@ export function LapsosPage() {
             <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">Lapso académico en curso</h3>
             <p className="mt-0.5 mb-0 text-edu-ink-400 text-[0.775rem]">Gestión y fechas del período vigente</p>
           </div>
-          <div className="flex gap-2">
+          <div className="w-full md:w-auto grid grid-cols-2 md:flex gap-2">
             <button
               onClick={() => openEdit(current.id)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold border-[1.5px] border-edu-border text-edu-ink-700 bg-edu-surface cursor-pointer transition-colors hover:bg-edu-subtle"
+              className="w-full justify-center md:justify-start md:w-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold border-[1.5px] border-edu-border text-edu-ink-700 bg-edu-surface cursor-pointer transition-colors hover:bg-edu-subtle"
             >
               <Pencil className="w-3.5 h-3.5" />
               Modificar cierre
             </button>
             <button
               onClick={() => setShowNuevo(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold text-white border-none cursor-pointer transition-opacity hover:opacity-90"
+              className="w-full justify-center md:justify-start md:w-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-edu-control text-[0.8125rem] font-semibold text-white border-none cursor-pointer transition-opacity hover:opacity-90"
               style={{ backgroundColor: TEAL }}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -192,65 +192,65 @@ export function LapsosPage() {
 
         {/* Cabecera */}
         <div className="overflow-x-auto">
-        <div className="min-w-[760px]">
-        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-          {HEADERS.map((h) => (
-            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
-              {h}
-            </span>
-          ))}
-        </div>
-
-        {paged.map((l, i) => {
-          const isActual = l.id === CURRENT_LAPSO_ID;
-          return (
-            <div
-              key={l.id}
-              className={`grid ${COLS} px-5 py-[13px] items-center ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-edu-ink font-medium">{l.label}</span>
-                {isActual && (
-                  <span
-                    className="inline-flex items-center px-2 py-[2px] rounded-edu-pill text-[0.65rem] font-semibold"
-                    style={{ backgroundColor: TEAL_BG, color: TEAL }}
-                  >
-                    actual
-                  </span>
-                )}
-              </div>
-              <span className="text-[0.8125rem] text-edu-ink-500">{l.periodo}</span>
-              <span className="text-[0.8125rem] text-edu-ink-500">{fmtFecha(l.inicio)}</span>
-              <span className="text-[0.8125rem] text-edu-ink-500">{fmtFecha(l.cierre)}</span>
-              <span>
-                {l.estado === "en_curso" ? (
-                  <span
-                    className="inline-flex items-center px-2.5 py-[4px] rounded-edu-pill text-[0.7rem] font-semibold"
-                    style={{ backgroundColor: TEAL_BG, color: TEAL }}
-                  >
-                    En curso
-                  </span>
-                ) : l.estado === "finalizado" ? (
-                  <span className="inline-flex items-center px-2.5 py-[4px] rounded-edu-pill text-[0.7rem] font-semibold bg-slate-100 text-slate-500">
-                    Finalizado
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2.5 py-[4px] rounded-edu-pill text-[0.7rem] font-semibold bg-edu-warning-bg text-edu-warning">
-                    Próximo
-                  </span>
-                )}
-              </span>
-              <button
-                onClick={() => openEdit(l.id)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-edu-chip text-[0.75rem] font-medium text-edu-ink-600 bg-edu-subtle border border-edu-border-soft cursor-pointer transition-colors hover:bg-edu-border-soft"
-              >
-                <Pencil className="w-3 h-3" />
-                Cierre
-              </button>
+          <div className="min-w-[760px]">
+            <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+              {HEADERS.map((h) => (
+                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
+                  {h}
+                </span>
+              ))}
             </div>
-          );
-        })}
-        </div>
+
+            {paged.map((l, i) => {
+              const isActual = l.id === CURRENT_LAPSO_ID;
+              return (
+                <div
+                  key={l.id}
+                  className={`grid ${COLS} px-5 py-[13px] items-center ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-edu-ink font-medium">{l.label}</span>
+                    {isActual && (
+                      <span
+                        className="inline-flex items-center px-2 py-[2px] rounded-edu-pill text-[0.65rem] font-semibold"
+                        style={{ backgroundColor: TEAL_BG, color: TEAL }}
+                      >
+                        actual
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[0.8125rem] text-edu-ink-500">{l.periodo}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-500">{fmtFecha(l.inicio)}</span>
+                  <span className="text-[0.8125rem] text-edu-ink-500">{fmtFecha(l.cierre)}</span>
+                  <span>
+                    {l.estado === "en_curso" ? (
+                      <span
+                        className="inline-flex items-center px-2.5 py-[4px] rounded-edu-pill text-[0.7rem] font-semibold"
+                        style={{ backgroundColor: TEAL_BG, color: TEAL }}
+                      >
+                        En curso
+                      </span>
+                    ) : l.estado === "finalizado" ? (
+                      <span className="inline-flex items-center px-2.5 py-[4px] rounded-edu-pill text-[0.7rem] font-semibold bg-slate-100 text-slate-500">
+                        Finalizado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-[4px] rounded-edu-pill text-[0.7rem] font-semibold bg-edu-warning-bg text-edu-warning">
+                        Próximo
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => openEdit(l.id)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-edu-chip text-[0.75rem] font-medium text-edu-ink-600 bg-edu-subtle border border-edu-border-soft cursor-pointer transition-colors hover:bg-edu-border-soft"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Cierre
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {totalPages > 1 && (

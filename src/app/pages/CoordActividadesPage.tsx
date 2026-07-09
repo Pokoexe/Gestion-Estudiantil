@@ -114,7 +114,7 @@ export function CoordActividadesPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div className="flex justify-between items-center flex-wrap gap-3">
+            {/* <div className="flex justify-between items-center flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: accent.purple.bg }}>
                         <Trophy style={{ width: 22, height: 22, color: accent.purple.fg }} />
@@ -128,7 +128,12 @@ export function CoordActividadesPage() {
                     <PlusCircle style={{ width: 16, height: 16 }} />
                     Crear actividad
                 </button>
-            </div>
+            </div> */}
+
+            <button onClick={openModal} className="w-full justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
+                <PlusCircle style={{ width: 16, height: 16 }} />
+                Crear actividad
+            </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 {/* Tabla de actividades (maestro) */}
@@ -154,59 +159,59 @@ export function CoordActividadesPage() {
 
                     <div>
                         <div className="overflow-x-auto">
-                        <div className="min-w-[860px]">
-                        <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                            {HEADERS.map((h) => (
-                                <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                            ))}
-                        </div>
-
-                        {filteredReuniones.length === 0 && (
-                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay actividades que coincidan con la búsqueda.</div>
-                        )}
-
-                        {pagedReuniones.map((r, i) => {
-                            const st = ESTADO_META[r.estado];
-                            const isSel = r.id === selectedId;
-                            return (
-                                <div
-                                    key={r.id}
-                                    onClick={() => setSelectedId(r.id)}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedId(r.id); } }}
-                                    aria-pressed={isSel}
-                                    style={isSel ? { boxShadow: `inset 3px 0 0 ${accent.purple.fg}` } : undefined}
-                                    className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors ${isSel ? "bg-edu-subtle" : "hover:bg-edu-subtle"} ${i < pagedReuniones.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                                >
-                                    <div className="min-w-0 pr-3">
-                                        <div className={`text-sm ${isSel ? "text-edu-primary" : "text-edu-ink"} font-semibold`}>{r.tema}</div>
-                                    </div>
-                                    <span className="text-[0.8125rem] text-edu-ink-500">{r.docente}</span>
-                                    <span className="text-[0.8125rem] text-edu-ink-500">{r.lugar}</span>
-                                    <span className="text-[0.8125rem] text-edu-ink-500">{r.cupos}</span>
-                                    <span className="text-[0.8125rem] text-edu-ink-500">{r.fecha}</span>
-                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>{r.estado}</span>
-                                    <div className="flex items-center justify-center gap-2">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setConfirmAgenda({ id: r.id, nuevoEstado: "Aprobado" }); }}
-                                            aria-label="Aprobar actividad"
-                                            className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-success cursor-pointer bg-transparent border-none p-0 hover:underline"
-                                        >
-                                            <CheckCircle2 style={{ width: 14, height: 14 }} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setConfirmAgenda({ id: r.id, nuevoEstado: "Rechazado" }); }}
-                                            aria-label="Rechazar actividad"
-                                            className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-danger cursor-pointer bg-transparent border-none p-0 hover:underline"
-                                        >
-                                            <XCircle style={{ width: 14, height: 14 }} />
-                                        </button>
-                                    </div>
+                            <div className="min-w-[860px]">
+                                <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                    {HEADERS.map((h) => (
+                                        <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                                    ))}
                                 </div>
-                            );
-                        })}
-                        </div>
+
+                                {filteredReuniones.length === 0 && (
+                                    <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">No hay actividades que coincidan con la búsqueda.</div>
+                                )}
+
+                                {pagedReuniones.map((r, i) => {
+                                    const st = ESTADO_META[r.estado];
+                                    const isSel = r.id === selectedId;
+                                    return (
+                                        <div
+                                            key={r.id}
+                                            onClick={() => setSelectedId(r.id)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedId(r.id); } }}
+                                            aria-pressed={isSel}
+                                            style={isSel ? { boxShadow: `inset 3px 0 0 ${accent.purple.fg}` } : undefined}
+                                            className={`grid ${COLS} px-5 py-[13px] items-center cursor-pointer transition-colors ${isSel ? "bg-edu-subtle" : "hover:bg-edu-subtle"} ${i < pagedReuniones.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                        >
+                                            <div className="min-w-0 pr-3">
+                                                <div className={`text-sm ${isSel ? "text-edu-primary" : "text-edu-ink"} font-semibold`}>{r.tema}</div>
+                                            </div>
+                                            <span className="text-[0.8125rem] text-edu-ink-500">{r.docente}</span>
+                                            <span className="text-[0.8125rem] text-edu-ink-500">{r.lugar}</span>
+                                            <span className="text-[0.8125rem] text-edu-ink-500">{r.cupos}</span>
+                                            <span className="text-[0.8125rem] text-edu-ink-500">{r.fecha}</span>
+                                            <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>{r.estado}</span>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setConfirmAgenda({ id: r.id, nuevoEstado: "Aprobado" }); }}
+                                                    aria-label="Aprobar actividad"
+                                                    className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-success cursor-pointer bg-transparent border-none p-0 hover:underline"
+                                                >
+                                                    <CheckCircle2 style={{ width: 14, height: 14 }} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setConfirmAgenda({ id: r.id, nuevoEstado: "Rechazado" }); }}
+                                                    aria-label="Rechazar actividad"
+                                                    className="inline-flex items-center gap-1 text-[0.75rem] font-semibold text-edu-danger cursor-pointer bg-transparent border-none p-0 hover:underline"
+                                                >
+                                                    <XCircle style={{ width: 14, height: 14 }} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {reunionesTotalPages > 1 && (

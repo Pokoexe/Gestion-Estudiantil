@@ -87,7 +87,7 @@ export function CoordIncidenciasPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div className="flex justify-between items-center flex-wrap gap-3">
+            {/* <div className="flex justify-between items-center flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: accent.purple.bg }}>
                         <ShieldAlert style={{ width: 22, height: 22, color: accent.purple.fg }} />
@@ -101,7 +101,7 @@ export function CoordIncidenciasPage() {
                     <PlusCircle style={{ width: 16, height: 16 }} />
                     Registrar incidencia
                 </button>
-            </div>
+            </div> */}
 
             {/* Filtro por tipo de persona */}
             <div className="flex gap-1 border-b border-edu-border-soft">
@@ -120,6 +120,11 @@ export function CoordIncidenciasPage() {
                     );
                 })}
             </div>
+
+            <button onClick={openModal} className="w-full justify-center inline-flex items-center gap-2 px-[18px] py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer border-none text-white" style={{ backgroundColor: accent.purple.fg }}>
+                <PlusCircle style={{ width: 16, height: 16 }} />
+                Registrar incidencia
+            </button>
 
 
             {
@@ -167,32 +172,32 @@ export function CoordIncidenciasPage() {
 
                         <div>
                             <div className="overflow-x-auto">
-                            <div className="min-w-[680px]">
-                            <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                                {HEADERS.map((h) => (
-                                    <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
-                                ))}
-                            </div>
-                            {visibles.length === 0 ? (
-                                <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">No hay incidencias que coincidan con la búsqueda.</p>
-                            ) : (
-                                pagedVisibles.map((inc, i) => {
-                                    const st = GRAVEDAD_META[inc.gravedad];
-                                    return (
-                                        <div key={inc.id} className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pagedVisibles.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
-                                            <span className="text-sm text-edu-ink font-semibold pr-3">{inc.persona}</span>
-                                            <span className="text-[0.8125rem] text-edu-ink-700 flex items-center gap-1.5">
-                                                {inc.tipo === "Docente" ? <UserSquare2 className="text-edu-ink-400" style={{ width: 13, height: 13 }} /> : <GraduationCap className="text-edu-ink-400" style={{ width: 13, height: 13 }} />}
-                                                {inc.tipo}
-                                            </span>
-                                            <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>{inc.gravedad}</span>
-                                            <span className="text-[0.8125rem] text-edu-ink-500">{inc.fecha}</span>
-                                            <span className="text-[0.8125rem] text-edu-ink-500 pr-3">{inc.descripcion}</span>
-                                        </div>
-                                    );
-                                })
-                            )}
-                            </div>
+                                <div className="min-w-[680px]">
+                                    <div className={`grid ${COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                        {HEADERS.map((h) => (
+                                            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">{h}</span>
+                                        ))}
+                                    </div>
+                                    {visibles.length === 0 ? (
+                                        <p className="text-[0.8125rem] text-edu-ink-400 m-0 px-5 py-10 text-center">No hay incidencias que coincidan con la búsqueda.</p>
+                                    ) : (
+                                        pagedVisibles.map((inc, i) => {
+                                            const st = GRAVEDAD_META[inc.gravedad];
+                                            return (
+                                                <div key={inc.id} className={`grid ${COLS} px-5 py-[13px] items-center transition-colors hover:bg-edu-subtle ${i < pagedVisibles.length - 1 ? "border-b border-edu-border-soft" : ""}`}>
+                                                    <span className="text-sm text-edu-ink font-semibold pr-3">{inc.persona}</span>
+                                                    <span className="text-[0.8125rem] text-edu-ink-700 flex items-center gap-1.5">
+                                                        {inc.tipo === "Docente" ? <UserSquare2 className="text-edu-ink-400" style={{ width: 13, height: 13 }} /> : <GraduationCap className="text-edu-ink-400" style={{ width: 13, height: 13 }} />}
+                                                        {inc.tipo}
+                                                    </span>
+                                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>{inc.gravedad}</span>
+                                                    <span className="text-[0.8125rem] text-edu-ink-500">{inc.fecha}</span>
+                                                    <span className="text-[0.8125rem] text-edu-ink-500 pr-3">{inc.descripcion}</span>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
                             </div>
                             {totalPages > 1 && (
                                 <div className="px-5 py-4 border-t border-edu-border-soft">

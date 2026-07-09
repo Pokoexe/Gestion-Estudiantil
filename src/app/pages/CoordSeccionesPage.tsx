@@ -171,7 +171,7 @@ export function CoordSeccionesPage() {
     return (
         <div className="flex flex-col gap-5">
             {/* Encabezado */}
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-edu-control flex items-center justify-center shrink-0" style={{ backgroundColor: accent.purple.bg }}>
                     <Layers style={{ width: 22, height: 22, color: accent.purple.fg }} />
                 </div>
@@ -179,7 +179,7 @@ export function CoordSeccionesPage() {
                     <h2 className="m-0 text-edu-ink font-bold text-[1.15rem]">Gestión académica</h2>
                     <p className="m-0 text-edu-ink-500 text-[0.8125rem]">Secciones, materias y estructura de horarios del plantel</p>
                 </div>
-            </div>
+            </div> */}
 
             {/* Pestañas */}
             <div className="flex gap-1 border-b border-edu-border-soft">
