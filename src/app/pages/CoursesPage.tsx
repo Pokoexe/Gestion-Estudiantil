@@ -135,14 +135,20 @@ function AssignmentCard({ assignment }: { assignment: Assignment }) {
 
           {assignment.hasAttachment && (
             <div className="pt-1">
-              <button className="w-full inline-flex items-center gap-2 px-[18px] py-[9px] rounded-[9px] border-[1.5px] border-edu-success-200 bg-edu-success-bg text-edu-success text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-success-100">
-                <Download style={{ width: "15px", height: "15px" }} />
-                Descargar prueba adjunta
-                {assignment.attachmentName && (
-                  <span className="text-xs text-edu-ink-500 font-normal">
-                    · {assignment.attachmentName}
+              <button className="w-full justify-between inline-flex items-center gap-2 px-[18px] py-[9px] rounded-[9px] border-[1.5px] border-edu-success-200 bg-edu-success-bg text-edu-success text-sm font-semibold cursor-pointer transition-colors hover:bg-edu-success-100">
+                <div className="flex flex-col items-start">
+                  <span className="hidden md:block">
+                    Descargar prueba adjunta
                   </span>
-                )}
+                  {assignment.attachmentName && (
+                    <span className="text-xs text-edu-ink-500 font-normal">
+                      {assignment.attachmentName}
+                    </span>
+                  )}
+                </div>
+
+                <Download style={{ width: "15px", height: "15px" }} />
+
               </button>
             </div>
           )}

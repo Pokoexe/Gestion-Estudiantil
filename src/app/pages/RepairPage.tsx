@@ -77,7 +77,7 @@ export function RepairPage() {
     return (
         <>
             {/* Bloques resumen */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Materias pendientes */}
                 <div className="bg-edu-surface rounded-edu-card p-5 border border-edu-border-soft flex flex-col gap-2.5">
                     <div className="flex justify-between items-start">
@@ -185,59 +185,59 @@ export function RepairPage() {
                 {/* Tabla */}
                 <div>
                     <div className="overflow-x-auto">
-                    <div className="min-w-[680px]">
-                    <div className={`grid ${REPAIR_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {REPAIR_HEADERS.map((h) => (
-                            <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
-                                {h}
-                            </span>
-                        ))}
-                    </div>
-
-                    {rows.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                            No hay materias que coincidan con el filtro.
-                        </div>
-                    )}
-
-                    {paged.map((s, i) => {
-                        const meta = STATUS_META[s.status];
-                        const avgClass =
-                            s.status === "reprobado"
-                                ? "text-edu-danger"
-                                : s.status === "pendiente"
-                                    ? "text-edu-warning"
-                                    : "text-edu-ink";
-                        return (
-                            <div
-                                key={s.id}
-                                onClick={() => goToSubject(s)}
-                                className={`grid ${REPAIR_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
-                                    <span className="text-[0.875rem] text-edu-ink font-medium">{s.name}</span>
-                                </div>
-                                <span className="text-[0.875rem] text-edu-ink-700">{s.teacher}</span>
-                                <span className="text-[0.875rem] text-edu-ink-700">{s.failedEvals}</span>
-                                <div className="flex flex-col gap-0.5 items-start">
-                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${meta.cls}`}>
-                                        {meta.label}
+                        <div className="min-w-[680px]">
+                            <div className={`grid ${REPAIR_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                {REPAIR_HEADERS.map((h) => (
+                                    <span key={h} className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]">
+                                        {h}
                                     </span>
-                                    {s.status === "reparando" && (
-                                        <span className="text-[0.68rem] text-edu-ink-400">
-                                            Etapa {s.stage} de {s.totalStages}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center justify-between gap-1">
-                                    <span className={`text-[0.875rem] font-semibold ${avgClass}`}>{s.average}</span>
-                                    <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                                </div>
+                                ))}
                             </div>
-                        );
-                    })}
-                    </div>
+
+                            {rows.length === 0 && (
+                                <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                    No hay materias que coincidan con el filtro.
+                                </div>
+                            )}
+
+                            {paged.map((s, i) => {
+                                const meta = STATUS_META[s.status];
+                                const avgClass =
+                                    s.status === "reprobado"
+                                        ? "text-edu-danger"
+                                        : s.status === "pendiente"
+                                            ? "text-edu-warning"
+                                            : "text-edu-ink";
+                                return (
+                                    <div
+                                        key={s.id}
+                                        onClick={() => goToSubject(s)}
+                                        className={`grid ${REPAIR_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < paged.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
+                                            <span className="text-[0.875rem] text-edu-ink font-medium">{s.name}</span>
+                                        </div>
+                                        <span className="text-[0.875rem] text-edu-ink-700">{s.teacher}</span>
+                                        <span className="text-[0.875rem] text-edu-ink-700">{s.failedEvals}</span>
+                                        <div className="flex flex-col gap-0.5 items-start">
+                                            <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${meta.cls}`}>
+                                                {meta.label}
+                                            </span>
+                                            {s.status === "reparando" && (
+                                                <span className="text-[0.68rem] text-edu-ink-400">
+                                                    Etapa {s.stage} de {s.totalStages}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between gap-1">
+                                            <span className={`text-[0.875rem] font-semibold ${avgClass}`}>{s.average}</span>
+                                            <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {totalPages > 1 && (

@@ -141,56 +141,59 @@ export function MateriasPage() {
                 </div>
 
                 {/* Materias reprobadas*/}
-                <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-                    <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
-                        <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
-                            Materias reprobadas
-                        </h3>
-                        <span className="text-[0.8rem] text-edu-danger font-medium">
-                            {failing.length} en riesgo
-                        </span>
-                    </div>
-                    <div>
-                        <div className={`grid ${SUBJECT_COLS_FAILS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                            {SUBJECT_HEADERS_FAILS.map((h) => (
-                                <span
-                                    key={h}
-                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                <div>
+                    <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
+                        <div className="px-5 py-4 border-b border-edu-border-soft flex justify-between items-center">
+                            <h3 className="m-0 text-edu-ink font-semibold text-[0.9375rem]">
+                                Materias reprobadas
+                            </h3>
+                            <span className="text-[0.8rem] text-edu-danger font-medium">
+                                {failing.length} en riesgo
+                            </span>
+                        </div>
+                        <div>
+                            <div className={`grid ${SUBJECT_COLS_FAILS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                                {SUBJECT_HEADERS_FAILS.map((h) => (
+                                    <span
+                                        key={h}
+                                        className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                                    >
+                                        {h}
+                                    </span>
+                                ))}
+                            </div>
+                            {failing.map((s, i) => (
+                                <div
+                                    key={s.id}
+                                    onClick={() => goToSubject(s.id)}
+                                    className={`grid ${SUBJECT_COLS_FAILS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < failing.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                                 >
-                                    {h}
-                                </span>
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="w-2 h-2 rounded-full shrink-0"
+                                            style={{ backgroundColor: color.danger }}
+                                        />
+                                        <span className="text-[0.875rem] text-edu-ink font-medium">
+                                            {s.name}
+                                        </span>
+                                    </div>
+                                    <span className="text-[0.875rem] text-edu-danger font-semibold">
+                                        {s.average}
+                                    </span>
+
+                                    <div className="flex items-center justify-between gap-1">
+                                        <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
+                                            {STATUS_META[s.status].label}
+                                        </span>
+                                        <ChevronRight className="w-4 h-4 text-edu-danger/50 shrink-0" />
+                                    </div>
+
+                                </div>
                             ))}
                         </div>
-                        {failing.map((s, i) => (
-                            <div
-                                key={s.id}
-                                onClick={() => goToSubject(s.id)}
-                                className={`grid ${SUBJECT_COLS_FAILS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < failing.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className="w-2 h-2 rounded-full shrink-0"
-                                        style={{ backgroundColor: color.danger }}
-                                    />
-                                    <span className="text-[0.875rem] text-edu-ink font-medium">
-                                        {s.name}
-                                    </span>
-                                </div>
-                                <span className="text-[0.875rem] text-edu-danger font-semibold">
-                                    {s.average}
-                                </span>
-
-                                <div className="flex items-center justify-between gap-1">
-                                    <span className="inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit bg-edu-danger-bg text-edu-danger">
-                                        {STATUS_META[s.status].label}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 text-edu-danger/50 shrink-0" />
-                                </div>
-
-                            </div>
-                        ))}
                     </div>
                 </div>
+
             </div>
 
             {/* Todas las materias */}
@@ -217,61 +220,61 @@ export function MateriasPage() {
                 </div>
                 <div className="overflow-x-auto">
                     <div className="min-w-[720px]">
-                    <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {SUBJECT_HEADERS.map((h) => (
-                            <span
-                                key={h}
-                                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                            >
-                                {h}
-                            </span>
-                        ))}
-                    </div>
-                    {filteredSubjects.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                            No hay materias que coincidan con la búsqueda.
-                        </div>
-                    )}
-                    {pagedSubjects.map((s, i) => {
-                        const st = STATUS_META[s.status];
-                        return (
-                            <div
-                                key={s.id}
-                                onClick={() => goToSubject(s.id)}
-                                className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedSubjects.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className="w-2 h-2 rounded-full shrink-0"
-                                        style={{ backgroundColor: s.dot }}
-                                    />
-                                    <span className="text-[0.875rem] text-edu-ink font-medium">
-                                        {s.name}
-                                    </span>
-                                </div>
-                                <span className="text-[0.875rem] text-edu-ink-700">
-                                    {s.teacher}
-                                </span>
-                                <span className="text-[0.875rem] text-edu-ink-700">
-                                    {s.evaluations}
-                                </span>
-                                <span className="text-[0.875rem] text-edu-ink-700">
-                                    {s.attendance}
-                                </span>
+                        <div className={`grid ${SUBJECT_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {SUBJECT_HEADERS.map((h) => (
                                 <span
-                                    className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
+                                    key={h}
+                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
                                 >
-                                    {st.label}
+                                    {h}
                                 </span>
-                                <div className="flex items-center justify-between gap-1">
-                                    <span className="text-[0.875rem] text-edu-ink font-semibold">
-                                        {s.average}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
-                                </div>
+                            ))}
+                        </div>
+                        {filteredSubjects.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay materias que coincidan con la búsqueda.
                             </div>
-                        );
-                    })}
+                        )}
+                        {pagedSubjects.map((s, i) => {
+                            const st = STATUS_META[s.status];
+                            return (
+                                <div
+                                    key={s.id}
+                                    onClick={() => goToSubject(s.id)}
+                                    className={`grid ${SUBJECT_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedSubjects.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="w-2 h-2 rounded-full shrink-0"
+                                            style={{ backgroundColor: s.dot }}
+                                        />
+                                        <span className="text-[0.875rem] text-edu-ink font-medium">
+                                            {s.name}
+                                        </span>
+                                    </div>
+                                    <span className="text-[0.875rem] text-edu-ink-700">
+                                        {s.teacher}
+                                    </span>
+                                    <span className="text-[0.875rem] text-edu-ink-700">
+                                        {s.evaluations}
+                                    </span>
+                                    <span className="text-[0.875rem] text-edu-ink-700">
+                                        {s.attendance}
+                                    </span>
+                                    <span
+                                        className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}
+                                    >
+                                        {st.label}
+                                    </span>
+                                    <div className="flex items-center justify-between gap-1">
+                                        <span className="text-[0.875rem] text-edu-ink font-semibold">
+                                            {s.average}
+                                        </span>
+                                        <ChevronRight className="w-4 h-4 text-edu-ink-300 shrink-0" />
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
                 {totalPages > 1 && (

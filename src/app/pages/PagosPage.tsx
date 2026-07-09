@@ -186,7 +186,7 @@ export function PagosPage() {
             )}
 
             {/* Bloque de solvencia */}
-            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 flex justify-between items-center flex-wrap gap-4">
+            <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft p-5 lg:flex justify-between items-center lg:flex-wrap gap-4">
                 <div className="flex items-center gap-4">
                     <div
                         className={`w-14 h-14 rounded-edu-card flex items-center justify-center shrink-0 ${solvent ? "bg-edu-success-bg" : "bg-edu-danger-bg"}`}
@@ -210,7 +210,7 @@ export function PagosPage() {
                     </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col justify-center lg:justify-end items-end gap-4 lg:gap-2 mt-4 lg:mt-1 ">
                     {solvent ? (
                         <>
                             <span className="inline-flex items-center gap-1.5 bg-edu-success-bg text-edu-success text-[0.8rem] font-semibold px-3 py-1.5 rounded-edu-pill">
@@ -220,7 +220,7 @@ export function PagosPage() {
                         </>
                     ) : (
                         <>
-                            <div className="text-right">
+                            <div className="w-full text-center lg:text-right lg:w-auto">
                                 <div className="text-edu-ink-400 text-[0.72rem] uppercase tracking-[0.05em] font-medium">
                                     Monto adeudado
                                 </div>
@@ -231,7 +231,7 @@ export function PagosPage() {
                             </div>
                             <button
                                 onClick={openModal}
-                                className="inline-flex items-center gap-2 bg-edu-primary text-white text-sm font-semibold px-4 py-2.5 rounded-edu-control border-none cursor-pointer transition-colors hover:bg-edu-primary-hover"
+                                className="w-full justify-center lg:justify-start lg:w-auto inline-flex items-center gap-2 bg-edu-primary text-white text-sm font-semibold px-4 py-2.5 rounded-edu-control border-none cursor-pointer transition-colors hover:bg-edu-primary-hover"
                             >
                                 <CreditCard className="w-4 h-4" />
                                 Pagar por internet
@@ -261,61 +261,61 @@ export function PagosPage() {
                 </div>
                 <div className="overflow-x-auto">
                     <div className="min-w-[720px]">
-                    <div className={`grid ${PAY_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
-                        {PAY_HEADERS.map((h) => (
-                            <span
-                                key={h}
-                                className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
-                            >
-                                {h}
-                            </span>
-                        ))}
-                    </div>
-                    {filteredPayments.length === 0 && (
-                        <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
-                            No hay pagos que coincidan con la búsqueda.
+                        <div className={`grid ${PAY_COLS} px-5 py-2.5 bg-edu-subtle border-b border-edu-border-soft`}>
+                            {PAY_HEADERS.map((h) => (
+                                <span
+                                    key={h}
+                                    className="text-[0.7rem] font-semibold text-edu-ink-400 uppercase tracking-[0.05em]"
+                                >
+                                    {h}
+                                </span>
+                            ))}
                         </div>
-                    )}
-                    {pagedPayments.map((p, i) => {
-                        const st = STATUS_META[p.status];
-                        return (
-                            <div
-                                key={p.id}
-                                onClick={() => setSelectedPayment(p)}
-                                className={`grid ${PAY_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedPayments.length - 1 ? "border-b border-edu-border-soft" : ""}`}
-                            >
-                                <span className="text-[0.875rem] text-edu-ink font-semibold">{money(p.amount)}</span>
-                                <span className="text-[0.875rem] text-edu-ink-700">{p.currency}</span>
-                                <span className="text-[0.8125rem] text-edu-ink-500">{p.date}</span>
-                                <span className="text-[0.875rem] text-edu-ink-700 capitalize">{p.type}</span>
-                                <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>
-                                    {st.label}
-                                </span>
-                                <span className="text-[0.8125rem] text-edu-ink-500 flex items-center gap-1.5">
-                                    {p.voucher && p.voucher !== "—" ? (
-                                        p.receiptUrl ? (
-                                            <a
-                                                href={p.receiptUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-1.5 text-edu-primary font-medium no-underline hover:underline"
-                                            >
-                                                <Receipt className="w-3.5 h-3.5 shrink-0" />
-                                                {p.voucher}
-                                            </a>
-                                        ) : (
-                                            <>
-                                                <Receipt className="w-3.5 h-3.5 text-edu-ink-400 shrink-0" />
-                                                {p.voucher}
-                                            </>
-                                        )
-                                    ) : (
-                                        "—"
-                                    )}
-                                </span>
+                        {filteredPayments.length === 0 && (
+                            <div className="px-5 py-10 text-center text-edu-ink-400 text-sm">
+                                No hay pagos que coincidan con la búsqueda.
                             </div>
-                        );
-                    })}
+                        )}
+                        {pagedPayments.map((p, i) => {
+                            const st = STATUS_META[p.status];
+                            return (
+                                <div
+                                    key={p.id}
+                                    onClick={() => setSelectedPayment(p)}
+                                    className={`grid ${PAY_COLS} px-5 py-[13px] items-center cursor-pointer transition-colors hover:bg-edu-subtle ${i < pagedPayments.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                                >
+                                    <span className="text-[0.875rem] text-edu-ink font-semibold">{money(p.amount)}</span>
+                                    <span className="text-[0.875rem] text-edu-ink-700">{p.currency}</span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500">{p.date}</span>
+                                    <span className="text-[0.875rem] text-edu-ink-700 capitalize">{p.type}</span>
+                                    <span className={`inline-flex items-center justify-center px-2.5 py-[3px] rounded-edu-pill text-[0.7rem] font-semibold w-fit ${st.cls}`}>
+                                        {st.label}
+                                    </span>
+                                    <span className="text-[0.8125rem] text-edu-ink-500 flex items-center gap-1.5">
+                                        {p.voucher && p.voucher !== "—" ? (
+                                            p.receiptUrl ? (
+                                                <a
+                                                    href={p.receiptUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-1.5 text-edu-primary font-medium no-underline hover:underline"
+                                                >
+                                                    <Receipt className="w-3.5 h-3.5 shrink-0" />
+                                                    {p.voucher}
+                                                </a>
+                                            ) : (
+                                                <>
+                                                    <Receipt className="w-3.5 h-3.5 text-edu-ink-400 shrink-0" />
+                                                    {p.voucher}
+                                                </>
+                                            )
+                                        ) : (
+                                            "—"
+                                        )}
+                                    </span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
                 {totalPages > 1 && (
@@ -380,8 +380,8 @@ export function PagosPage() {
                                         type="button"
                                         onClick={() => setModalTab(t.key as "cuenta" | "prueba")}
                                         className={`px-3.5 py-2.5 text-[0.8125rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${modalTab === t.key
-                                                ? "border-edu-primary text-edu-primary"
-                                                : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
+                                            ? "border-edu-primary text-edu-primary"
+                                            : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"
                                             }`}
                                     >
                                         {t.label}

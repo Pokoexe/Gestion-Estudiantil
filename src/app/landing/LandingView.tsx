@@ -555,7 +555,7 @@ const ACTIVITIES_PER_PAGE = 4;
 const TEACHERS_PER_PAGE = 4;
 
 /** Intervalo del avance automático de los carruseles de sección (ms). */
-const SECTION_AUTOPLAY_MS = 6000;
+export const SECTION_AUTOPLAY_MS = 6000;
 
 type ThemeShape = (typeof THEMES)[keyof typeof THEMES];
 
@@ -565,7 +565,7 @@ type ThemeShape = (typeof THEMES)[keyof typeof THEMES];
  * expone la navegación. Si `autoplayMs > 0`, avanza solo (respeta
  * "prefers-reduced-motion" y la pausa por hover vía `paused`).
  */
-function useCarousel(itemCount: number, perPage: number, autoplayMs = 0) {
+export function useCarousel(itemCount: number, perPage: number, autoplayMs = 0) {
   const pageCount = Math.max(1, Math.ceil(itemCount / perPage));
   const [page, setPage] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -589,7 +589,7 @@ function useCarousel(itemCount: number, perPage: number, autoplayMs = 0) {
 }
 
 /** Flechas ‹ › superpuestas al carrusel. Solo se muestran si hay más de 1 página. */
-function CarouselArrows({ pageCount, go, theme }: { pageCount: number; go: (dir: -1 | 1) => void; theme: ThemeShape }) {
+export function CarouselArrows({ pageCount, go, theme }: { pageCount: number; go: (dir: -1 | 1) => void; theme: ThemeShape }) {
   if (pageCount <= 1) return null;
   const arrowStyle: React.CSSProperties = {
     background: theme.surfaceSolid,
@@ -620,7 +620,7 @@ function CarouselArrows({ pageCount, go, theme }: { pageCount: number; go: (dir:
 }
 
 /** Puntos indicadores bajo el carrusel. Solo se muestran si hay más de 1 página. */
-function CarouselDots({ pageCount, page, setPage, theme }: { pageCount: number; page: number; setPage: (p: number) => void; theme: ThemeShape }) {
+export function CarouselDots({ pageCount, page, setPage, theme }: { pageCount: number; page: number; setPage: (p: number) => void; theme: ThemeShape }) {
   if (pageCount <= 1) return null;
   return (
     <div className="mt-5 flex items-center justify-center gap-2">

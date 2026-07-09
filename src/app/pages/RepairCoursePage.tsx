@@ -14,10 +14,15 @@ import {
     PenLine,
     Wrench,
     MessageCircle,
+    User,
 } from "lucide-react";
 import { color } from "../theme/tokens";
 import { useFetch } from "../datos_maquetados";
 import { getReparacionMateria, type Assignment, type EtapaStatus } from "../datos_maquetados/actions/estudiante";
+import { CarouselArrows, CarouselDots, SECTION_AUTOPLAY_MS, useCarousel } from "../landing/LandingView";
+import { THEMES } from "../landing/themes";
+import { loadDraft, loadPublished } from "../landing/storage";
+import { DEFAULT_TEMPLATE, makeDefaultConfig } from "../landing/types";
 
 const TYPE_META: Record<Assignment["type"], { icon: React.FC<{ style?: React.CSSProperties }>, bg: string, color: string, label: string }> = {
     presentation: { icon: Presentation, bg: color.primary50, color: color.primary, label: "Exposición" },
@@ -173,11 +178,50 @@ export function RepairCoursePage() {
     const [activeIdx, setActiveIdx] = useState(0);
     const [filter, setFilter] = useState<"Todas" | "Pendientes" | "Calificadas">("Todas");
 
+
+    const { page, setPage, pageCount, setPaused, go } = useCarousel(2, 1, SECTION_AUTOPLAY_MS);
+
+    const config = loadDraft() ?? loadPublished() ?? makeDefaultConfig(DEFAULT_TEMPLATE);
+    const theme = THEMES[config.template];
+    const glass: React.CSSProperties = {
+        background: theme.surface,
+        border: `1px solid ${theme.border}`,
+        backdropFilter: "blur(6px)",
+    };
+
     // Al cargar la materia, abre la etapa en curso (o la primera).
     useEffect(() => {
         if (!subject) return;
         setActiveIdx(Math.max(0, subject.etapas.findIndex((e) => e.status === "in_progress")));
     }, [subject]);
+
+
+    const [itemsPerPage, setItemsPerPage] = useState(1); // 1 por defecto (Móvil)
+
+    useEffect(() => {
+        const handleResize = () => {
+            const width = window.innerWidth;
+            if (width >= 1024) {
+                setItemsPerPage(3); // lg
+            } else if (width >= 768) {
+                setItemsPerPage(2); // md
+            } else {
+                setItemsPerPage(1); // menor a md
+            }
+        };
+
+        // Ejecutar una vez al montar para obtener el tamaño inicial
+        handleResize();
+
+        // Escuchar cuando el usuario redimensione la ventana
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    // Asegurarnos de que si itemsPerPage cambia y estamos en una página vacía, regresamos al inicio
+    useEffect(() => {
+        setPage(0);
+    }, [itemsPerPage]);
 
     if (loading) {
         return (
@@ -194,6 +238,10 @@ export function RepairCoursePage() {
             </div>
         );
     }
+
+
+
+
 
     const etapa = subject.etapas[activeIdx] ?? subject.etapas[0];
     const pendingCount = etapa.assignments.filter((a) => a.status === "pending").length;
@@ -213,25 +261,44 @@ export function RepairCoursePage() {
                         Etapas de reparación · {subject.name}
                     </span>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                    {subject.etapas.map((e, i) => {
-                        const meta = ETAPA_META[e.status];
-                        const isActive = i === activeIdx;
-                        return (
-                            <button
-                                key={e.order}
-                                onClick={() => setActiveIdx(i)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-edu-control border-[1.5px] text-sm font-semibold cursor-pointer transition-colors ${isActive ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-edu-surface text-edu-ink-500 hover:border-edu-primary-200"}`}
-                            >
-                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
-                                Etapa {e.order}
-                                <span className="text-[0.7rem] font-medium" style={{ color: meta.dot }}>
-                                    · {meta.label}
-                                </span>
-                            </button>
-                        );
-                    })}
+
+
+                <div className="" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+                    <div className="relative">
+                        <div key={page} className="lp-anim-fade grid md:grid-cols-2 lg:grid-cols-3 gap-4 px-16">
+                            {subject.etapas
+                                /* Usamos la variable dinámica en lugar de un número fijo */
+                                .slice(page * itemsPerPage, (page + 1) * itemsPerPage)
+                                .map((etapa, relativeIdx) => {
+
+                                    /* La matemática del índice absoluto también usa la variable dinámica */
+                                    const absoluteIdx = page * itemsPerPage + relativeIdx;
+
+                                    const meta = ETAPA_META[etapa.status];
+                                    const isActive = absoluteIdx === activeIdx;
+
+                                    return (
+                                        <div key={etapa.schedule} className="group overflow-hidden rounded-2xl transition-transform hover:-translate-y-1" style={glass}>
+                                            <button
+                                                key={etapa.room}
+                                                onClick={() => setActiveIdx(absoluteIdx)}
+                                                className={`flex w-full items-center gap-2 px-4 py-2.5 rounded-edu-control border-[1.5px] text-sm font-semibold cursor-pointer transition-colors ${isActive ? "border-edu-primary bg-edu-primary-50 text-edu-primary" : "border-edu-border bg-edu-surface text-edu-ink-500 hover:border-edu-primary-200"}`}
+                                            >
+                                                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: meta.dot }} />
+                                                Etapa {etapa.order}
+                                                <span className="text-[0.7rem] font-medium" style={{ color: meta.dot }}>
+                                                    · {meta.label}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    )
+                                })}
+                        </div>
+                        <CarouselArrows pageCount={pageCount} go={go} theme={theme} />
+                    </div>
+                    <CarouselDots pageCount={pageCount} page={page} setPage={setPage} theme={theme} />
                 </div>
+
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
