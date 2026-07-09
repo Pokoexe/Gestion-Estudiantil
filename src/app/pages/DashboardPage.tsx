@@ -83,7 +83,11 @@ export function DashboardPage() {
 
         {/* Horario */}
         <div className="lg:col-span-2 bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
-          <div className="text-end w-full md:w-auto px-4 sm:px-5 py-4 border-b border-edu-border-soft md:flex justify-end">
+
+          <div className="px-4 sm:px-5 py-4 border-b border-edu-border-soft flex justify-between items-center gap-2">
+            <h3 className="hidden md:block m-0 text-edu-ink font-semibold text-[0.9375rem]">
+              Horario del lapso
+            </h3>
             <button
               className="w-full md:w-auto justify-center inline-flex items-center gap-2 px-3 sm:px-[18px] py-2 sm:py-2.5 rounded-edu-control text-sm font-semibold cursor-pointer transition-colors border-[1.5px] border-edu-primary bg-edu-primary text-white hover:bg-edu-primary-hover shrink-0"
             >
@@ -92,6 +96,7 @@ export function DashboardPage() {
               <span className="sm:hidden">Descargar</span>
             </button>
           </div>
+
           <div className="overflow-hidden">
 
             <div className="overflow-x-auto">

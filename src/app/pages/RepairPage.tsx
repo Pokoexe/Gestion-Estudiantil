@@ -143,7 +143,7 @@ export function RepairPage() {
             <div className="bg-edu-surface rounded-edu-card border border-edu-border-soft overflow-hidden">
                 {/* Pestañas */}
                 <div className="px-5 pt-3 border-b border-edu-border-soft">
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex justify-center md:justify-start gap-1 flex-wrap">
                         {TABS.map((t) => (
                             <button
                                 key={t.key}
