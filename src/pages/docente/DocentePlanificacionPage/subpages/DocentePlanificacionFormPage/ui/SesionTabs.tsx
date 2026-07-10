@@ -1,0 +1,47 @@
+import { PlusCircle, ClipboardCheck } from "lucide-react";
+import { type PlanifSesion } from "@shared/services/actions/planificaciones";
+
+interface SesionTabsProps {
+    rows: PlanifSesion[];
+    activeTab: number | "review";
+    setActiveTab: React.Dispatch<React.SetStateAction<number | "review">>;
+    addRow: () => void;
+}
+
+export function SesionTabs({ rows, activeTab, setActiveTab, addRow }: SesionTabsProps) {
+    return (
+        /* Pestañas de sesiones + datos colocados */
+        <div className="flex items-center gap-1 flex-wrap border-b border-edu-border-soft">
+            {rows.map((r, i) => {
+                const active = activeTab === i;
+                return (
+                    <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setActiveTab(i)}
+                        className={`px-3 py-2 text-[0.8rem] font-medium border-b-2 -mb-px transition-colors cursor-pointer bg-transparent ${active ? "border-edu-primary text-edu-primary" : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"}`}
+                    >
+                        Sesión {i + 1}
+                    </button>
+                );
+            })}
+            <button
+                type="button"
+                onClick={addRow}
+                title="Añadir sesión"
+                className="px-2 py-2 -mb-px text-edu-primary cursor-pointer bg-transparent border-none flex items-center"
+            >
+                <PlusCircle className="w-4 h-4" />
+            </button>
+            <div className="flex-1" />
+            <button
+                type="button"
+                onClick={() => setActiveTab("review")}
+                className={`px-3 py-2 text-[0.8rem] font-semibold border-b-2 -mb-px inline-flex items-center gap-1.5 transition-colors cursor-pointer bg-transparent ${activeTab === "review" ? "border-edu-primary text-edu-primary" : "border-transparent text-edu-ink-500 hover:text-edu-ink-700"}`}
+            >
+                <ClipboardCheck className="w-3.5 h-3.5" />
+                Datos colocados
+            </button>
+        </div>
+    );
+}

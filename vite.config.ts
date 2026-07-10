@@ -53,8 +53,10 @@ export default defineConfig({
   base: BASE,
   resolve: {
     alias: {
-      // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+      '@shared':    path.resolve(__dirname, './shared'),
+      '@themes':    path.resolve(__dirname, './themes'),
+      '@constants': path.resolve(__dirname, './constants'),
     },
   },
 
