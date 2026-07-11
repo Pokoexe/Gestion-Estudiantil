@@ -5,16 +5,29 @@ export function useConfiguracion() {
     const [passwordForm, setPasswordForm] = useState({ current: "", next: "", confirm: "" });
     const [emailSaved, setEmailSaved] = useState(false);
     const [passwordSaved, setPasswordSaved] = useState(false);
+    const [showEmailVerify, setShowEmailVerify] = useState(false);
+    const [showPasswordVerify, setShowPasswordVerify] = useState(false);
 
     const handleEmailSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setShowEmailVerify(true);
+    };
+
+    const handlePasswordSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setShowPasswordVerify(true);
+    };
+
+    const closeEmailVerify = () => setShowEmailVerify(false);
+    const closePasswordVerify = () => setShowPasswordVerify(false);
+
+    const confirmEmailChange = () => {
         setEmailSaved(true);
         setTimeout(() => setEmailSaved(false), 3000);
         setEmailForm({ email: "", confirmEmail: "" });
     };
 
-    const handlePasswordSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const confirmPasswordChange = () => {
         setPasswordSaved(true);
         setTimeout(() => setPasswordSaved(false), 3000);
         setPasswordForm({ current: "", next: "", confirm: "" });
@@ -38,6 +51,12 @@ export function useConfiguracion() {
         setPasswordForm,
         emailSaved,
         passwordSaved,
+        showEmailVerify,
+        showPasswordVerify,
+        closeEmailVerify,
+        closePasswordVerify,
+        confirmEmailChange,
+        confirmPasswordChange,
         handleEmailSubmit,
         handlePasswordSubmit,
         emailValid,

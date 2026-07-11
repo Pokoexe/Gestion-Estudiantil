@@ -37,7 +37,7 @@ export function PlanTab({ PLAN, onSelect, TYPE_META, EVAL_STATUS }: Props) {
                                 <Clock className="w-3 h-3 text-edu-ink-400 shrink-0" />
                                 {ev.horario}
                             </span>
-                            <span className="text-sm text-edu-ink-700 font-semibold">{ev.weight} %</span>
+                            <span className="text-sm text-edu-ink-700 font-semibold">{ev.weight}%</span>
                             <span className="text-[0.8125rem] text-edu-ink-500">{ev.date}</span>
                             <div className="flex items-center justify-between gap-1">
                                 <span
@@ -54,7 +54,7 @@ export function PlanTab({ PLAN, onSelect, TYPE_META, EVAL_STATUS }: Props) {
                 <div className="px-5 py-3 bg-edu-subtle border-t border-edu-border-soft text-[0.8125rem] text-edu-ink-500 flex justify-between">
                     <span>Total ponderado</span>
                     <span className="font-semibold text-edu-ink">
-                        {PLAN.reduce((a, e) => a + e.weight, 0)} %
+                        {PLAN.reduce((a, e) => a + e.weight, 0)}%
                     </span>
                 </div>
             </div>

@@ -3,10 +3,12 @@ import type { Actividad } from "@shared/services/actions/estudiante";
 
 interface ExtracurricularesProps {
     actividades: Actividad[];
+    onCourseClick: (id: number) => void;
+    onActivityClick: () => void;
 }
 
 /** Cursos y actividades extracurriculares (máx. 5 ítems c/u). */
-export function Extracurriculares({ actividades }: ExtracurricularesProps) {
+export function Extracurriculares({ actividades, onCourseClick, onActivityClick }: ExtracurricularesProps) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Cursos extracurriculares */}
@@ -22,7 +24,8 @@ export function Extracurriculares({ actividades }: ExtracurricularesProps) {
                     {actividades.map((a, i) => (
                         <div
                             key={a.id}
-                            className={`px-5 py-2.5 flex items-center gap-3 ${i < actividades.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                            onClick={() => onCourseClick(a.id)}
+                            className={`px-5 py-2.5 flex items-center gap-3 cursor-pointer transition-colors hover:bg-edu-subtle ${i < actividades.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                         >
                             <div className="w-7 h-7 rounded-edu-chip bg-edu-primary-50 flex items-center justify-center shrink-0">
                                 <Book className="w-3.5 h-3.5 text-edu-success" />
@@ -50,7 +53,8 @@ export function Extracurriculares({ actividades }: ExtracurricularesProps) {
                     {actividades.map((a, i) => (
                         <div
                             key={a.id}
-                            className={`px-5 py-2.5 flex items-center gap-3 ${i < actividades.length - 1 ? "border-b border-edu-border-soft" : ""}`}
+                            onClick={onActivityClick}
+                            className={`px-5 py-2.5 flex items-center gap-3 cursor-pointer transition-colors hover:bg-edu-subtle ${i < actividades.length - 1 ? "border-b border-edu-border-soft" : ""}`}
                         >
                             <div className="w-7 h-7 rounded-edu-chip bg-edu-primary-50 flex items-center justify-center shrink-0">
                                 <Star className="w-3.5 h-3.5 text-edu-primary" />

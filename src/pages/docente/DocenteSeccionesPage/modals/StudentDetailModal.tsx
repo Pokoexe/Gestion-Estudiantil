@@ -76,7 +76,7 @@ export function StudentDetailModal({ studentDetail, PLAN, TYPE_META, notaColor, 
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-[0.8125rem] text-edu-ink font-medium truncate">{ev.name}</div>
-                                            <div className="text-[0.7rem] text-edu-ink-400">{ev.weight} % · {ev.date}</div>
+                                            <div className="text-[0.7rem] text-edu-ink-400">{ev.weight}% · {ev.date}</div>
                                         </div>
                                         {g != null ? (
                                             <span className={`text-sm font-bold shrink-0 ${notaColor(g)}`}>

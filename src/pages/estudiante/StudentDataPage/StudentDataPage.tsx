@@ -34,7 +34,11 @@ export function StudentDataPage() {
                 incidencias={incidencias}
                 onSubjectClick={(subjectId) => navigate(`/estudiante/materias/${subjectId}`)}
             />
-            <Extracurriculares actividades={actividades} />
+            <Extracurriculares
+                actividades={actividades}
+                onCourseClick={(id) => navigate(`/estudiante/cursos/${id}`)}
+                onActivityClick={() => navigate("/estudiante/cursos?tab=actividades")}
+            />
         </>
     );
 }

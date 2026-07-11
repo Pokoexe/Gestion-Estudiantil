@@ -57,7 +57,7 @@ export function EvalDetailModal({ evalDetail, selected, TYPE_META, EVAL_STATUS, 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                         {[
                             { label: "Tipo", value: tm.label },
-                            { label: "Peso", value: `${evalDetail.weight} %` },
+                            { label: "Peso", value: `${evalDetail.weight}%` },
                             { label: "Docente", value: "Prof. Alejandro Morales" },
                         ].map((d) => (
                             <div key={d.label}>

@@ -30,14 +30,14 @@ export function ReviewPanel({ evalRows, totalPond, weightOk, evalsOk, infoOk }: 
                         <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
                             {r.nombre || <span className="text-edu-danger">Sin nombre</span>}
                         </span>
-                        <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.ponderacion || "—"} %</span>
+                        <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.ponderacion || "—"}%</span>
                         <span className="text-[0.78rem] text-edu-ink-500">{r.fecha || "—"}</span>
                         <span className="text-[0.78rem] text-edu-ink-500">{r.archivos.length} arch.</span>
                     </div>
                 ))}
                 <div className="px-3 py-2.5 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
                     <span className="text-edu-ink-500">Ponderación total</span>
-                    <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalPond} %</span>
+                    <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalPond}%</span>
                 </div>
                 </div>
               </div>
@@ -47,7 +47,7 @@ export function ReviewPanel({ evalRows, totalPond, weightOk, evalsOk, infoOk }: 
                 {[
                     { ok: infoOk,   text: "Información del curso completa (título y cupos)" },
                     { ok: evalsOk,  text: "Todas las evaluaciones tienen nombre y ponderación" },
-                    { ok: weightOk, text: `La ponderación total es 100 % (actual: ${totalPond} %)` },
+                    { ok: weightOk, text: `La ponderación total es 100% (actual: ${totalPond}%)` },
                 ].map((c, i) => (
                     <div key={i} className="flex items-center gap-2 text-[0.8125rem]">
                         {c.ok

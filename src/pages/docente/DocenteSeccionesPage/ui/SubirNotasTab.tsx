@@ -142,7 +142,7 @@ export function SubirNotasTab({
                                 <div className="min-w-0 flex-1">
                                     <div className="text-[0.8rem] font-semibold text-edu-ink leading-snug">{ev.name}</div>
                                     <div className="text-[0.72rem] text-edu-ink-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                        <span>{ev.weight} %</span>
+                                        <span>{ev.weight}%</span>
                                         <span>·</span>
                                         <span>{ev.date}</span>
                                     </div>

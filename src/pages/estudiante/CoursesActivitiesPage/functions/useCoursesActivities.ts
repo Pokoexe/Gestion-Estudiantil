@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useFetch } from "@shared/services";
 import { getCursosExtra } from "@shared/services/actions/courses";
 import { getActividades, type Activity } from "@shared/services/actions/estudiante";
@@ -23,11 +23,15 @@ export function parseSpanishDate(s: string): number {
  */
 export function useCoursesActivities() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const { data: extraCourses } = useFetch(getCursosExtra, []);
     const { data: activities } = useFetch(getActividades, []);
 
-    const [tab, setTab] = useState<TabKey>("cursos");
+    const initialTab = searchParams.get("tab");
+    const [tab, setTab] = useState<TabKey>(
+        initialTab === "nuevos" || initialTab === "actividades" ? initialTab : "cursos",
+    );
 
     // Cursos tab
     const [myPage, setMyPage] = useState(1);

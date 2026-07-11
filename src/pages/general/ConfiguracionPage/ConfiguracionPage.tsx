@@ -2,6 +2,8 @@ import { Settings } from "lucide-react";
 import { useConfiguracion } from "./functions/useConfiguracion";
 import { EmailForm } from "./ui/EmailForm";
 import { PasswordForm } from "./ui/PasswordForm";
+import { VerifyEmailModal } from "./modals/VerifyEmailModal";
+import { VerifyPasswordModal } from "./modals/VerifyPasswordModal";
 
 export function ConfiguracionPage() {
     const {
@@ -11,6 +13,12 @@ export function ConfiguracionPage() {
         setPasswordForm,
         emailSaved,
         passwordSaved,
+        showEmailVerify,
+        showPasswordVerify,
+        closeEmailVerify,
+        closePasswordVerify,
+        confirmEmailChange,
+        confirmPasswordChange,
         handleEmailSubmit,
         handlePasswordSubmit,
         emailValid,
@@ -19,6 +27,13 @@ export function ConfiguracionPage() {
 
     return (
         <div className="flex flex-col gap-5">
+            {showEmailVerify && (
+                <VerifyEmailModal onClose={closeEmailVerify} onSuccess={confirmEmailChange} />
+            )}
+            {showPasswordVerify && (
+                <VerifyPasswordModal onClose={closePasswordVerify} onSuccess={confirmPasswordChange} />
+            )}
+
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-edu-control bg-edu-primary-50 flex items-center justify-center shrink-0">
                     <Settings className="w-5 h-5 text-edu-primary" />

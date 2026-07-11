@@ -66,14 +66,14 @@ export function PlanReviewModal({ plan, onClose }: { plan: Plan; onClose: () => 
                                         <span className="text-[0.8rem] text-edu-ink font-medium truncate pr-2">
                                             {r.content || <span className="text-edu-danger">Sin nombre</span>}
                                         </span>
-                                        <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.weight || "—"} %</span>
+                                        <span className="text-[0.8rem] text-edu-ink-700 font-semibold">{r.weight || "—"}%</span>
                                         <span className="text-[0.78rem] text-edu-ink-500">{r.date || "—"}</span>
                                         <span className="text-[0.78rem] text-edu-ink-500">{r.files.length} archivo(s)</span>
                                     </div>
                                 ))}
                                 <div className="px-3 py-2 bg-edu-subtle border-t border-edu-border-soft flex justify-between text-[0.8125rem]">
                                     <span className="text-edu-ink-500">Ponderación total</span>
-                                    <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight} %</span>
+                                    <span className={`font-semibold ${weightOk ? "text-edu-success" : "text-edu-warning"}`}>{totalWeight}%</span>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +88,7 @@ export function PlanReviewModal({ plan, onClose }: { plan: Plan; onClose: () => 
                     {[
                         { ok: seleccionOk, text: "Materia y sección seleccionadas" },
                         { ok: evalsComplete, text: "Todas las evaluaciones tienen nombre, ponderación y fecha" },
-                        { ok: weightOk, text: `La ponderación total es 100 % (actual: ${totalWeight} %)` },
+                        { ok: weightOk, text: `La ponderación total es 100% (actual: ${totalWeight}%)` },
                         { ok: datesInRange, text: "Las fechas están dentro del lapso" },
                         { ok: spacingOk, text: `Entre evaluaciones hay entre ${LAPSO.minDays} y ${LAPSO.maxDays} días` },
                     ].map((c, i) => (

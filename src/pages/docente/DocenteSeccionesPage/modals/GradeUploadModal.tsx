@@ -53,7 +53,7 @@ export function GradeUploadModal({
 
                 <div className="p-5 flex flex-col gap-4">
                     <div className="px-3.5 py-2.5 rounded-edu-control bg-edu-primary-50 text-[0.8125rem] text-edu-primary">
-                        Evaluación: <strong>{selectedEval?.name}</strong> ({selectedEval?.weight} %)
+                        Evaluación: <strong>{selectedEval?.name}</strong> ({selectedEval?.weight}%)
                     </div>
 
                     {gradeIsChange && (
